@@ -1,7 +1,7 @@
 Translate FDE Book from Chinese to English.
 
-Source: /home/ubuntu/workspace/fde-book/ (Chinese originals — DO NOT modify)
-Target: /home/ubuntu/workspace/fde-book/en/ (English translations)
+Source: ./ (Chinese originals — DO NOT modify)
+Target: ./en/ (English translations)
 
 RULES:
 - Mirror the source directory under en/.
@@ -13,7 +13,7 @@ RULES:
 - Each iteration: translate up to 5 files, then review and commit.
 
 PROGRESS CHECK:
-Run: find /home/ubuntu/workspace/fde-book/en -name "*.md" 2>/dev/null | wc -l
+Run: find ./en -name "*.md" 2>/dev/null | wc -l
 Target: 33 files total
 
 FILE LIST (33 files):

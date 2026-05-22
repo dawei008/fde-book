@@ -419,7 +419,7 @@ for x, y, x2, y2, x3, y3 in corners:
 
 # === SAVE ===
 final = img.convert('RGB')
-output_path = "/home/ubuntu/workspace/fde-book/cover.png"
+output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cover.png")
 final.save(output_path, "PNG", quality=95)
 print(f"Cover saved to {output_path}")
 print(f"Size: {final.size}")

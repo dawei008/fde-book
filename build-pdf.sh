@@ -3,7 +3,7 @@
 # Mirrors openbook/build-pdf.sh but renamed for FDE Book output.
 set -uo pipefail
 
-BOOK_DIR="/home/ubuntu/workspace/fde-book"
+BOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$BOOK_DIR"
 
 build_pdf() {
