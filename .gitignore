@@ -1,0 +1,5 @@
+book/
+.DS_Store
+*.swp
+/tmp/fdebook-*-combined.md
+research/
