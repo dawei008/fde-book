@@ -4,408 +4,266 @@ parent: "Part IV — 工程化落地"
 nav_order: 1
 ---
 
-# Chapter 9: 客户数据栈 — Ontology / ETL / 实时管道
+# 第 9 章 客户数据栈：Ontology、ETL 与实时管道的取舍
 
-## 开场
+合昇精密重工那个工单 Agent，第 6 章我们在会议室签下了选型纸，第 7 章定了 RAG + tool use，第 8 章把评估集接进了 CI。现在 Scaffolding 进入了第三周，要把"模型能跑"变成"数据能进"。
 
-```
-某金融客户。FDE 的 LLM Agent demo 跑得很好，但要接生产。
+董事会那张表里有一行我当时没敢轻易答："Agent 要不要拉客户当地经销商的实时备件库存？"——这一行后面藏着东南亚 5 个站点 + 总部 1 套 ERP + 各地经销商 8 个外部系统的数据接入工程量。我那天和顾建国说了一句："这个我得画一张数据图回来再答。"那张图，就是这一章。
 
-第一周接数据接到崩溃：
-  - 客户数据库 5 个：PostgreSQL（主库）+ Oracle（合约）+
-    SQL Server（财务）+ MongoDB（日志）+ 共享盘 Excel（30%）
-  - 主键不统一：CRM 用 customer_id，ERP 用 cust_no，
-    财务用 client_code，没有 mapping 表
-  - 时区不统一：UTC + Asia/Shanghai + 客户当地时区混用
-  - 一份关键报表的数据从 4 个系统拉出来，
-    每个系统有不同的"客户" 定义
-
-FDE 学到了一句话：
-  "Agent 上线前 80% 的工程在数据治理上。
-   不做数据治理直接上 Agent，
-   Agent 越聪明越容易把不一致的数据
-   错误地组合成自信的答案。"
-
-这一章讲：怎么把一个客户的数据栈
-从"五湖四海"治理到"Agent 能放心调用"。
-```
+这一章不教你"什么是数据仓库"——你已经做过五年后端，这些你都知道。这一章讲的是**从客户视角看数据栈、决定什么先接什么后接、什么用 Ontology 收拢什么用裸 SQL 凑合**——这些判断是 FDE 在客户现场的核心动作，和教科书里的"数据架构"不是一回事。
 
 ---
 
-## 9.1 客户数据栈的典型形状
+## 9.1 第一周必画的"5 层数据图"
+
+我自己经历过的几个项目里，数据接入翻车永远不是因为某个工具不会用，是因为 FDE 进场前两周没花一上午把客户的数据栈画清楚。第三周开始接数据，发现"客户" 这个词在 4 个系统里有 4 种 ID，连"昨天的订单"是哪个时区的"昨天"都对不齐。
+
+我习惯第一周内画一张这种图，5 层从下往上：
 
 ```
-        客户企业的"数据 5 层"
-        ─────────────────────────────────────
-
-  L1 操作型数据库 (OLTP)
-     - PostgreSQL / MySQL / Oracle / SQL Server
-     - 业务系统主存储
-
-  L2 数据仓库 / 数据湖 (OLAP)
-     - Snowflake / Redshift / BigQuery / Databricks / Iceberg
-     - 跑分析的地方
-
-  L3 中间层 (Data Mart / Cube)
-     - dbt 模型 / 公司自建 view
-     - 业务指标的"标准定义"
-
-  L4 BI / Dashboard
-     - Tableau / Power BI / Quicksight / Looker
-
-  L5 业务应用 / Agent / API
-     - 应用层使用数据的地方（FDE 的工作多在这一层）
+  L5  应用 / Agent / API           ← FDE 的工作多在这一层
+        Bedrock Agent / Lambda / 内部应用
+        
+  L4  BI / Dashboard               ← 业务方每天看的
+        QuickSight / Tableau / Power BI / 自研
+        
+  L3  指标层 / Data Mart           ← "客户" 在这里被定义
+        dbt 模型 / 业务 view / 公司自建口径
+        
+  L2  数仓 / 数据湖                ← 跑分析的地方
+        Redshift / Snowflake / S3 + Iceberg / Databricks
+        
+  L1  操作型数据库 (OLTP)          ← 业务系统主存储
+        PostgreSQL / Oracle / SQL Server / MongoDB
 ```
 
-**FDE 第一周要画一张这种"5 层数据图"**，把客户的现状画清楚。
+合昇这边画完是这样的：L1 有 5 个——总部 PostgreSQL（CRM 工单）、Oracle（合约/财务）、新加坡 RDS（MES）、各站点本地 MongoDB（现场作业日志），还有 30% 的关键数据躺在共享盘的 Excel 里（备件库存就是这个）。L2 是新加坡区一个跑了两年的 Redshift。L3 是数据团队两个人维护的一堆 view，没用 dbt。L4 是 QuickSight 和给董事会看的几张静态周报。L5 现在是空的——他们之前没做过 Agent。
+
+画这张图的目的不是好看，是回答三个问题：
+
+- **数据现在在哪一层、要去哪一层？** 我们的 Agent 在 L5，要查的数据要么在 L1（实时工单状态）要么在 L2/L3（历史派工记录）。Excel 备件库存在哪一层？严格说在 L1 的"非结构化"角落——这就是一类典型的接入难题。
+- **跨多少层？** 跨的层越多，工程量越大。Agent 直接读 L1 的 PostgreSQL，是最快但耦合最重的方案；走 L2 → L3 慢一天但稳定。这个选择第 9.3 节展开。
+- **L3 这一层有没有"统一口径"？** 大多数 B 端客户在这一层是混乱的——同一个"客户"在 CRM 是 customer_id，在 ERP 是 cust_no，在财务系统是 client_code。没有 mapping 表，业务方靠经验拼接。这就是 9.2 节讲的 Ontology 问题。
+
+> Lawrence 在 *Forward Deployed Engineer Rule Book* 里写过一句让我印象很深的话：*Most LLM hallucinations are actually data quality problems wearing a costume.* 我做了几个项目之后越来越同意——Agent 越聪明，越容易把不一致的数据自信地组合成错误的答案。第一周画清楚这张图，是给后面所有"为什么 Agent 答错了"的事故省时间。
 
 ---
 
-## 9.2 Ontology — 把"五湖四海"统一
+## 9.2 Ontology：把"五湖四海"统一到一张身份证
 
-Ontology 是 Palantir 引入并推广的概念，本质上是**业务对象 + 关系 + 属性**的统一定义。
-
-```
-              Ontology 的 3 个组成
-              ─────────────────────
-
-  Object (对象):
-    Customer / Order / Product / Contract / Employee
-    每个对象有"金本位定义"
-
-  Property (属性):
-    Customer.id, Customer.name, Customer.tier
-    每个属性有 source-of-truth
-
-  Relationship (关系):
-    Customer 1:N Order
-    Order 1:N OrderItem
-    Order N:1 Salesperson
-```
-
-### Ontology 的 4 个核心问题
+Ontology 这个词最早是 Palantir 推出来的，他们把它做成了产品的核心抽象。剥掉营销层，本质上是三件事：
 
 ```
-1. 谁是"客户"？
-   - CRM 表？还是付款主体？还是合同方？
-   - 不同部门定义不一样 → 必须统一
-
-2. ID 用什么？
-   - CRM 的 customer_id?
-   - 合同方的 unified_party_id?
-   - 必须有"金 ID"
-
-3. Mapping 怎么建？
-   - 大部分情况是手工建表
-   - 没有银弹
-
-4. 谁有权改 Ontology？
-   - 有 owner 才能避免"今天 A 改一个字段，明天 B 改回来"
+  Object       业务对象的"金本位定义"
+               Customer / Order / Product / Contract / Asset
+               
+  Property     每个对象的属性 + source-of-truth
+               Customer.id = ?, Customer.tier = ?
+               
+  Relationship 对象之间的关系
+               Customer 1:N Order, Order 1:N Item
 ```
 
-### AWS 实操：用 Lake Formation + Glue Data Catalog 做轻量 Ontology
+这听起来像数据建模 101，但 Ontology 和传统数据建模有一个关键区别——**它不是数据团队关起门来定义的，是业务方、数据团队、应用团队三方共同 sign-off 的合同**。"客户" 是谁？这件事不能让数据工程师拍——必须业务方说话。
 
-AWS 没有 Palantir 那种"完整 Ontology 框架"，但可以用 Glue + Lake Formation 实现轻量版：
+合昇这边我第二周和陈雪、顾建国坐下来过了一遍。我问的不是技术问题，是四个业务问题：
+
+**第一，谁是"客户"？** 合昇的 CRM 里"客户"是采购方，ERP 里"客户"是付款主体，售后系统里"客户"是设备使用方。一台五轴加工中心，采购方可能是新加坡某代理商，付款主体是马来西亚一家工厂，使用方是越南胡志明的车间。三个"客户" ID 都不一样。我们 Agent 接的工单来自使用方——所以**售后系统的 customer_id 是金 ID**。
+
+**第二，主键用什么？** 售后系统的 customer_id 长这样：`SVC-VN-HCM-001423`。带地区编码、带顺序号，看着规整，但有 200 多条历史数据是手填的，前缀不统一（`VN-HCM` vs `VHCM` vs `HCM-VN`）。我们没法直接用——必须先建一张"金 ID → 实际系统 ID" 的 mapping 表，把脏数据归位。这张表第三周陈雪带着两个客服花了两天手工修完。**没有银弹，就是手工**。
+
+**第三，谁有权改？** Ontology 一旦定下来，下游所有 dbt 模型、所有 Agent prompt 都基于它。任何一个字段改名都是大事。我们约定 Ontology owner 是陈雪（业务方），任何改动需要她邮件确认。这条写进了 SOW 附录。
+
+**第四，第一版要覆盖几个对象？** 合昇这一期 Agent 只做工单分诊——只需要 Customer、Asset（设备）、Ticket（工单）、Engineer（工程师）4 个对象。Order/Contract 不上 Ontology 第一版。**业务范围不到的对象不做**——Ontology 不是"先建好备用"，是"用到哪个建到哪个"。
+
+到这里 Ontology 的设计完成了。落地用什么工具？合昇是 AWS 客户，主区在 ap-southeast-1，我们没必要去引入 Palantir Foundry——杀鸡用牛刀，而且过不了顾建国那一关（"不要再开第二条供应商关系"）。AWS 这个客户场景下，我们用 Glue Data Catalog + Lake Formation 做了一个轻量版：
 
 ```
-        Glue Data Catalog 作为 Ontology 注册中心
-        ─────────────────────────────────────────
-
-  Database: customer_360_ontology
-
-  Table: customer  (← 业务对象定义)
-    Columns:
-      - customer_id    (string, 金 ID)
-      - source_systems (struct: crm_id, erp_no, finance_code)
-      - tier           (string)
-      - tags           (LF tags: PII, region=APAC)
-
-  Table: order
-    ...
-
-  ↓
-  Lake Formation Tags (LF-Tags):
-    - PII: yes / no
-    - sensitivity: public / internal / restricted
-    - region: APAC / EMEA / NA
-
-  ↓
-  IAM 角色 + LF-Tags 控制谁能查哪个对象的哪个字段
+  Glue Data Catalog 作为 Ontology 注册中心
+  
+    database: chsj_ontology_v1
+    
+    table: customer
+      customer_id        string  PK    -- 金 ID
+      legal_name         string
+      country            string
+      tier               string
+      crm_id             string        -- mapping 到 CRM
+      erp_no             string        -- mapping 到 ERP
+      finance_code       string        -- mapping 到财务
+      lf_tags:           PII=yes, region=APAC
+      owner:             chen.xue@chsj.com
+    
+    table: asset
+      asset_id           string  PK
+      customer_id        string  FK -> customer
+      model              string
+      install_date       date
+      ...
 ```
 
-**好处**：
+权限走 Lake Formation 的 LF-Tags：PII 字段在 dev 环境一律 mask，prod 环境按 IAM 角色分。这套不是"完整 Ontology 框架"——它没有 Foundry 那种带 UI 的对象浏览器、没有自动血缘——但它够用，而且不引入新供应商。这是 FDE 在客户现场最常见的取舍：**用客户已有平台的能力，做出 Palantir 那套抽象的 70%，剩下 30% 用 SOP 和 dbt 模型补上**。
 
-- Ontology 的元数据由 Glue 维护
-- 权限由 LF-Tags + IAM 维护
-- Athena / Redshift / EMR 都能查
-- Bedrock Knowledge Bases 直接读 Glue 元数据
-
-> **AWS 知识参考**：搜 "AWS Lake Formation tags" 与 "Glue Data Catalog cross-account"。
+如果你的客户用 Snowflake 或 Databricks，对应的工具是 Snowflake 的 Tags + Polaris、Databricks 的 Unity Catalog。换一个云，思路一样。
 
 ---
 
-## 9.3 ETL — 让数据流起来
+## 9.3 ETL：怎么决定"够新"和"够准"
 
-ETL（Extract / Transform / Load）是把 L1 → L2 → L3 的工程。
+Ontology 定义了"对象长什么样"，ETL 解决"对象怎么从 5 个系统里被组装出来"。
 
-### ETL 的 3 个工程信号
+我从来不在客户现场讨论"用哪个 ETL 工具最好"。这件事的判断顺序是反过来的——**先回答 SLA、再回答工具**。
 
-```
-  数据"够新吗"？ → 看 SLA
-    - T+1: 隔天看（90% 项目够用）
-    - T+1h: 小时级（实时性要求高）
-    - 实时: 秒级（CDC 才能做）
-
-  数据"够准吗"？ → 看 quality 测试
-    - 主键唯一
-    - 不能有空值
-    - 数值在合理范围
-    - 业务规则（订单金额 > 0）
-
-  数据"够稳吗"？ → 看依赖图 + 监控
-    - 上游挂了，下游应该 graceful 失败
-    - 失败应该有 alert
-    - 重跑应该幂等
-```
-
-### ETL 工具速决
+SLA 我用三档说话：
 
 ```
-                    场景 → 推荐工具
-                    ─────────────────────────
+  T+1 (隔天可见)   ──→ 90% 的项目这一档够用
+                       适合: 周报 / 月报 / 历史分析 / 客服 RAG
+                       工程量基准: 1x
 
-  云上 + Spark 系     Databricks / EMR + Delta
-                      AWS Glue（serverless 友好）
+  T+1h (小时级)    ──→ 大约 8% 的项目需要
+                       适合: 业务方上午调整下午想看效果
+                       工程量基准: 2-3x (要做增量同步)
 
-  云上 + 数仓内       dbt + Snowflake / BigQuery / Redshift
-
-  云上 + Streaming    Kafka + Kinesis Data Streams + Flink
-
-  自建 / 离线         Airflow + Spark + Iceberg
-
-  小规模 / 简单       AWS Step Functions + Lambda + S3
+  实时 (秒级)      ──→ 不到 2% 的项目真正需要
+                       适合: 风控 / 推荐 / 在线状态 / 库存竞争
+                       工程量基准: 5-10x (要 CDC + 流式处理)
 ```
 
-### dbt 是 FDE 的"瑞士军刀"
+合昇那个备件库存——我和陈雪谈了一次，问她："如果系统给工程师推荐的备件，库存其实已经被另一个站点订走了，你能接受多久才发现这个事？"她想了一下："几个小时内吧。如果是早上派工的，下午能改就行。"
 
-如果客户用云数仓，**80% 的 ETL 用 dbt 写**：
+那就是 T+1h。不是实时。我们省掉了一整套 CDC 流水线。
+
+工程现实里，**一上来就上实时管道是 FDE 最常踩的坑之一**。我自己在第二个 FDE 项目踩过——客户随口一句"最好实时"，我没回头确认，搭了 Kinesis + Flink 一整套，三周后发现业务真实需要的是"早上能改晚上能改"。三周白搭。从那之后我养成习惯：**任何"实时"的需求，我会反问一句"半小时延迟你能接受吗？"，能接受就降一档**。
+
+SLA 定下来后，工具按场景选。我画过一张速决表，合昇这次走的是第一行：
+
+| 客户场景 | 推荐组合 | 备注 |
+|---|---|---|
+| AWS + 数仓内变换 | dbt + Redshift / Athena | 80% 项目首选，SQL-only |
+| AWS + Spark 友好 | Glue / EMR + Iceberg | Glue 适合 serverless 偏好的客户 |
+| AWS + 简单调度 | Step Functions + Lambda | 数据量小、逻辑简单时最省 |
+| AWS + 实时 | MSK / Kinesis + Flink/Firehose | 真要实时再上 |
+| 客户用 Snowflake | dbt + Snowflake | 同左，换数仓 |
+| 客户用 Databricks | dbt + Databricks 或纯 PySpark | 看团队风格 |
+
+我们最后用的是 dbt + Redshift。合昇 Redshift 已经跑了两年，dbt 是数据团队上个季度引入的（之前是堆 view），现在正好用 Agent 项目做一次系统化的 customer_360 迁移。dbt 项目结构合昇那边变成这样：
 
 ```
-        dbt 项目的标准结构
-        ──────────────────────────────────
-
   models/
     staging/
-      stg_crm_customers.sql        (清洗 raw)
-      stg_erp_customers.sql
+      stg_crm__customers.sql      -- 清洗 CRM 原始表
+      stg_erp__customers.sql      -- 清洗 ERP
+      stg_svc__tickets.sql        -- 清洗售后工单
+      stg_finance__clients.sql    -- 清洗财务
     intermediate/
-      int_customer_unified.sql     (做 join / mapping)
+      int_customer__id_mapping.sql   -- 4 个系统的 customer_id 拼接
+      int_ticket__enriched.sql       -- 工单接上设备 + 客户
     marts/
-      dim_customer.sql             (业务对象层)
-      fct_orders.sql
+      dim_customer.sql            -- Ontology 里的 customer 对象
+      dim_asset.sql
+      fct_ticket.sql
 
   tests/
-    not_null_customer_id.yml       (数据质量)
+    not_null_customer_id.yml
     unique_customer_id.yml
-
-  macros/
-    pii_mask.sql                   (复用逻辑)
+    referential_asset_to_customer.yml
 ```
 
-dbt 的好处：
-
-- SQL-only（FDE 不用学新语言）
-- 自带 lineage（数据血缘可视化）
-- 自带 testing（uniqueness / not-null / accepted-values）
-- Git 管理 + 代码 review（数据工程也工程化）
+dbt 在这个层面有三个好处直接对应 FDE 的痛点：**SQL-only**（团队不用学新语言）、**自带血缘**（dbt docs serve 能可视化）、**自带测试**（uniqueness / not-null / 引用完整性 / 接受值）。第三个尤其关键——Agent 项目最怕的不是"今天数据错了"，是"今天数据错了但没人知道"。每张主表 3 个 dbt test 起步，是我现在每个项目的默认动作。
 
 ---
 
-## 9.4 数据血缘 / Lineage — 失败定位的命脉
+## 9.4 数据血缘：失败发生时的 5 分钟 vs 5 天
 
-```
-        没有 Lineage 的数据栈：
-        "下游报表错了" → 一个人翻 5 个系统找 3 天
+合昇上线前两周，我们遇到过一次小事故。一个 dbt 模型 `dim_customer` 突然多了一行——某个 customer_id 在 CRM 里被重命名了一次，又被改回来，触发了 stg 层一个 left join 的边界 bug。下游的 Agent prompt 拿到了一条"客户名 = NULL"的数据，给工程师推送了一条莫名其妙的派工建议。
 
-        有 Lineage 的数据栈：
-        "下游报表错了" → 5 分钟看清是哪个上游 ETL 改了 schema
-```
+陈雪在 Slack 群里 @ 我："这个工单为什么派给电气组？" 我从这条工单回查到 Agent 的 prompt，再回查到 prompt 引用的 customer 信息，再回查到 dim_customer 的那一行——这一路下来，因为 dbt 自带 lineage，我用了 4 分钟。
 
-### 工具
+如果没有 lineage——我得分别打开 CRM、ERP、财务系统、Redshift 的 view 定义，一个一个对——保守估计半天。
 
-```
-  开源:
-    - OpenLineage（dbt / Airflow / Spark 都支持）
-    - Marquez（OpenLineage 的 backend）
+这就是为什么"接 lineage" 不是 nice-to-have，是 FDE 第一周该做的动作之一。具体最低要求：
 
-  商业 / 云:
-    - DataHub
-    - Atlan
-    - AWS Glue (有 lineage 视图)
-    - Unity Catalog (Databricks)
-    - Foundry (Palantir)
-```
+- **dbt 项目**：默认就有，跑 `dbt docs generate` + `dbt docs serve` 即可，把链接发给客户和团队
+- **Glue / Airflow 调度的非 dbt 任务**：装 OpenLineage hook，把 lineage 发到 Marquez 或 DataHub
+- **Bedrock Agent 调用 Athena 时**：把 query 和返回的 query_id 写进 CloudWatch Logs，这是 lineage 的最后一公里
 
-### FDE 的最低要求
-
-不要求"全公司血缘"，但**自己做的每个 dbt 模型 / Glue Job 必须接 lineage**：
-
-```
-1. dbt: 自动生成 lineage（dbt docs serve）
-2. Airflow / Glue: 装 OpenLineage hook
-3. 出问题第一步: 查 lineage，找根因
-```
+商业产品（DataHub Cloud、Atlan、Foundry）在合规重的客户那边有意义——它们把 IAM、审计、跨云血缘都打包了。但合昇这种规模，dbt 自带的就够。**别在客户没需求的地方上重型工具**——这是 FDE 一条很无聊但很值钱的判断力。
 
 ---
 
-## 9.5 实时数据管道 — 慎用
+## 9.5 PII 与"上线前最低 5 件事"
 
-### 什么时候真的要实时
+合昇做的是 B2B 工单，PII 看起来不重——但客户数据里仍然有联系人手机号、邮箱、签收人姓名。东南亚有几个国家有数据本地化要求（印尼 PP 71/2019、越南网络安全法），合规这一块我们和顾建国确认过：客户数据不出 ap-southeast-1。
 
-```
-  ✓ 业务流程必须秒级反馈（风控 / 推荐 / 广告竞价）
-  ✓ 决策窗口短（库存 / 价格）
-  ✓ 用户体验感知（在线状态 / 实时通知）
-
-  → 满足 1 条考虑实时
-  → 都不满足 → 用 T+1，省 70% 工程量
-```
-
-### 实时管道的工程坑
+PII 处理我们做了三件事：
 
 ```
-  ❌ 一开始就实时 → 调试地狱
-  ❌ 没有 idempotency → 重放数据出错
-  ❌ Schema 演化没考虑 → 一升级就坏
-  ❌ 没有 dead letter queue → 单条坏数据卡所有
-  ❌ 监控不到 lag → 用户投诉了你才知道
+  1. PII 字段在 Glue Data Catalog 打 LF-Tag: PII=yes
+  2. dev 环境通过 Lake Formation 的 column-level 权限做哈希 mask
+  3. prod 环境只对 Agent 调用的 IAM 角色开放, 走 VPC endpoint 不出网
 ```
 
-### AWS 实操：MSK + Kinesis + Firehose 三件套
+写进 SOW 的是这三句话——非常具体，有 IAM 角色名、有 LF-Tag 名、有 VPC endpoint ID。**SOW 里写的 PII 控制必须是工程上可验证的**，写"严格保护客户隐私" 没用，写"客户数据通过 IAM 角色 `chsj-agent-runtime-role` + LF-Tag `PII=yes` 控制访问，dev 环境字段哈希 mask"才能在审计时拿出证据。
+
+数据工程上线前，FDE 至少要做完这 5 件事——这不是"完整治理体系"，是合昇这种典型 B 端客户的最低门槛：
 
 ```
-        AWS 实时管道典型组合
-        ─────────────────────────────────
-
-  生产端 (Producer)
-    ↓
-  MSK (Managed Kafka) or Kinesis Data Streams
-    ↓
-  消费端选择:
-    A. Lambda 直接处理（小流量）
-    B. Flink on EMR / KDA (大流量 + 复杂逻辑)
-    C. Kinesis Firehose 直接落 S3 / Redshift
-    ↓
-  下游: S3 (Iceberg) / Redshift / OpenSearch
+  1. 每张主表有一个 owner (人 + 邮箱)
+  2. PII 字段全部打 LF-Tag, dev 环境 mask
+  3. Schema 变更走 PR review, 通知下游
+  4. 每张主表至少 3 个 dbt test
+  5. Lineage 接通 (能 5 分钟内回答 "这个数从哪来")
 ```
 
-简单场景用 Firehose（自动 buffer + 压缩 + S3 partition），复杂场景用 Flink。
-
-> **AWS 知识参考**：搜 "Amazon MSK best practices"，"Kinesis Data Firehose"。
+5 件事都不到位 → Agent 上去就是雷区。这话不是吓唬人——我自己在前一个项目少做了第 4 项（dbt test），上线第三周客户那边一个上游库 schema 改了一个字段类型，下游 Agent 静默拿到了空值，三天后业务方看报表才发现。事故之后我把这 5 件事写成了我自己的 checklist，每个新项目用一次。
 
 ---
 
-## 9.6 数据治理的"最低 5 件事"
+## 9.6 把 9.1-9.5 串起来：合昇这一期的实际工程动作
 
-不是"完整数据治理体系"，是 FDE 在客户现场至少要做的 5 件事：
+回到合昇的工单 Agent。第三周到第五周，数据工程的实际时间线长这样：
 
-```
-1. 数据 owner 表
-   每张表 / 每个 dbt 模型有一个 owner（人 + 邮箱）
+**Week 3（数据画像 + Ontology）**
 
-2. PII 标记
-   哪些字段是 PII，必须打 tag，必须 mask 在 dev
+- 周一上午：和陈雪、顾建国画完 5 层数据图
+- 周一下午到周三：和陈雪过 Ontology 的 4 个业务问题，定下 Customer/Asset/Ticket/Engineer 4 个对象
+- 周四到周五：陈雪带客服手工修 customer_id mapping 表（200 多条）；我在 Glue Data Catalog 注册了 Ontology v1 的 4 张表，打 LF-Tags
 
-3. Schema 变更流程
-   增字段：通知 + 文档
-   改字段类型 / 删字段：必须 review + 通知下游
+**Week 4（dbt 模型 + 测试）**
 
-4. 测试覆盖
-   每张主表至少 3 个 dbt test (uniqueness / not-null / referential)
+- 周一周二：写 stg 层（4 个系统的清洗）和 int 层（id mapping + ticket 富化）
+- 周三：写 marts 层的 dim_customer / dim_asset / fct_ticket
+- 周四：3 张主表各加 5-7 个 dbt test（uniqueness / not-null / referential / accepted-values）
+- 周五：跑 dbt docs generate，把 lineage 链接发给客户
 
-5. Lineage 可视化
-   能在 5 分钟内回答"这个数从哪来"
-```
+**Week 5（备件库存 T+1h + Agent 接入）**
 
-**5 件事都不到位 → Agent 上去就是雷区**。
+- 周一周二：备件库存（Excel）走 Glue crawler + Athena，做了一个 4 小时跑一次的 Step Functions 流水线（不是实时）
+- 周三：Bedrock Agent 接 Athena tool，能查 dim_customer + dim_asset + fct_ticket
+- 周四：跑评估集 v1（200 条），发现 dim_customer 那个 left join 的 NULL 问题（9.4 节那次事故）
+- 周五：修完，把对应的 dbt test 加上，重跑评估集到达上线阈值
 
----
-
-## 9.7 一个真实端到端例子
-
-```
-  客户: 某保险公司
-  Agent 任务: 自动核保（投保人风险评估）
-
-  数据需求 (FDE 在 Discovery 摸出来的):
-    - 投保人基础信息（CRM）
-    - 历史理赔记录（理赔系统 Oracle）
-    - 健康告知 PDF (扫描件 + OCR)
-    - 黑名单 (合规系统 SQL Server)
-    - 信用评分 (外部 API)
-
-  → 5 个系统 4 个内部 + 1 个外部
-
-  FDE 的工程方案:
-    Week 1: Glue Data Catalog 注册 4 个内部系统的元数据
-            建 customer Ontology（统一 customer_id mapping）
-    Week 2: 写 dbt models 把 4 个系统的客户数据合并到 customer_360
-            打 LF-Tags（PII 字段 mask）
-    Week 3: Lambda + EventBridge 拉外部 API 信用评分
-    Week 4: Bedrock Agent 调用 Athena 查 customer_360
-            + 调 Lambda 拉信用 + 调 OCR
-    Week 5-6: Eval + 灰度
-
-  关键工程动作:
-    - 没有写"实时" 管道（Discovery 时业务确认 T+4h 可接受）
-    - 用 Glue Data Catalog 做 Ontology（轻量）
-    - 所有 PII 字段在 dev 环境一律 mask
-    - 每个 dbt 模型有 owner + tests
-```
+整个数据工程占了三周。如果第一期备件库存做实时——按我经验至少加两周，而且业务方实际上不需要。
 
 ---
 
-## 关键引用
+## 收尾
 
-> "*The Ontology is the contract between data engineering and the rest of the company.*"
-> — Palantir Blog, *On Ontology*, 2024
+数据工程不是 FDE 项目里最炫的部分——会议室里讲 RAG、Agent、模型对比，业务方会眼睛发亮；讲 Ontology、dbt test、PII 标记，业务方会想刷手机。但**80% 的 Agent 上线事故根因在数据层**——你解决不了 Ontology 的不一致，再好的模型也只是把混乱的数据自信地说错。
 
-> "*Most LLM hallucinations are actually data quality problems wearing a costume.*"
-> — A. Lawrence, *FDE Rule Book*, 2025
-
-> "*If you can't explain where the number came from, the customer can't trust the answer.*"
-> — AWS GenAI Innovation Center, 2025
+我现在每次进客户现场，第一周必做的是画 5 层数据图、和业务方过一次 Ontology、看 PII 现状。这三件事每件 1-2 小时，当周内能做完。做完之后我对这个项目能不能上线、要花多久，心里就大致有数。如果你接手一个数据栈混乱的客户，又被催着第二周就上 Agent demo——那是个红灯，下一章会讲一个相关问题：客户的网络隔离环境下 FDE 的工程动作怎么做。
 
 ---
 
-## 动手清单
+## 本章引用的公开资料
 
-接到一个数据密集型 FDE 项目，第 1-2 周必做：
+- A. Lawrence, *Forward Deployed Engineer Rule Book*（公开 GitHub 文档）
+- Palantir 工程博客 — *Ontology* 系列文章
+- AWS 文档 — *Lake Formation Tag-Based Access Control*、*Glue Data Catalog cross-account*
+- AWS 文档 — *Amazon MSK best practices*、*Kinesis Data Firehose*
+- dbt 官方文档 — *Tests*、*Documentation and Lineage*
+- OpenLineage / Marquez 项目文档
+- 印尼 PP 71/2019、越南网络安全法（数据本地化合规公开资料）
 
-1. **画客户的"5 层数据图"**（9.1 节）
-2. **找出 3 个核心业务对象的 source-of-truth**（customer / order / product）
-3. **建 Glue Data Catalog database**（即使是 PoC）
-4. **每张表打 owner + LF-Tags（PII / region / sensitivity）**
-5. **用 dbt 写 customer_360 之类的统一视图**
-6. **接 OpenLineage**（dbt 自带）
-7. **决定 SLA**：T+1 / T+1h / 实时（默认 T+1，能跑就先 T+1）
-
----
-
-## 反模式清单
-
-- ❌ **跳过 Ontology 直接接 Agent**（Agent 会基于不一致数据自信地说错话）
-- ❌ **5 个系统直连不做统一**（任何上游小变动都崩）
-- ❌ **数据没 owner**（schema 变了没人通知，下游一片崩）
-- ❌ **第一版就上实时管道**（调试成本 10x，不一定值）
-- ❌ **Dev 环境用真实 PII**（合规事故的高发区）
-- ❌ **dbt 项目无 tests**（数据出错只能靠下游投诉知道）
-- ❌ **Lineage 不接**（数据问题排查时间从 5 分钟变 5 天）
-
----
-
-## 与下一章的关系
-
-数据栈有了，但客户大多不让你用云上的"开箱即用"方案 —— 数据要待在客户 VPC / 私有部署 / 离线机房里。下一章讲：在客户网络隔离环境下，FDE 的工程动作怎么做。
-
-[← Part IV 导读](intro.md) · [下一章: 在客户 VPC 工作 →](chapter-10.md)
+[← Part IV 导读](intro.md) · [下一章：在客户 VPC 工作 →](chapter-10.md)
