@@ -4,390 +4,282 @@ parent: "Part VII — 交接与持续"
 nav_order: 1
 ---
 
-# Chapter 16: Handoff + 模式提取 — 把方案抽象成可复用资产
+# 第 16 章 项目交接
 
-## 开场
+苏州合昇精密重工，海外业务部，二期 GA 后第 11 周。
 
-```
-某 FDE 完成了一个 12 周的 Agent 项目，技术上很成功。
+二期那个备件下单 + 跨站点协调的 agent 已经稳跑了两个半月。Bedrock Agent 跑在 ap-southeast-1，14 个工具有 12 个是合昇专属（Ch14），3 个外部 SaaS 走 stateful MCP 接 AgentCore（Ch15）。Eval-v3 200 条样本，每周 CI 跑一次，过线 92%。一期那个 Haiku 分诊器还在跑，给二期当兜底——Ch6 那张 A4 上签的字，整整一年都守住了。
 
-3 个月后，客户运维找她："那个 prompt 我们想改，怎么改？"
-她飞过去，2 小时改完。
+周明远在周会上提了一句:"FDE 的合同十二月底到期，明年我们想把这套东西自己接走。"陈雪和顾建国都在场,没人接话——但这句话其实是合昇这边对一期+二期项目的期末考。
 
-6 个月后，客户："Agent 答错率上升了，您看看"
-她飞过去，1 天 debug。
-
-9 个月后，客户："我们想再加一个 use case"
-她飞过去，打开自己的旧代码，发现自己也有点忘了。
-
-FDE 的同事接到一个新客户的相似项目，跑过来问她：
-  "这个怎么做来着？"
-她回答："你看我之前的代码 ...
-        但每个客户都不一样，重新做一遍吧。"
-
-她公司的 CEO 看到第三个客户的报价，
-问她："为什么我们 3 个相似项目都报 12 周？应该 4 周才对。"
-
-她答不上来。
-
-这一章讲两件事：
-  1. Handoff — 让客户真正接走（你不再被电话叫飞过去）
-  2. 模式提取 — 让下一个相似项目 4 周做完
-```
+我接下来的八周就是这个考试的答卷。
 
 ---
 
-## 16.1 Handoff 的工程定义
+## 16.1 Handoff 不是上线后那个 Demo
+
+很多 FDE 的项目交接都做错同一件事：把 handoff 安排在上线之后，作为收尾仪式。客户运维拉个会、FDE 念一遍 PPT、签个验收单、合同结束。三个月后客户运维改个 prompt 改不动，打电话回来问，FDE 又飞过去。
+
+这不是交接，是 FDE 把项目当成了自己的项目。
+
+Handoff 的工程定义只有一句：**客户能在没你的情况下独立运营这个系统**。这句话拆成四个可观察的能力：
 
 ```
-        Handoff = "客户能在没你的情况下独立运营这个系统"
+        Handoff 是否真完成,看四件事:
 
-        判断标准 (4 个能力):
-        ──────────────────────────────────────
+  1. 客户能独立改一次配置并部署
+     —— prompt / KB 数据 / model id 任改一项, 灰度上线
 
-  1. 客户能独立 deploy 一次 hot fix
-     (改 prompt / 改 KB / 改 model id)
+  2. 客户能独立读 trace 找根因
+     —— 准确率掉了, 不是先打电话给我
 
-  2. 客户能独立读 dashboard 找根因
-     (没有 trace 你帮他看)
-
-  3. 客户能独立跑一次 Eval
-     (升级模型前不再依赖你)
+  3. 客户能独立跑一次 eval
+     —— 升级模型 / 改 prompt 之前先有数
 
   4. 客户能独立处理 Top 5 故障类型
-     (而不是 P1 就打电话给你)
+     —— P1 故障 5 分钟止血, 不是先 escalate
 ```
 
-**4 个全部达到 → 真 handoff。少 1 个 = 项目还没交付完**。
+四个能力都到位才算 handoff 完成。少一个，下个季度还是会被电话叫回来。
+
+这四件事都不是"上线后教一下"能教会的，它们是项目从一开始就要按"将来给客户接走"来设计的。Discovery 阶段的访谈对象里就要有客户接手人，Scaffolding 阶段的代码风格就要照客户能维护的写，Production 阶段的告警就要发到客户的 oncall 群——不是发到我自己的 Slack。Handoff 是设计，不是收尾事件。
+
+我在合昇做这件事的方式是给自己倒推八周。GA 那一刻起就开始 handoff 倒计时，每周一个里程碑，最后一周客户主导、我后排。
 
 ---
 
-## 16.2 Handoff 的"3 周倒计时"
+## 16.2 八周倒计时
 
-不是上线那一刻才开始 handoff，是上线前 3 周开始：
+倒计时的起点是一份很简单的清单——客户接手人是谁、能力差距在哪、八周里每周补哪一块。
+
+合昇这边的接手人在 GA 之前就已经定了：
+
+- **王磊**，IT 主管顾建国手下的运维，5 年 AWS 经验，Python 能写但不深。负责 D1（Bedrock 配置 / VPC endpoint / IAM policy）。
+- **沈佳**，售后业务系统的产品经理，陈雪的下属，Python 入门级别。负责 D2-D4（prompt / KB 维护 / agent 编排逻辑）。
+- **张伟**，海外服务工程师转的内部数据分析，会写 SQL 不写代码。负责 D5（eval 跑 / dashboard 看 / 故障复盘）。
+
+三个人的画像决定了我要补的能力差距：王磊不需要补 AWS，要补 Bedrock 特定的坑；沈佳要补的是"如何安全地改 prompt"——不是 prompt 工程，是改完之后怎么通过 eval 验证再发布；张伟要补的是 trace 怎么读、CloudWatch Logs Insights 怎么写查询。
+
+这三份能力差距不是我猜的，是 GA 后第二周我让三个人各自做了一次"如果我现在接手"的脱手演练。给定一个真实告警（错误率从基线 0.4% 涨到 1.2%），让他们独立 30 分钟操作。结果：
+
+- 王磊找到了 Bedrock 服务状态页，但没意识到 cross-region inference profile 出问题时要看的是另一个 region 的 health。
+- 沈佳改对了 prompt，但没跑 eval 就直接在生产灰度。
+- 张伟从 dashboard 翻到了 trace，但读不懂 tool call 的 input/output JSON 结构。
+
+这三个具体的"卡点"就是接下来八周培训的目标。**Handoff 不是讲完就行，是练完那个具体卡点能过**。
+
+倒计时从这里开始：
 
 ```
-        T-3 周 ───── T-2 周 ───── T-1 周 ───── T 上线 ───── T+4 周
-        ──────       ──────       ──────       ───────     ──────
-
-        计划         培训         影子         独立         FDE 退出
-        启动         + 文档       运营         运营
-
-  T-3   ✓ 找客户运维 owner (人 + 邮箱 + 排班)
-        ✓ 写 Runbook 大纲
-        ✓ Dashboard 给客户访问
-
-  T-2   ✓ 4 小时培训 (Runbook + dashboard + Eval)
-        ✓ 让客户 owner 操作一次每个动作
-        ✓ Q&A
-
-  T-1   ✓ 客户 owner 跟着 FDE 一起处理所有事情
-        ✓ FDE 不主动操作，只 review 客户操作
-        ✓ 一周末客户 owner 写一份 "我学到的"
-
-  T     上线 + 灰度
-        ✓ 客户 owner 主导, FDE 后排
-
-  T+4   FDE 完全撤离
-        ✓ 仍 on-call 但不主动看
-        ✓ 客户每周报告自己的运营状态
+  T-8   能力评估 + 培训计划锁定
+  T-7   Runbook 初稿 + dashboard 全员开权限
+  T-6   王磊主导一次 prompt 灰度发布 (我在旁)
+  T-5   沈佳主导一次 KB 增量更新 + eval 重跑
+  T-4   张伟主导一次故障复盘 (用上周一个真实告警)
+  T-3   三人合作处理一次模拟故障 (我注入一个错误)
+  T-2   三人独立处理一次真实告警 (我不出现, 事后 review)
+  T-1   全员 pair: 我和他们三人一对一各坐半天, 看完整工作流
+  T     合同结束。我转 on-call, 4 周后完全撤离
 ```
+
+T-3 那次模拟故障是关键节点。如果三人合作还过不去，handoff 不能按期收尾——这一点我和周明远第一周就讲清楚了，把"handoff 准入门槛"写在了 SOW 修订条款里。
 
 ---
 
-## 16.3 Runbook — 给客户的"操作手册"
+## 16.3 Runbook 不是文档,是练习册
 
-Runbook 不是文档，是**可操作的指令清单**。
+Runbook 写出来不是给客户备查的，是给客户照着做的。两者的区别在于：备查文档可以"完整"——把所有可能性都列出来；练习册必须"够用"——每一条都对应一个具体的运营动作，每一条都被客户至少操作过一次。
+
+合昇这次的 Runbook 我分成 6 节：
 
 ```
-        Runbook 必备的 7 个 section
-        ─────────────────────────────────────
-
-  1. 系统架构图 (一页 A4)
-  2. 部署 / 回滚步骤 (命令 / 截图)
-  3. Top 10 故障类型 + 处理 SOP
-  4. Eval 怎么跑 + 阈值含义
-  5. 关键配置在哪 + 怎么改
-  6. 数据 / KB 更新 SOP
-  7. Escalation 路径 (什么情况打谁电话)
+  1. 系统架构图 (一页, 标清楚每个组件部署在哪个账号 / region / VPC)
+  2. 部署 + 回滚 SOP (命令级, 每一行都能复制粘贴)
+  3. Top 10 故障 + 处理流程
+  4. Eval 触发条件 + 跑法 + 阈值含义
+  5. 配置项清单 (哪些值在哪个文件, 改了之后要做什么)
+  6. Escalation 路径 (什么情况找谁, 含 AWS support 等级和联系方式)
 ```
 
-### Runbook 的 SOP 范例
+第 3 节 Top 10 故障是 Runbook 的"主体"。这 10 条不是想象出来的，是从 Production 阶段那 11 周客户事件里挑的真实案例。每一条按下面这个格式写，长度控制在一屏内：
 
 ```
 ═══════════════════════════════════════════════════════════════════
-  SOP-001: Agent 错误率突然上升
+  SOP-003: Agent 工具调用率突然下降
 ═══════════════════════════════════════════════════════════════════
 
-  现象: dashboard 显示错误率 > 1% (基线 0.3%)
+  现象: dashboard "tool_call_count_per_session" 从基线 3.2 掉到 1.1
+        通常伴随 "agent_returned_text_only" 比例上升
 
-  Step 1: 检查 Bedrock 服务状态
-    - 打开 https://health.aws.amazon.com
-    - 看 us-east-1 Bedrock service health
-    - 如果 AWS 故障 → 等 + 通知用户
+  Step 1: 看 Bedrock 模型可用性
+    控制台 → Bedrock → Cross-region inference → us.anthropic.claude-haiku-4-5
+    如果显示 throttled → 走 Step 2
+    如果正常 → 走 Step 3
 
-  Step 2: 检查最近 commit
-    - GitLab → main 分支 last 5 commits
-    - 是否有 prompt / KB / model 变更
-    - 如有 → 走 Step 3 (rollback)
+  Step 2: 切到 fallback inference profile
+    在 Parameter Store 里把 ACTIVE_PROFILE 改成 FALLBACK_PROFILE
+    路径: /合昇/agent/active_profile
+    生效时间: < 1 分钟 (Lambda 下次冷启读取)
 
-  Step 3: Rollback
-    - 命令: ./scripts/rollback.sh prod --target-version=$LAST_GOOD
-    - 等 5 分钟看 dashboard
-    - 错误率回到基线 → 完成
-    - 没回到 → 走 Step 4
+  Step 3: 看 agent trace
+    CloudWatch Logs Insights:
+      filter @logStream like /agent-orchestrator/
+      | filter @message like /tool_selection/
+      | stats count() by tool_name, action
+    如果 "no_tool_selected" 占比 > 30% → 走 Step 4
 
-  Step 4: 联系 FDE on-call
-    - Slack: @fde-oncall
-    - 电话: +XX-XXX-XXXX (24h)
+  Step 4: 检查 prompt
+    git log --oneline -5 -- prompts/
+    最近 3 commit 是否动过 system prompt
+    动过 → ./scripts/rollback.sh prod --to-prev
+    没动 → escalate (Step 6)
 
-  Step 5: 写故障报告
-    - 模板: docs/incident-template.md
-    - 24 小时内提交
+  Step 5: 跑 eval-v3 验证恢复
+    ./scripts/run_eval.sh prod --suite=v3
+    通过率回到 > 90% → 写故障报告
+    通过率仍 < 90% → escalate
+
+  Step 6: Escalate
+    Slack: #合昇-fde-oncall
+    紧急 (P1): 周明远 + 王磊电话
+    AWS Support: Business 等级, case + Bedrock 标签
 ═══════════════════════════════════════════════════════════════════
 ```
 
-**好的 Runbook 让客户 P1 故障 5 分钟止血**。
+写 Runbook 我有一个原则：**每个 SOP 写完之后让客户接手人不看我演示，自己照着做一遍**。能照着跑通的就留下，跑不通的回去改文档。这一遍下来 10 条 SOP 起码改三遍。
+
+第 4 节 eval 这一节比看起来重要。客户接手之后最容易做错的事是"改了 prompt 直接发"——不是因为他们不想跑 eval，是因为 eval 的运行成本（时间 / token / 心智）不低，遇到紧急修复时第一反应就是绕过。所以 Runbook 里 eval 这一节的开头第一句话就是："任何 prompt / KB / model id 的变更，灰度发布前必须跑 eval-v3，**没有例外**。如果是 P1 紧急修复，跑 eval-v3-smoke（30 条快速集，5 分钟）。"
+
+这一句话和上面那段 SOP-003 的 Step 5 是配合的。Runbook 写到这种密度，客户才会照着做。
 
 ---
 
-## 16.4 培训 — 4 小时课程
+## 16.4 评估集和 Runbook 必须能独立运行
 
-```
-        Handoff 培训 4 小时议程
-        ─────────────────────────────────────
+这一条是我自己学到代价最大的一课。
 
-  Hour 1: 系统架构 + 业务流
-    ├── 数据从哪来到哪去 (15 min)
-    ├── Agent 的工具集和能力边界 (15 min)
-    ├── Eval 是干嘛的 (15 min)
-    └── 监控仪表盘逐项讲 (15 min)
+我之前一个项目做了 16 周，handoff 时也写了 Runbook、也交了 eval 集，文档自认为完整。半年后客户工程师跑 eval，跑不起来——脚本依赖一个我本地装的 conda 环境，docker 镜像里没有；数据集里有几条 fixture 引用了一个我自己 S3 桶上的文件，权限早过期了；Runbook 里有一句"按照 6.2 节的步骤"——6.2 节其实是我笔记本里的另一份文档，从来没合并进交付。
 
-  Hour 2: 日常运营
-    ├── 怎么看 dashboard (实操) (20 min)
-    ├── 怎么跑 Eval (实操) (20 min)
-    └── 怎么改 prompt + 灰度 (实操) (20 min)
+那次客户后来花了三周才把环境跑通。我也是从那次开始把"独立运行"当成 handoff 的硬指标。
 
-  Hour 3: 故障处理
-    ├── Top 10 故障演练 (动手) (40 min)
-    └── Rollback 演练 (实操) (20 min)
+具体做法是 T-4 那一周做一次"sandbox 演练"：
 
-  Hour 4: 数据 / KB 维护 + Q&A
-    ├── KB 更新 SOP (实操) (30 min)
-    └── Q&A (30 min)
-```
+1. 在客户账号下另开一个全新的 AWS account（不是 region，是 account）。
+2. 给王磊一份 git clone 命令、一份 README、一份 Runbook，**只给这些**。
+3. 让他从零开始把整个系统部署起来，跑通一次 eval，发布一次 prompt 改动。
+4. 我坐在他旁边但不指导，只记录他卡在哪一步、文档里哪一句话不准。
 
-**关键**：每个环节都要客户**亲手操作**，不是看 FDE 演示。
+合昇这次跑下来王磊用了一天半，卡了 11 个点。其中最严重的两个：
+
+- IaC 里有一个 Bedrock model access 的状态依赖。新账号下 model access 默认是关的，但我们的 CDK 没有自动开启逻辑（开通必须人工在控制台点）。Runbook 里这一步写了，但写在第 5 节"配置项清单"里，王磊按部署顺序读没读到。改：把这一句挪到第 2 节"部署 SOP"的 Step 1。
+- Eval 的 golden set 里有一个客户邮箱字段被脱敏了（合规要求），但脱敏脚本是我手工跑的，没进 IaC。新账号下 eval 一跑就报错"邮箱格式不合法"。改：把脱敏脚本写进 CDK 的 custom resource，部署时自动跑一次。
+
+这 11 个点改完，再让张伟从零跑一遍——这一次 4 小时跑通。
+
+**评估集和 Runbook 必须能独立运行**——这句话的判断标准是 sandbox 演练能 pass。判断标准不是文档完整、不是流程齐全，是真的从零跑通过。
 
 ---
 
-## 16.5 模式提取 — 让下一个项目快 5 倍
+## 16.5 最后一周的 Pair
 
-### 什么是"模式提取"
+T-1 那一周我做了一件事：和三个人一对一各坐半天，从早到晚一起处理他们这一周收到的所有真实工作。
 
-每个项目结束时，问 4 个问题：
+不是培训，不是演示，是 pair。我在旁边看，他们正常工作，遇到他们卡住的地方我才说话——而且不是直接给答案，是反问"你刚才看了哪几个数据，你觉得现在该看什么"。
 
-```
-  Q1: 这个项目里哪些工作"换个客户也基本一样"？
-       → 这是可复用资产
+这一周的设计是从我看 Conikeec 的 *FDE Playbook* 学来的。他描述 Palantir handoff 的最后一周时用了一个词叫 "shadowing in reverse"——前面六周 FDE 让客户跟着 FDE 做，最后一周 FDE 跟着客户做。这个反向 shadowing 是 handoff 是否真生效的最后一道实测。
 
-  Q2: 哪些工作"花了大量时间但下次能避免"？
-       → 这是工程模板的来源
+合昇这一周里最有价值的发现是沈佳的工作流：她改 prompt 时其实不是改我写的那一段 system prompt，而是改 KB 里那份"业务术语表"。我之前没意识到合昇运营人员的心智模型里"prompt"和"KB 文档"是同一回事——他们认为只要让 agent "看到"正确的描述，agent 就会按描述行动。这个心智模型不算错，但它意味着我的 Runbook 里 KB 维护那一节的优先级要拔高，prompt 那一节反而可以简化。
 
-  Q3: 哪些"客户特有的"实际上很多客户都有？
-       → 这是行业模板的来源
+T-1 那一周我重写了 Runbook 的第 5 节（配置项清单），把 KB 文档的版本控制和 prompt 等同对待——所有 KB 改动也走 git commit + eval + 灰度。沈佳后面的工作就照这个路径走。
 
-  Q4: 哪些"我以为简单实际很难"？
-       → 这是预警卡片的来源
-```
-
-### 模式提取产出 — 4 类资产
-
-```
-        FDE 的"项目后资产库"
-        ───────────────────────────────────
-
-  1. 代码模板
-     - LLM RAG 起手包
-     - Bedrock Agent 起手包
-     - Eval CI 起手包
-     - Lambda MCP server 起手包
-
-  2. 文档模板
-     - Discovery 报告模板（Ch 4）
-     - SOW 模板（Ch 5）
-     - Runbook 模板（本章）
-     - 验收标准模板
-
-  3. 决策卡片
-     - "客户问这个 → 答这个" 速记
-     - "出现这个信号 → 切到这种解法"
-     - "这种问题先做这 3 件事"
-
-  4. 反模式案例集
-     - 真实故障复盘
-     - 错误代价 + 教训
-```
-
-### 模板"颗粒度" 经验
-
-```
-  ❌ 太粗: "Bedrock 起手模板"
-     → 一上来还是要大改
-
-  ✓ 适中: "Bedrock + Knowledge Bases + Aurora pgvector
-           VPC 部署 + IAM Identity Center 起手模板"
-     → 客户 80% 用例直接用
-
-  ❌ 太细: "招商银行私有云 RAG 起手模板"
-     → 颗粒度过细只能用一次
-```
+如果没有那一周的 pair，这条心智模型差异我永远看不见。Runbook 会按我以为的"prompt 第一、KB 第二"写，沈佳照着做但效率低、容易出错——三个月后就变成"客户没好好用工具"。其实是工具的形状没适配客户。
 
 ---
 
-## 16.6 模式提取的工程动作
+## 16.6 Phase 2 边界
 
-每个项目结束 1 周内做 5 件事：
+合同到期那天周明远问我："二期之后呢，明年我们想做销售 agent 接 Salesforce，你们公司还能继续吗？"
 
-```
-  1. 写 1 页 "项目复盘"
-     - 我们做了什么
-     - 哪些做对了 / 做错了
-     - 数字 (outcome / Eval / 成本 / 时间)
+这个问题不是 handoff 的问题，是商业问题——但它是 handoff 阶段必须答的，因为答案影响 handoff 的边界。
 
-  2. Code review 自己整个项目
-     - 哪些代码块"显然能复用"
-     - 抽出来放公司 internal repo
+我的判断是：合昇这一期的 handoff 完成意味着合昇能独立运营**当前这个系统**，不意味着合昇能独立做下一期。下一期是新项目，要重新做 Discovery、重新对齐 outcome、重新签 SOW。Handoff 不能滑成"反正我们以后有事还能问你"——那不是 handoff，是工程师变成兼职顾问。
 
-  3. 抽 3 个"决策瞬间"
-     - 那个时刻你判断了什么 → 写成卡片
+我和周明远那次对话定了三件事：
 
-  4. 抽 1-2 个"如果重来要怎么做"
-     - 写成"项目模板 v X+1"
+1. **当前系统的 on-call**。合同结束后我有 8 周的 on-call 期，P1 故障 4 小时响应，P2 24 小时。8 周后完全撤离，再有事走商务。
+2. **下一期的 Discovery**。如果合昇明年想做销售 agent，我们公司可以接，但要重新走 Ch4 那一套 Discovery，从一周工位 shadowing 开始。不是把当前这个 agent "扩展一下"。
+3. **代码 IP**。合昇这套系统的代码、prompt、eval 集、Runbook 全部归合昇。我们公司只保留"经验"（Ch16.7 讲的模式提取），不保留代码。
 
-  5. 跟同事开 1 小时 brown-bag
-     - 不是炫耀成功，是讲"你不知道的坑"
-```
+第 1 条是 handoff 的硬边界——8 周内是"延长保修"，8 周之后客户的事就是客户的事。第 2 条是"防止下一期被拖成无偿延期"。第 3 条是合规上的事，但它也是工程上的事——客户接手之后能改任何东西，不需要回来问我们。
+
+这三件事写进了一份"Handoff 完成确认书"，三个签字栏：周明远、陈雪、顾建国。这份纸的作用和 Ch6 那张 A4 一样，是后面所有"这事算谁的"对话的护身符。
 
 ---
 
-## 16.7 行业模板 — 一个例子
+## 16.7 项目复盘和经验提取
+
+合同结束那一周我没立刻进下一个项目，留了五天做复盘。
+
+复盘不是写 PPT，是回答四个问题：
 
 ```
-  行业: 保险公司
-  模板: "保险 RAG/Agent 起手包 v3.2"
+  Q1: 合昇这次哪些工作"换个客户也基本一样"?
+       → 这是模板的来源
 
-  内容:
-  ├── 行业知识
-  │   ├── 保险公司组织架构常见样
-  │   ├── 核保 / 理赔 / 销售 三条主流
-  │   ├── 通用监管要求 (银保监 / 等保)
-  │   └── 通用数据栈 (核心 + ECIF + 渠道 + 风控)
-  │
-  ├── 通用 Discovery 模板
-  │   ├── 12 个保险特有的问题
-  │   └── 5 类关键产出物清单
-  │
-  ├── 代码模板
-  │   ├── 保单条款分片 (PDF + 表格)
-  │   ├── 客户身份匹配 (ID 卡 / 客户号 / 保单号 mapping)
-  │   ├── Bedrock + Aurora pgvector + KMS 部署 IaC
-  │   └── 等保审计日志规范
-  │
-  ├── Eval 模板
-  │   ├── 保险问答 200 条 golden
-  │   ├── 安全性 50 条 (PII / 不当承诺)
-  │   └── 业务专家校准流程
-  │
-  └── Handoff 模板
-      ├── 保险公司运维交接 SOP
-      └── 监管检查应答模板
+  Q2: 哪些工作"花了大量时间但下次能省"?
+       → 这是工具 / 脚手架的来源
+
+  Q3: 哪些"我以为简单实际很难"?
+       → 这是预警的来源, 下次 Discovery 阶段就要问
+
+  Q4: 哪些"我做错了但客户没追究"?
+       → 这是最贵的一类经验
 ```
 
-**新 FDE 接保险客户**：用 v3.2 起步，第 4 周客户已经看到 demo。
+合昇这次我抽出来的东西：
+
+**Q1 的产物（模板类）**：制造业海外服务的 Discovery 问卷（Ch4 那 28 个问题，我加了 5 个海外特有的——时区、跨区数据合规、母语 vs 工作语言）；Bedrock Agent + AgentCore stateful MCP 的 IaC 起手（CDK，500 行，剥离了合昇业务专属逻辑）；Eval CI 起手（GitHub Actions + bedrock-runtime + 三档 smoke/full/regression）。
+
+**Q2 的产物（脚手架类）**：MCP server 健康检查脚本（Ch15 那次 OAuth token 过期事件直接催生的）；Bedrock cross-region inference profile 自动切换的 Lambda 模板（Ch13 那次 region 抖动事件直接催生的）；Runbook 的 Markdown + Mermaid 模板（10 个 SOP 的标准格式）。
+
+**Q3 的产物（预警类）**：客户运维心智模型差异（16.5 那个 prompt vs KB 的发现）写成一张卡片"问下面三个问题判断客户怎么理解 prompt"；客户接手人能力评估（16.2 那个脱手演练）写成一张可复用的 30 分钟测试清单。
+
+**Q4 的产物（最贵的一类）**：合昇一期的 eval-v0 标注我让陈雪一个人做（Ch6 末尾那次坑），到二期才补成双盲。这件事如果换个不那么宽容的客户，一期就翻车了。我把它写成一张"Discovery 阶段必须做的 5 件事"卡片，第一条就是"eval 标注从第一天起双盲"。
+
+这些产物我不是放进自己的 Notion，是合并进公司的内部 wiki。每条都标了来源（合昇一期 Ch6 / 二期 Ch14 / Handoff Ch16）和它解决的问题。下一个 FDE 接保险或制造业海外服务的项目时，这些是他们的起点——不是从零，是从合昇这一年的经验上接着走。
+
+Nabeel Qureshi 在 *Reflections on Palantir* 里讲 Palantir 的 FDE 文化时有一段是这样：每个项目结束，FDE 都要做一次内部分享，主题不是"我们赢了"，是"我们这次最贵的教训是什么"。这个文化在 AI 应用 FDE 这边也成立——讲赢的项目同事听了点头，讲坑的项目同事听了避坑。**最值钱的不是成功经验，是写得清楚的失败**。
 
 ---
 
-## 16.8 公司层面的模式管理
+## 这一章踩过的坑
 
-模式提取不是个人行为，公司应该有结构化沉淀：
+这一章主要讲合昇这次做对的事。但 handoff 这件事我前面几个项目踩的坑也值得记一下：
 
-```
-        FDE 团队的"知识中心" 结构
-        ─────────────────────────────────
+第一次做 handoff，我把它放在上线之后两周。结果上线那两周客户运维忙着配合上线、根本没空培训，培训挪到第三周时上线已经稳了，客户的紧迫感没了，培训质量差。**Handoff 倒计时必须从 Production 阶段的某个早期里程碑就开始，不是上线之后**。合昇这次我从 GA 那一刻就启动，是吃过那个亏。
 
-  公司 Wiki:
-    /fde-knowledge/
-      patterns/                (跨行业)
-        rag-starter/
-        agent-starter/
-        eval-ci-starter/
-      industries/              (行业)
-        insurance/
-        finance/
-        retail/
-        manufacturing/
-      anti-patterns/           (反例)
-        2025-Q3-incidents.md
-        ...
-      decision-cards/          (决策卡片)
-      tools/                   (内部工具)
+第二次，我写了一份 80 页的 Runbook，自认为完整。客户接手三个月后告诉我：他们从来没读完过，每次出事都是 ctrl-F 搜关键词。**Runbook 的长度不是质量指标，可执行的密度才是**。合昇这次 Runbook 控制在 22 页，每个 SOP 一屏内。
 
-  Code Repo:
-    fde-platform/
-      starter-kits/
-      common-lambdas/
-      shared-prompts/
-      eval-suites/
-```
+第三次，handoff 那一周我教得太多——把所有"以后可能会用到的知识"都讲了。客户工程师最后跟我说："你讲的我都点头，但回去就忘了"。**Handoff 教的不是知识，是肌肉记忆**。合昇这次我只让三个人各自练 1-2 件事，但每件事练到 4 遍以上。
 
-**FDE 老手 vs 新手的差距 80% 在这个知识中心的厚度**。
+第四次（这次没踩，但差点踩），合昇 T-3 那次模拟故障三人合作处理用了 50 分钟才搞定，比我预期的 20 分钟慢。当时我有冲动说"差不多了，handoff 按时收尾"。但我对照 16.1 那四个能力——独立处理 Top 5 故障类型——50 分钟止血和 20 分钟止血的差距，是客户业务真在线时几十分钟损失的差距。我多给了一周，T-2 那次他们 18 分钟搞定。**Handoff 准入门槛不能在最后一刻放水**。如果当时放水，三个月后那条故障真发生时客户会用 50 分钟止血，我会被叫回来。
 
 ---
 
-## 关键引用
+## 下一章
 
-> "*Handoff is not a milestone — it's a 4-week process you start 3 weeks before launch.*"
-> — A. Lawrence, *FDE Rule Book*, 2025
+合昇这个项目走到这里，从 Discovery 到 Handoff 全流程闭环。我从 Ch4 走到 Ch16 用了一年，写下来的是这一年的具体动作和判断。
 
-> "*The second project on a customer should take 1/3 the time of the first.*"
-> — Bob McGrew @ YC, 2025
-
-> "*Pattern extraction is the difference between a consultant and an engineer.*"
-> — AWS GenAI Innovation Center, 2025
+但 FDE 这个职业不是一个项目接一个项目地堆经验——堆经验只能让你做"更多"项目，不能让你做"不一样的"项目。下一章讲 FDE 自身的长期成长：怎么从工程深度往上加行业纵深，怎么避免在第三个、第五个相似项目时变成"高级实施工程师"。
 
 ---
 
-## 动手清单
+## 本章引用的公开资料
 
-项目最后 4 周必做：
+- A. Lawrence, *Forward Deployed Engineer Rule Book* (2025) — Handoff 是设计而非事件的判断框架
+- Conikeec, *The FDE Playbook: A Practitioner's Field Manual* (2025, Substack) — "Shadowing in reverse" 这个最后一周 pair 的提法
+- Nabeel Qureshi, *Reflections on Palantir* — Palantir FDE 项目复盘文化"讲坑不讲赢"的来源
 
-1. **T-3 周开始 Handoff 倒计时**（16.2 节）
-2. **写 Runbook 7 sections**（16.3 节）
-3. **客户运维 4 小时培训**（亲手操作）
-4. **客户 owner 影子运营 1 周**
-5. **项目结束 1 周内写复盘 + 抽 3 个决策卡片**
-6. **抽公司内部能复用的代码 / 文档 / 配置**
-7. **跟同事 brown-bag 1 小时**（讲坑而不是讲赢）
-
----
-
-## 反模式清单
-
-- ❌ **上线那一周才想起 Handoff**（来不及培训）
-- ❌ **Runbook 写成"功能文档"**（不是可操作 SOP）
-- ❌ **培训只有 PPT 没有动手**（客户记不住）
-- ❌ **客户运维 P1 就打电话给 FDE**（4 个能力没培训到位）
-- ❌ **项目结束就下一个，不复盘**（每个项目都从零）
-- ❌ **模式只在自己脑袋里**（同事不知道，公司不知道）
-- ❌ **复盘只讲赢**（最值钱的是讲坑）
-
----
-
-## 与下一章的关系
-
-到这里，从 Discovery → Scaffolding → 生产 → Handoff → 模式提取的全流程闭环。
-
-最后一章讲：FDE 自身的能力如何长期成长 —— 不是技术追新，而是**T 字成长**：工程深度 + 行业纵深的双向加深。
+完整书目和链接见全书末尾的 *参考文献*。
 
 [← Part VII 导读](intro.md) · [下一章: T 字成长 →](chapter-17.md)
