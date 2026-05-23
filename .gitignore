@@ -1,4 +1,7 @@
 book/
+site/zh/book/
+site/en/book/
+_site/
 .DS_Store
 *.swp
 /tmp/fdebook-*-combined.md

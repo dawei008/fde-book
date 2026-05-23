@@ -1,0 +1,28 @@
+[book]
+title = "OpenBook · Forward Deployed Engineer — AI 应用的落地工程学"
+authors = ["dawei008"]
+language = "zh"
+multilingual = false
+src = "src"
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/dawei008/fde-book"
+edit-url-template = "https://github.com/dawei008/fde-book/edit/main/{path}"
+site-url = "/fde-book/"
+mathjax-support = false
+copy-fonts = true
+additional-css = ["theme/cjk.css"]
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.search]
+enable = true
+limit-results = 30
+use-boolean-and = true
+
+[output.html.print]
+enable = true
