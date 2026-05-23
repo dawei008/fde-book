@@ -1,3 +1,9 @@
+---
+title: "appendix/appendix-b.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Appendix B: Model / Framework / Platform Comparison Matrix
 
 > Appendix A is a "breadth cheat sheet"; this appendix is a "depth comparison." When you need to make a serious decision inside one tool category, look here.

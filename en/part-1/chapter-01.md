@@ -1,3 +1,9 @@
+---
+title: "part-1/chapter-01.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 1: The FDE Workflow — A Real Week, A Real Quarter
 
 ## Opening

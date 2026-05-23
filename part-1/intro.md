@@ -1,3 +1,9 @@
+---
+title: "Part I — 角色与心智"
+nav_order: 11
+has_children: true
+---
+
 # Part I: 起手 — 理解 FDE 工程的形状
 
 > 适用范围：通用 / 两条主线起点

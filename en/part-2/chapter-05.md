@@ -1,3 +1,9 @@
+---
+title: "part-2/chapter-05.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 5: From Requirements to Acceptance — Eval Set / Acceptance Criteria / SOW
 
 ## Opening

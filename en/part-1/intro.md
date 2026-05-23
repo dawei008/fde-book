@@ -1,3 +1,9 @@
+---
+title: "part-1/intro.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Part I: Getting Started — The Shape of FDE Engineering
 
 > Scope: General / starting point for both tracks

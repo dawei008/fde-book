@@ -1,3 +1,9 @@
+---
+title: "part-4/intro.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Part IV: Data & Integration — Inside Real Customer Environments
 
 > Applies to: **field-delivery track** (data / integration / VPC / compliance). The LLM-application track must also read all of this whenever real customer data is involved.

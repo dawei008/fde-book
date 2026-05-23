@@ -1,3 +1,9 @@
+---
+title: "part-5/intro.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Part V: PoC → Production — Crossing the Hardest Gap
 
 > Applies to: Both tracks (both main lines have to clear this gap)

@@ -1,3 +1,9 @@
+---
+title: "part-3/chapter-07.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 7: Decision Tree — RAG / Fine-tune / Prompting / Agent
 
 ## Opening

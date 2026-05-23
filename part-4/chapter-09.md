@@ -1,3 +1,9 @@
+---
+title: "第 9 章 数据工程"
+parent: "Part IV — 工程化落地"
+nav_order: 1
+---
+
 # Chapter 9: 客户数据栈 — Ontology / ETL / 实时管道
 
 ## 开场

@@ -1,3 +1,9 @@
+---
+title: "第 10 章 Scaffolding 与开发循环"
+parent: "Part IV — 工程化落地"
+nav_order: 2
+---
+
 # Chapter 10: 在客户 VPC / 私有部署 / 离线机房工作
 
 ## 开场

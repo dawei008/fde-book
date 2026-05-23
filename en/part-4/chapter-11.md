@@ -1,3 +1,9 @@
+---
+title: "part-4/chapter-11.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 11: Integrating with Legacy Systems — SSO / SCIM / API / Audit
 
 ## Opening

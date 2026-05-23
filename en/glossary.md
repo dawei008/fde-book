@@ -1,3 +1,9 @@
+---
+title: "en/glossary.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Glossary
 
 > Alphabetical order. Source pages in [bibliography.md](bibliography.md).

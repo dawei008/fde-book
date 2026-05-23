@@ -1,3 +1,9 @@
+---
+title: "第 8 章 评估先于代码"
+parent: "Part III — 技术选型"
+nav_order: 3
+---
+
 # Chapter 8: 先 Eval 再开发 — 实操指南
 
 ## 开场

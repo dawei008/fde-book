@@ -1,3 +1,9 @@
+---
+title: "part-7/chapter-16.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 16: Handoff + Pattern Extraction — Abstracting the Solution into Reusable Assets
 
 ## Opening

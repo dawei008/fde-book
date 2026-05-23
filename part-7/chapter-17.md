@@ -1,3 +1,9 @@
+---
+title: "第 17 章 FDE 的下一步"
+parent: "Part VII — 交接与持续"
+nav_order: 2
+---
+
 # Chapter 17: FDE 的 T 字成长 — 工程深度 + 行业纵深
 
 ## 开场

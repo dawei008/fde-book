@@ -1,3 +1,9 @@
+---
+title: "appendix/appendix-c.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Appendix C: Eval Set Design Templates
 
 > Eval templates for the four most common LLM task types:

@@ -1,3 +1,9 @@
+---
+title: "part-7/intro.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Part VII: Handoff and Mastery
 
 > Applies to: Both tracks

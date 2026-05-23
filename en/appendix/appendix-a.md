@@ -1,3 +1,9 @@
+---
+title: "appendix/appendix-a.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Appendix A: FDE Tool Stack Cheat Sheet (2026 Edition)
 
 3-5 candidates per category, plus the dimensions to choose by. Built for 30-minute decisions during PoC scoping.

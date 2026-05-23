@@ -1,3 +1,9 @@
+---
+title: "part-3/intro.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Part III: Scaffolding — Six Weeks to a Running LLM Workflow
 
 > Applies to: **LLM application track** (data-driven track readers, jump to Part IV)

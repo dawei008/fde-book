@@ -1,3 +1,9 @@
+---
+title: "part-3/chapter-06.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 6: Tech Stack Quick-Decision Matrix — Model / Framework / Database / Orchestration
 
 ## Opening

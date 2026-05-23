@@ -1,3 +1,9 @@
+---
+title: "part-6/chapter-15.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 15: MCP and Enterprise Integration — Wiring Agents into Customer Tools
 
 ## Opening

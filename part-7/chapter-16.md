@@ -1,3 +1,9 @@
+---
+title: "第 16 章 项目交接"
+parent: "Part VII — 交接与持续"
+nav_order: 1
+---
+
 # Chapter 16: Handoff + 模式提取 — 把方案抽象成可复用资产
 
 ## 开场

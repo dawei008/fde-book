@@ -1,3 +1,9 @@
+---
+title: "en/README.md"
+nav_exclude: true
+search_exclude: false
+---
+
 <p align="center">
   <img src="../cover.png" alt="FDE Book Cover" width="520" />
 </p>

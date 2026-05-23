@@ -1,3 +1,9 @@
+---
+title: "第 4 章 进客户第一周"
+parent: "Part II — 客户发现"
+nav_order: 1
+---
+
 # Chapter 4: Discovery — 观察 > 提问
 
 ## 开场

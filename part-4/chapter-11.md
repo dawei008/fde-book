@@ -1,3 +1,9 @@
+---
+title: "第 11 章 VPC、SSO、合规"
+parent: "Part IV — 工程化落地"
+nav_order: 3
+---
+
 # Chapter 11: 与遗留系统对接 — SSO / SCIM / API / 审计
 
 ## 开场

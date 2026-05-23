@@ -1,3 +1,9 @@
+---
+title: "part-6/intro.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Part VI: The Agent Era — New Engineering Tasks for the FDE
 
 > Applies to: **LLM application track** (optional reading for the data-driven track)

@@ -1,3 +1,9 @@
+---
+title: "Part V — 上线与运营"
+nav_order: 15
+has_children: true
+---
+
 # Part V: PoC → 生产 — 跨过最难的鸿沟
 
 > 适用范围：通用（两条主线都要过这一关）

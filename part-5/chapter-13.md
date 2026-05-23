@@ -1,3 +1,9 @@
+---
+title: "第 13 章 监控与 Guardrails"
+parent: "Part V — 上线与运营"
+nav_order: 2
+---
+
 # Chapter 13: 可观测性 / 成本 / 灰度 / 回滚
 
 ## 开场

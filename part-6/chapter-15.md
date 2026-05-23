@@ -1,3 +1,9 @@
+---
+title: "第 15 章 MCP 集成"
+parent: "Part VI — Agent 与 MCP"
+nav_order: 2
+---
+
 # Chapter 15: MCP 与企业集成 — 把 Agent 接到客户工具上
 
 ## 开场

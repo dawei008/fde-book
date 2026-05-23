@@ -1,3 +1,9 @@
+---
+title: "en/reading-guide.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Reading Guide
 
 > 17 chapters, ~6-7 hours end to end. Two tracks running in parallel — pick the route that matches your FDE flavor.

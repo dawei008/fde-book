@@ -1,3 +1,9 @@
+---
+title: "part-1/chapter-02.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 2: The Three Iron Rules — Sell Outcomes / Fix Forward / Eval-Driven
 
 ## Opening

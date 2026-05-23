@@ -1,3 +1,9 @@
+---
+title: "part-3/chapter-08.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 8: Eval First, Code Second — A Practical Guide
 
 ## Opening

@@ -1,7 +1,11 @@
-book/
-site/zh/book/
-site/en/book/
+# Jekyll build output
 _site/
+.jekyll-cache/
+.jekyll-metadata
+.bundle/
+vendor/
+
+# Misc
 .DS_Store
 *.swp
 /tmp/fdebook-*-combined.md

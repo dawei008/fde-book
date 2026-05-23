@@ -1,3 +1,9 @@
+---
+title: "Part II — 客户发现"
+nav_order: 12
+has_children: true
+---
+
 # Part II: 客户发现 — 用工程师的方式做需求
 
 > 适用范围：通用（两条主线都需要）

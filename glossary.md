@@ -1,3 +1,8 @@
+---
+title: "术语表"
+nav_order: 90
+---
+
 # 术语表
 
 > 按字母 / 拼音排序。引用页见 [bibliography.md](bibliography.md)。

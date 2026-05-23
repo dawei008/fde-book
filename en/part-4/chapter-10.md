@@ -1,3 +1,9 @@
+---
+title: "part-4/chapter-10.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 10: Working in the Customer's VPC / Private Deployment / Offline Data Center
 
 ## Opening

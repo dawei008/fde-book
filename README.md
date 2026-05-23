@@ -1,107 +1,91 @@
 <p align="center">
-  <img src="cover.png" alt="OpenBook: Forward Deployed Engineering" width="520" />
+  <img src="cover.png" alt="OpenBook · Forward Deployed Engineer" width="480" />
 </p>
 
-<h1 align="center">OpenBook: Forward Deployed Engineer</h1>
+<h1 align="center">OpenBook · Forward Deployed Engineer</h1>
 <h3 align="center">AI 应用的落地工程学</h3>
 
 <p align="center">
-  <code>Outcome = Harness × Customer</code> — 这本书讲的是 Harness 怎么交到客户手里
+  <strong>📖 <a href="https://dawei008.github.io/fde-book/">在 GitHub Pages 上阅读 →</a></strong>
 </p>
 
 <p align="center">
-  <code>Sell the outcome. Fix forward. Eval first.</code>
-</p>
-
-<p align="center">
-  <a href="en/README.md">English</a> ·
-  <a href="https://dawei008.github.io/fde-book/">在线阅读</a> ·
-  <a href="OpenBook-FDE-zh.pdf">中文 PDF</a> ·
-  <a href="OpenBook-FDE-en.pdf">English PDF</a> ·
-  <a href="bibliography.md">参考文献</a>
-</p>
-
-<p align="center">
-  <em>17 章 · 7 Part · 4 附录 · 中英双语</em>
+  <em>17 章 · 7 Part · 4 附录 · 中英双语 · 配套可执行 demo</em>
 </p>
 
 ---
 
-> *本书是对 Forward Deployed Engineer 工程实践的独立梳理。所有引用均标注来源；不复制任何受版权保护的代码或长段原文。*
+写给在客户现场把 AI 跑起来的工程师。
+
+公式：
+
+```
+Outcome = Harness × Customer
+```
+
+Harness 提供能力，Customer 提供约束。这本书写的是怎么把 Harness 装到客户身上。
 
 ---
 
-## 这是一本什么书
+## 在线阅读 vs 仓库
 
-**这是写给已经在做或正要去做 FDE 的工程师的实用手册。**
+**[👉 dawei008.github.io/fde-book](https://dawei008.github.io/fde-book/)** 是阅读体验最好的入口——左侧有完整目录、有搜索、移动端友好、夜间模式。
 
-不讲职业故事，不讲 FDE 的历史考据，不讲"是不是你的下一步"。
+**这个仓库**是源文件 + 配套代码 + 翻译工程。clone 下来你能：
 
-讲的是当你接到一个新客户、被丢到他们的会议室里、面对一堆 Confluence 文档和一个含糊的目标时，**第一周做什么、第六周做什么、第六个月做什么**，每一步具体的工程动作和判断。
+- 直接读 markdown（每章一个 `.md`，结构和书一致）
+- 跑配套 demo（`demos/` 目录，每章独立、用完即拆，详见各章末尾）
+- 提 PR / 开 Issue 反馈错处或补充案例
 
-它有两条主线并存：
-
-- **LLM 应用主线**（Part III、VI 重点）：模型 / RAG / Agent / Eval / 工具集 — 2026 年大多数 FDE 在干的事
-- **客户现场软件交付主线**（Part IV 重点）：Ontology / VPC 部署 / 集成 / 数据管道 — Palantir 风格的传统 FDE 工作
-
-两条线在 Part II（Discovery）、Part V（PoC→生产）、Part VII（Handoff）合流。
+如果你觉得这本书有用，欢迎 ⭐ Star 这个仓库——这是判断我应不应该继续往下写的最直接信号。
 
 ---
 
-## 你为什么需要这本书
+## 目录
 
-如果你正在或即将面对下面任何一种情况：
+| Part | 讲什么 |
+|---|---|
+| **I — 角色与心智** | FDE 是什么、心智模型、不是什么 |
+| **II — 客户发现** | 第一周怎么做、需求 → 评估集 → SOW |
+| **III — 技术选型** | 第一周决断、RAG / 微调 / Agent 选型、评估先于代码 |
+| **IV — 工程化落地** | 数据工程、scaffolding、VPC/SSO/合规 |
+| **V — 上线与运营** | PoC 到生产、监控与 Guardrails |
+| **VI — Agent 与 MCP** | Agent toolset 设计、MCP 集成 |
+| **VII — 交接与持续** | 项目交接、FDE 的下一步 |
+| **附录 A-D** | 工具栈速查、比较矩阵、评估集模板、客户启动包 |
 
-- 老板让你"跟客户对接，把 PoC 推过线"，你不知道边界在哪里
-- 第一次进客户的 VPC，被审批流、SSO、合规问卷拖住
-- 写完一个 Demo 客户很满意，但说"上生产再聊"就再也没下文
-- 接手一个上一任 FDE 留下的项目，文档残缺、Eval 没有、客户期待已经飘了
-- Agent 跑得起来但客户不敢上 — 你不知道沙箱、回滚、可观测性怎么搭
-
-这本书每一章都在直接回答这种问题。
-
----
-
-## 目录速览
-
-| Part | 适用 | 解决什么 |
-|---|---|---|
-| I 起手 | 通用 | FDE 工作流、三条铁律、两种形态如何切换 |
-| II 客户发现 | 通用 | Discovery 实操、需求→评估集→SOW |
-| III 脚手架 | LLM 主线 | 技术栈选型、决策树、Eval-driven 开发 |
-| IV 数据与集成 | 现场交付主线 | Ontology、VPC、SSO、审计、遗留系统 |
-| V PoC→生产 | 通用 | 过线条件、可观测性、灰度、回滚 |
-| VI Agent 时代 | LLM 主线 | Agent 部署、工具沙箱、MCP 集成 |
-| VII 交付与精进 | 通用 | Handoff、模式提取、T 字成长 |
-
-完整章节见 [SUMMARY.md](SUMMARY.md)。
+英文版在 [`en/`](en/) 目录，结构镜像中文。
 
 ---
 
-## 怎么读
+## 配套代码
 
-- **从头到尾**：约 6-7 小时
-- **只关心 LLM/Agent 应用**：Part I → III → V → VI → VII
-- **只关心传统现场交付（数据 / 集成）**：Part I → II → IV → V → VII
-- **当工具书查**：附录 A-D 按需翻
+`demos/` 下每章一个独立子目录。约定：
 
-详见 [阅读指南](reading-guide.md)。
+- 每个 demo 都能在你自己的 AWS 账号里复现
+- 用完即拆，每个 demo README 给出 teardown 步骤
+- 所有数字（延迟、准确率、$）都来自实跑，不是抄 benchmark
 
----
-
-## 这本书不会做的事
-
-- 不重述 Palantir 的发展史
-- 不教 Python / SQL / Docker — 假设你已是 5 年以上工程师
-- 不出版重复市面上的 LLM 教程 — 不讲"什么是 transformer"，讲"客户现场怎么选模型"
-- 不堆 100 页"FDE 必读书单" — 该看的在每章末尾点名
+例如 [`demos/ch6-stack/`](demos/ch6-stack/) 是第 6 章的模型选型 bench：4 个 Bedrock 模型 × 10 条工单 × 3 轮，总成本约 $0.50。
 
 ---
 
-## 状态
+## 致谢
 
-- 写作进行中（2026-05 启动）
-- 中文是 source of truth；英文版镜像在 `en/`
-- 研究素材和引用清单在 `research/` 目录，公开可查
+这本书大量参考了：
 
-如果你正在做 FDE 工作，欢迎在 GitHub Issue 里提具体问题或反例 — 可能成为下一版的章节。
+- *Forward Deployed Engineer Rule Book* — A. Lawrence (2025)
+- *The FDE Playbook: A Practitioner's Field Manual* — Conikeec (2025)
+- *Reflections on Palantir* — Nabeel Qureshi
+- AWS GenAI Innovation Center 公开案例
+- Bob McGrew @ Y Combinator (2025) — "Sell the outcome, not the product"
+
+完整书目在 [`bibliography.md`](bibliography.md)。
+
+---
+
+## License
+
+CC-BY-SA 4.0（文本），MIT（代码）。
+
+转载、引用、重组都欢迎，请保留来源链接。

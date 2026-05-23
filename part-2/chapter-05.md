@@ -1,3 +1,9 @@
+---
+title: "第 5 章 从需求到 SOW 与评估集"
+parent: "Part II — 客户发现"
+nav_order: 2
+---
+
 # Chapter 5: 从需求到验收 — 评估集 / 验收标准 / SOW
 
 ## 开场

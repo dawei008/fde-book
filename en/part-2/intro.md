@@ -1,3 +1,9 @@
+---
+title: "part-2/intro.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Part II: Customer Discovery — Requirements, Engineer-Style
 
 > Scope: applies to both tracks.

@@ -1,3 +1,9 @@
+---
+title: "part-7/chapter-17.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 17: The FDE's T-Shape Growth — Engineering Depth + Industry Depth
 
 ## Opening

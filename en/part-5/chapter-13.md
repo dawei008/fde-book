@@ -1,3 +1,9 @@
+---
+title: "part-5/chapter-13.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 13: Observability / Cost / Canary / Rollback
 
 ## Opening

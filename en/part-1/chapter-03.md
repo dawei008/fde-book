@@ -1,3 +1,9 @@
+---
+title: "part-1/chapter-03.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 3: Two FDE Modes — Data-Driven vs LLM-Driven
 
 ## Opening

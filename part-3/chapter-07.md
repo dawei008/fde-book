@@ -1,3 +1,9 @@
+---
+title: "第 7 章 RAG / 微调 / Agent 决策树"
+parent: "Part III — 技术选型"
+nav_order: 2
+---
+
 # Chapter 7: 决策树 — RAG / Fine-tune / Prompting / Agent
 
 ## 开场

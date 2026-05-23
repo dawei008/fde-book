@@ -1,3 +1,9 @@
+---
+title: "Part VII — 交接与持续"
+nav_order: 17
+has_children: true
+---
+
 # Part VII: 交付与精进
 
 > 适用范围：通用

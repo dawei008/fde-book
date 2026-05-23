@@ -1,3 +1,9 @@
+---
+title: "en/bibliography.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Bibliography
 
 > Full raw URL list and search-method log live in `../research/05-sources.md`.

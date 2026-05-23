@@ -1,3 +1,9 @@
+---
+title: "Part IV — 工程化落地"
+nav_order: 14
+has_children: true
+---
+
 # Part IV: 数据与集成 — 面对客户真实环境
 
 > 适用范围：**现场交付主线**（数据 / 集成 / VPC / 合规）；LLM 应用主线在涉及客户真实数据时也需要全部读

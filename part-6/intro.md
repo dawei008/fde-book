@@ -1,3 +1,9 @@
+---
+title: "Part VI — Agent 与 MCP"
+nav_order: 16
+has_children: true
+---
+
 # Part VI: Agent 时代 — FDE 的新工程任务
 
 > 适用范围：**LLM 应用主线**（数据驱动主线选读）

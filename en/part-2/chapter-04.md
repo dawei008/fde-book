@@ -1,3 +1,9 @@
+---
+title: "part-2/chapter-04.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 4: Discovery — Observe Before You Ask
 
 ## Opening

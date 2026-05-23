@@ -1,3 +1,9 @@
+---
+title: "第 1 章 FDE 的真实工作流"
+parent: "Part I — 角色与心智"
+nav_order: 1
+---
+
 # Chapter 1: FDE 工程的工作流 — 一周 / 一季度的真实日程
 
 ## 开场

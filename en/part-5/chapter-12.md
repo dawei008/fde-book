@@ -1,3 +1,9 @@
+---
+title: "part-5/chapter-12.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 12: PoC Pass-Line Conditions — What Makes It, What Stalls Out
 
 ## Opening

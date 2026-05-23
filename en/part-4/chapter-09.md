@@ -1,3 +1,9 @@
+---
+title: "part-4/chapter-09.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 9: The Customer Data Stack — Ontology / ETL / Real-Time Pipelines
 
 ## Opening

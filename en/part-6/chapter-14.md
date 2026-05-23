@@ -1,3 +1,9 @@
+---
+title: "part-6/chapter-14.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Chapter 14: Deploying Agents in Customer Environments — Toolsets / Sandboxing / Failure Recovery
 
 ## Opening

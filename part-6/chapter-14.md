@@ -1,3 +1,9 @@
+---
+title: "第 14 章 Agent Toolset 设计"
+parent: "Part VI — Agent 与 MCP"
+nav_order: 1
+---
+
 # Chapter 14: 在客户环境部署 Agent — 工具集 / 沙箱 / 失败恢复
 
 ## 开场

@@ -1,3 +1,8 @@
+---
+title: "参考文献"
+nav_order: 91
+---
+
 # 参考文献
 
 > 完整原始链接清单与检索方法记录见 `research/05-sources.md`。

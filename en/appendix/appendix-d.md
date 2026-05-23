@@ -1,3 +1,9 @@
+---
+title: "appendix/appendix-d.md"
+nav_exclude: true
+search_exclude: false
+---
+
 # Appendix D: Customer Kickoff Pack — 12 Templates Ready for Week One
 
 > When you take on a new customer or new project, here are the 12 templates you'll need in week one. Each one comes with "when to use / how to use / template body."

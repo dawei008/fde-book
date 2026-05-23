@@ -1,3 +1,9 @@
+---
+title: "第 12 章 PoC 到生产"
+parent: "Part V — 上线与运营"
+nav_order: 1
+---
+
 # Chapter 12: PoC 过线条件 — 哪些能过，哪些卡死
 
 ## 开场

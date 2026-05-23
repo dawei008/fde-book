@@ -1,3 +1,9 @@
+---
+title: "第 3 章 FDE 不是什么"
+parent: "Part I — 角色与心智"
+nav_order: 3
+---
+
 # Chapter 3: 两种 FDE 形态 — 数据驱动型 vs LLM 驱动型
 
 ## 开场

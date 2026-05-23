@@ -1,3 +1,9 @@
+---
+title: "第 2 章 FDE 的心智模型"
+parent: "Part I — 角色与心智"
+nav_order: 2
+---
+
 # Chapter 2: 三条铁律 — Sell Outcomes / Fix Forward / Eval-Driven
 
 ## 开场

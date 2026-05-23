@@ -1,3 +1,9 @@
+---
+title: "Part III — 技术选型"
+nav_order: 13
+has_children: true
+---
+
 # Part III: 脚手架 — 6 周让 LLM 工作流跑起来
 
 > 适用范围：**LLM 应用主线**（数据驱动主线读 Part IV）
