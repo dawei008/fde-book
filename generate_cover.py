@@ -34,8 +34,8 @@ def load_font(name, size):
 
 
 # === LOAD FONTS (matched to OpenBook 1) ===
-font_title_large  = load_font("BigShoulders-Bold.ttf", 148)
-font_title_sub    = load_font("Tektur-Medium.ttf", 54)
+font_title_large  = load_font("BigShoulders-Bold.ttf", 96)
+font_title_sub    = load_font("Tektur-Medium.ttf", 88)
 font_equation     = load_font("JetBrainsMono-Bold.ttf", 36)
 font_label        = load_font("JetBrainsMono-Regular.ttf", 17)
 font_label_bold   = load_font("JetBrainsMono-Bold.ttf", 17)
@@ -99,25 +99,6 @@ for r in range(max(W, H), 0, -2):
     vdraw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(220, 222, 230, alpha))
 img = Image.alpha_composite(img, vignette)
 draw = ImageDraw.Draw(img, 'RGBA')
-
-# === CIRCUIT TRACES — sparse, precise (kept identical to OpenBook 1 for series identity) ===
-traces = [
-    ((0, 340), (350, 340)),
-    ((420, 340), (580, 340)),
-    ((0, 1860), (280, 1860)),
-    ((1320, 1860), (1600, 1860)),
-    ((350, 340), (350, 480)),
-    ((1400, 600), (1400, 820)),
-    ((200, 1700), (200, 1860)),
-]
-for (x1, y1), (x2, y2) in traces:
-    draw.line([(x1, y1), (x2, y2)], fill=alpha_color(CYAN, 50), width=1)
-
-trace_nodes = [(350, 340), (350, 480), (580, 340), (1400, 600), (1400, 820), (200, 1700), (280, 1860)]
-for nx, ny in trace_nodes:
-    draw.ellipse([nx-4, ny-4, nx+4, ny+4], outline=alpha_color(CYAN, 70), width=1)
-    draw.ellipse([nx-2, ny-2, nx+2, ny+2], fill=alpha_color(CYAN, 50))
-
 
 # === CENTRAL FDE GRAVITY WELL ===
 center_x, center_y = W // 2, H // 2 - 40
@@ -270,32 +251,44 @@ draw.text(
     badge_text, fill=alpha_color(ORANGE, 180), font=font_badge
 )
 
-# Main title
+# Main title — OPENBOOK acts as a small series mark; FDE name is the hero
 title_y = 180
-draw.text((96, title_y), "OPENBOOK", fill=alpha_color(TEXT, 240), font=font_title_large)
+draw.text((100, title_y), "OPENBOOK", fill=alpha_color(MUTED, 200), font=font_title_large)
 
-# English subtitle
+# English subtitle — the actual title; bigger and darker than OPENBOOK
 en_subtitle = "Forward Deployed Engineer"
-draw.text((100, title_y + 156), en_subtitle, fill=alpha_color(MUTED, 220), font=font_title_sub)
+en_y = title_y + 96
+draw.text((100, en_y), en_subtitle, fill=alpha_color(TEXT, 240), font=font_title_sub)
 
-# Chinese subtitle
-cn_y = title_y + 240
-cn_line1 = "AI 应用的"
-cn_line2 = "落地工程学"
+# Chinese subtitle — single line, no break
+font_cjk_subtitle = None
+for p in CJK_FONT_PATHS:
+    if os.path.exists(p):
+        font_cjk_subtitle = ImageFont.truetype(p, 56)
+        break
+if font_cjk_subtitle is None:
+    font_cjk_subtitle = font_cjk_large
 
-draw.text((100, cn_y), cn_line1, fill=alpha_color(TEXT, 200), font=font_cjk_large)
+cn_y = en_y + 130
+cn_full = "AI 应用的落地工程学"
 
-# "落地" in cyan accent — the keyword
-fde_zh = "落地"
-rest_zh = "工程学"
+# Render in two segments so 落地 gets the cyan accent
+prefix = "AI 应用的"
+accent = "落地"
+suffix = "工程学"
 
-bbox_h = draw.textbbox((0, 0), fde_zh, font=font_cjk_large)
-hw = bbox_h[2] - bbox_h[0]
-draw.text((100, cn_y + 80), fde_zh, fill=alpha_color(CYAN, 240), font=font_cjk_large)
-draw.text((100 + hw, cn_y + 80), rest_zh, fill=alpha_color(TEXT, 200), font=font_cjk_large)
+bbox_pre = draw.textbbox((0, 0), prefix, font=font_cjk_subtitle)
+pw = bbox_pre[2] - bbox_pre[0]
+bbox_acc = draw.textbbox((0, 0), accent, font=font_cjk_subtitle)
+aw = bbox_acc[2] - bbox_acc[0]
+
+draw.text((100, cn_y), prefix, fill=alpha_color(TEXT, 220), font=font_cjk_subtitle)
+draw.text((100 + pw, cn_y), accent, fill=alpha_color(CYAN, 240), font=font_cjk_subtitle)
+draw.text((100 + pw + aw, cn_y), suffix, fill=alpha_color(TEXT, 220), font=font_cjk_subtitle)
 
 # Underline beneath 落地
-draw.rectangle([100, cn_y + 80 + 72, 100 + hw, cn_y + 80 + 75], fill=alpha_color(CYAN, 60))
+underline_y = cn_y + 64
+draw.rectangle([100 + pw, underline_y, 100 + pw + aw, underline_y + 3], fill=alpha_color(CYAN, 80))
 
 
 # === EQUATION BAR: OUTCOME = HARNESS × CUSTOMER ===
@@ -353,51 +346,31 @@ for i, (text, color, highlight) in enumerate(eq_parts):
 
 # === BOTTOM SECTION ===
 
-sub_y = H - 400
+sub_y = H - 410
 sub_line1 = "Harness 提供能力,客户提供约束"
 sub_line2_a = "FDE"
 sub_line2_b = " 把 Harness 装到客户身上"
 sub_line3 = "这本书讲的就是怎么做这件事"
 
 if font_cjk_medium:
-    draw.text((100, sub_y), sub_line1, fill=(*TEXT, 255), font=font_cjk_medium)
+    draw.text((100, sub_y), sub_line1, fill=(*TEXT, 240), font=font_cjk_medium)
 
-    draw.text((100, sub_y + 44), sub_line2_a, fill=(*ORANGE, 255), font=font_meta)
-    bbox = draw.textbbox((0, 0), sub_line2_a, font=font_meta)
+    # Line 2: keep FDE in the same CJK font size so it doesn't drop visually
+    draw.text((100, sub_y + 44), sub_line2_a, fill=(*ORANGE, 255), font=font_cjk_medium)
+    bbox = draw.textbbox((0, 0), sub_line2_a, font=font_cjk_medium)
     hw2 = bbox[2] - bbox[0]
-    draw.text((100 + hw2, sub_y + 44), sub_line2_b, fill=(*TEXT, 220), font=font_cjk_small)
+    draw.text((100 + hw2, sub_y + 44), sub_line2_b, fill=(*TEXT, 220), font=font_cjk_medium)
 
-    draw.text((100, sub_y + 86), sub_line3, fill=(*MUTED, 255), font=font_cjk_small)
+    draw.text((100, sub_y + 88), sub_line3, fill=(*MUTED, 220), font=font_cjk_small)
 
 
-# === DIVIDER + TAGS ===
-div_y = H - 280
+# === DIVIDER ===
+div_y = H - 250
 draw.line([(100, div_y), (W - 100, div_y)], fill=alpha_color(MUTED, 60), width=1)
 
-tags = ["DISCOVERY", "EVAL", "SCAFFOLDING", "VPC", "GUARDRAILS", "AGENT", "HANDOFF", "T-SHAPE"]
-tag_x = 100
-tag_y = div_y + 24
 
-for tag in tags:
-    bbox = draw.textbbox((0, 0), tag, font=font_tag)
-    tw = bbox[2] - bbox[0]
-    th = bbox[3] - bbox[1]
-
-    pad_tx, pad_ty = 12, 7
-    draw.rectangle(
-        [tag_x, tag_y, tag_x + tw + pad_tx * 2, tag_y + th + pad_ty * 2],
-        outline=alpha_color(CYAN, 120), width=1
-    )
-    draw.text((tag_x + pad_tx, tag_y + pad_ty), tag, fill=(*CYAN, 255), font=font_tag)
-
-    tag_x += tw + pad_tx * 2 + 10
-    if tag_x > W - 300:
-        tag_x = 100
-        tag_y += th + pad_ty * 2 + 10
-
-
-# === META ===
-meta_y = div_y + 90
+# === META (right-aligned, just under the divider) ===
+meta_y = div_y + 18
 meta_lines = [
     "17 chapters + 4 appendices",
     "7 parts · Field Engineering",
@@ -405,7 +378,27 @@ meta_lines = [
 for i, line in enumerate(meta_lines):
     bbox = draw.textbbox((0, 0), line, font=font_meta)
     tw = bbox[2] - bbox[0]
-    draw.text((W - 100 - tw, meta_y + i * 28), line, fill=(*MUTED, 255), font=font_meta)
+    draw.text((W - 100 - tw, meta_y + i * 26), line, fill=(*MUTED, 240), font=font_meta)
+
+
+# === TAGS (left-aligned, single row, below meta) ===
+tags = ["DISCOVERY", "EVAL", "SCAFFOLDING", "VPC", "GUARDRAILS", "AGENT", "HANDOFF", "T-SHAPE"]
+tag_x = 100
+tag_y = div_y + 80
+
+for tag in tags:
+    bbox = draw.textbbox((0, 0), tag, font=font_tag)
+    tw = bbox[2] - bbox[0]
+    th = bbox[3] - bbox[1]
+
+    pad_tx, pad_ty = 10, 6
+    draw.rectangle(
+        [tag_x, tag_y, tag_x + tw + pad_tx * 2, tag_y + th + pad_ty * 2],
+        outline=alpha_color(CYAN, 120), width=1
+    )
+    draw.text((tag_x + pad_tx, tag_y + pad_ty), tag, fill=(*CYAN, 255), font=font_tag)
+
+    tag_x += tw + pad_tx * 2 + 8
 
 
 # === CORNER MARKS ===
