@@ -1,455 +1,230 @@
 ---
-title: "part-3/chapter-07.md"
-nav_exclude: true
-search_exclude: false
+title: "Chapter 7  RAG / Fine-tune / Agent Decision Tree"
+parent: "Part III — Tech Stack Selection"
+nav_order: 2
 ---
 
-# Chapter 7: Decision Tree — RAG / Fine-tune / Prompting / Agent
+# Chapter 7  RAG / Fine-tune / Agent Decision Tree
 
-## Opening
+Chapter 6 nailed down "whose model" (Hesheng case picked Claude Haiku 4.5 + Opus 4.7 fallback). But **the model is just the engine** — you still have to decide how to connect the customer's knowledge and workflow to it. That's what this chapter is about.
 
-```
-The customer CTO says: "I want to build an AI customer-support agent."
+Four mainstream connectors:
 
-The new FDE's reaction:
-  A) "Great, let's build a RAG and index the FAQs."
-  B) "Great, let's fine-tune a model on customer dialogue."
-  C) "Great, let's wire up GPT-4 with a multi-Agent setup."
+- **Prompting** — only modify the prompt; the model answers from pretraining.
+- **RAG** — index an external knowledge base; the model retrieves before answering.
+- **Fine-tune** — train the customer's data into the model weights.
+- **Agent** — let the model plan, call tools, perform multi-step reasoning.
 
-The veteran FDE's reaction:
-  "Wait — what's the biggest pain point in your support today?
+The most common failure mode for beginner FDEs is hearing "build an AI assistant" and immediately stacking the most complex of the four — agent + RAG + fine-tune all together. Six weeks later you have an unmanageable monster, and on a specific question the customer asks, it does worse than ChatGPT with a plain prompt.
 
-   Are answers wrong (→ maybe RAG)?
-   Or correct but robotic (→ maybe prompting + few-shot)?
-   Or do you need to take action across systems (→ maybe Agent)?
-   Or is some industry-specific phrasing impossible to nail
-     (→ maybe fine-tune)?
-
-   Different pain points map to completely different solutions.
-   Pick the wrong one here, and six weeks are wasted."
-
-The goal of this chapter: decide which one in 30 seconds,
-and explain why in 10 minutes.
-```
+This chapter gives a **judgment order**: try prompting first; if not, add RAG; if not, add agent; only at the end, consider fine-tune. Validate each step with the customer's real data; only step down when the bar isn't met.
 
 ---
 
-## 7.1 The Essential Difference Between the Four Approaches
+## 7.1  The essence of the four connectors
 
-```
-              Input handling     Knowledge source     Output generation
-              ─────────          ──────────           ──────────
+| Connector | Input handling | Knowledge source | Output generation | One-line take |
+|---|---|---|---|---|
+| **Prompting** | Raw query | Model pretrained weights | Direct generation | Change the prompt and let the model figure it out |
+| **RAG** | query → retrieve | External knowledge base (updatable) | Retrieve + generate | Put the answer in a knowledge base; model looks it up and answers |
+| **Fine-tune** | Raw query | New weights (you trained) | New model generates | Train the answer into the model's brain |
+| **Agent** | query → plan | Tool-call results + model weights + KB | Multi-step reasoning + synthesis | Let the model use tools to get things done |
 
-  Prompting   raw query          model weights         model generates directly
-                                 (learned at training)
-
-  RAG         query → retrieve   external KB           retrieval + model generation
-                                 (updatable)
-
-  Fine-tune   raw query          new weights           new model generates
-                                 (trained by you)
-
-  Agent       query → plan       tool-call results     multi-step reasoning + synthesis
-                                 + model weights
-                                 + KB
-```
-
-Plain language:
-
-- **Prompting** = "tweak the prompt; the model already knows"
-- **RAG** = "put the answer in a corpus; the model looks it up"
-- **Fine-tune** = "teach the answer into the model's brain"
-- **Agent** = "let the model use tools to get things done"
+One thing to notice: **the four connectors aren't mutually exclusive.** Most production LLM apps are prompting + RAG; the more complex ones are prompting + RAG + agent. Fine-tune typically pairs with one of the first three; projects that ship purely on fine-tune are rare.
 
 ---
 
-## 7.2 The Main Decision Tree
+## 7.2  Decision order: try the cheap things first
 
-```
-              Customer's core pain point
-                    │
-        ┌───────────┴───────────┐
-        ↓                       ↓
-    "doesn't know the answer"   "knows but it's wrong"
-        │                       │
-        ↓                       ↓
-    Need external knowledge?    Style / format / industry-phrasing issue?
-        │                       │
-        ├─Yes→ RAG               ├─Yes→ Prompting + Few-shot
-        └─No→ Prompting         │       (90% of the time, enough)
-                                ↓
-                            Tried and failed?
-                                │
-                                ├─Yes→ Fine-tune
-                                └─No→ keep iterating Prompting
-
-   "Need to actively act / cross systems"
-        │
-        ↓
-    Agent (tool use)
-```
-
-### Reading the Main Path
+The standard order I use during selection with a customer:
 
 ```
 Default order:
-  1. Start with Prompting (cheapest, fastest)
-  2. Not enough → RAG (add external knowledge)
-  3. Still not enough → Agent (let the model take action)
+  1. Prompting first  (cheapest, fastest)
+  2. Not enough → add RAG (external knowledge)
+  3. Still not enough → add Agent (let the model take action)
   4. Last resort → Fine-tune (most expensive, hardest to maintain)
 ```
 
-**For 90% of LLM applications, Prompting + RAG is enough.** Fine-tune is the last-of-the-last option to consider.
+**For 90% of LLM apps, prompting + RAG is enough.** Fine-tune is the option of last resort.
+
+Why this order? Because the cost structure of the four is very different:
+
+| Connector | Startup cost | Marginal cost | Maintenance cost |
+|---|---|---|---|
+| Prompting | A few hours of tuning | Per-call token cost | Edit the prompt (half hour) |
+| RAG | Days to a week | Retrieval + call | Index rebuild (hours to a day) |
+| Agent | Weeks | Multi-step + tool calls | Tool protocol upgrades + monitoring |
+| Fine-tune | Weeks to months | Inference (self-host or managed) | Model retraining (days each) |
+
+**The most important judgment isn't "which is most powerful," it's "can the customer's pain be solved with a cheaper connector?"** Try prompting; when prompting hits its ceiling, escalate. This is the concrete grounding of outcome-driven thinking — you're accountable for the result, not for "which complex stack we used."
 
 ---
 
-## 7.3 RAG vs Fine-tune — The Eternal Confusion
+## 7.3  How to decide which connector for the current pain
 
-The boundary between RAG and Fine-tune is what new FDEs get wrong most often.
+The four connectors map to four typical pain types. Decision logic:
 
-```
-                    RAG                       Fine-tune
-                    ─────────                 ─────────
+**Question 1: Is the customer's pain "the model doesn't know the answer" or "knows but answers wrong"?**
 
-  What it solves    Knowledge missing         Wrong answer style
-                    from the model            Non-standard terminology / format
-                    Frequently updated data   High-frequency, low-complexity tasks
-                    Need traceable citations
+If it's "doesn't know" — domain knowledge not in pretraining, latest data, customer-internal information — default to RAG. RAG's essence is "let the model look it up before answering."
 
-  Data requirements Documents (no labels)     High-quality Q&A pairs
-                    Hundreds — millions       Hundreds — tens of thousands
+If it's "knows but answers wrong" — answers feel mechanical, style is off, industry terminology used incorrectly — try prompting + few-shot first. Give the model 3–5 demonstration examples saying "this kind of question gets answered like this" — most style problems resolve here.
 
-  Dev cycle         1-2 weeks                 4-8 weeks
+Back to the Hesheng ticket-triage example (Chapter 6): the pain is "the model should dispatch the ticket to the mechanical or electrical group." This is "knows but answers wrong" — the model fully understands the Chinese ticket text, but the dispatch logic is internal to the customer (which faults go to mechanical, which to electrical). Try prompting + few-shot — give the model 5–10 real dispatch demonstrations, then have it judge new tickets.
 
-  Maintenance cost  Just update the docs      Data drift = retrain
+**Question 2: Tried prompting, accuracy can't go up — what to add?**
 
-  Explainability    High (with citations)     Low (black box)
+Look at why it can't go up.
 
-  Good fit          Knowledge bases / FAQ     Vertical-industry phrasing
-                    Dynamic business rules    Fixed output formats
-                    Compliance with sourcing  Ultra-low latency (small models)
+If it's because **the prompt is too long / few-shot can't fit** — e.g., the customer has hundreds of fault codes, each with different processing flows, can't all fit in the prompt — escalate to RAG. Index the fault-code library as an external KB and retrieve the relevant ones into the prompt per query.
 
-  Bad fit           Need "voice"              Frequently changing data
-                    Ultra-low latency         Need source attribution
-                    Fine-tune is cheaper      Tight budget
-```
+If it's because **the prompt is correct but the model output is still inconsistent** — same ticket asked twice yields two different dispatches — this is the model's "pattern coverage" problem. Try adding more explicit rules in the prompt ("if the ticket contains alarm codes 4501–4999, electrical group"); if still not, consider fine-tune.
 
-### A Quick-Decision Mantra
+**Question 3: The customer's need isn't "answer questions" but "do things automatically" — what then?**
 
-```
-"Fact / knowledge" correctness        → RAG
-"Tone / style / format"               → Prompting → Fine-tune
-"Action / cross-system"               → Agent
-"Latency / cost"                      → model selection + caching (not necessarily method change)
-```
+Go agent. "Do things automatically" is characterized by: the model needs to **call external tools** (query APIs, write to databases, send emails), and **steps are dynamic** (not a fixed pipeline; the model decides next-step from previous-step results).
 
-### Counter-Example: Misusing Fine-tune
+But beware — many customers say "I want an agent" but the actual requirement is "I want a fixed-flow automation." Those are handled with prompting + workflow orchestration (Step Functions, Airflow); no LLM planning needed. **Test:** if you can draw a flowchart enumerating every possible execution path, you don't need an agent. If the branches explode beyond what you can draw, an agent earns its complexity.
 
-> *A customer needed "customer-support answers to policy questions". A new FDE went straight to fine-tuning a 7B model and shipped after three weeks. A month later, policy updated; the model gave wrong answers and complaints rolled in. Re-fine-tuning took another three weeks.*
->
-> *Postmortem: policy questions = factual knowledge = should use RAG. With RAG, you update the KB — no retraining.*
+Hesheng's ticket triage: pure classification, no agent needed. If phase two expands to "triage + auto-call ERP for parts inventory + auto-send acknowledgement to customer" — that's an agent.
 
-**FDE failure mode**: treating a RAG problem as a fine-tune problem.
+**Question 4: When do you actually need fine-tune?**
+
+Three scenarios:
+
+- **Style / jargon never matches**: prompting plus all the few-shot in the world can't reach the target style. Common in legal, medical, other heavily specialized domains.
+- **Latency / cost won't add up**: your prompt is too long (thousands of tokens), call frequency is high, paying the prompt cost every call is unacceptable. Fine-tune compresses knowledge into weights; the prompt can shrink to a few hundred tokens.
+- **Private deployment + strict data sensitivity**: customer doesn't allow data to be sent to any external API (even a "private cloud" Bedrock-style one), it has to run in their own data center — typically paired with fine-tune.
+
+90% of LLM projects don't fit any of those three. Fine-tune is the terminal option, not the default.
 
 ---
 
-## 7.4 Sub-Decisions Inside RAG
+## 7.4  Walking through Hesheng's decision
 
-Once you've picked RAG, four sub-decisions remain.
+Back to Chapter 6's Hesheng ticket triage. Chapter 6 nailed model selection; this chapter decides how to connect the customer's ticket data:
 
-### Sub-Decision 1: Chunk Granularity
+**Step one:** try prompting + few-shot.
 
-```
-        Granularity choices
-        ─────────────────────────────────
+Have the model judge mechanical vs. electrical from the ticket text. Stuff the prompt with 10 real dispatch demonstrations (5 mechanical + 5 electrical). The bench in Chapter 6 already ran — haiku at 100% on 10 samples. Says the dispatch logic is solvable with prompting.
 
-  By sentence (50-100 tokens)
-    → recall sharp, but little context
-    → fits: FAQ, short answers
+**Question:** Chapter 6's bench was 100% on 10 samples. Will it hold on 200?
 
-  By paragraph (200-500 tokens)
-    → balanced (most common)
-    → fits: knowledge bases, document Q&A
+That measurement happens during Scaffolding. It's the v0 → v1 expansion of the Eval set; Chapter 8 covers it. The most important judgment at this step: **at minimum 100% on 10 samples means this path is viable** — don't rush to RAG or agent. Push prompting to v1.0 first; if the bar isn't met, go down.
 
-  By section (1000-3000 tokens)
-    → full context, fuzzier recall
-    → fits: legal, contract analysis
+**Step two:** decide whether to add RAG.
 
-  By document (whole doc)
-    → use a long-context model (Claude 200K)
-    → fits: small number of large docs, contract review
-```
+Hesheng's tickets have characteristics: alarm codes (`ALM 4501`), machine model references (`JG-A6`), specific fault types. The model's pretraining doesn't have Hesheng's alarm code table, no JG-series machine fault crosswalk — these are customer-internal knowledge.
 
-### Sub-Decision 2: Retrieval Strategy
+But can the prompt hold them? Hesheng's alarm code table is about 200 codes — fitting them all in is roughly 3,000–4,000 tokens. Claude Haiku 4.5's context is 200K, easily fits. The 1-hour prompt cache from Chapter 6 means a long system prompt won't be paid for every call.
 
-```
-  Pure vector retrieval (semantic)
-    → strength: strong semantic understanding
-    → weakness: weak keyword hits
+**Conclusion:** phase one, no RAG. Stuff alarm codes and machine-model fault tables into the system prompt. The 1-hour prompt cache makes this efficient.
 
-  Pure keyword retrieval (BM25)
-    → strength: exact match
-    → weakness: weak semantics
+When does RAG become necessary? Two situations:
 
-  Hybrid retrieval (Hybrid: semantic + BM25 + rerank)
-    → strength: strongest overall
-    → weakness: higher complexity
-    → recommended: this is the production default
-```
+- Customer's alarm code table grows to thousands and won't fit in prompt
+- Customer adds scenarios needing retrieval over historical maintenance records (e.g., "how were similar faults handled in the last six months") — that's a real RAG scenario
 
-### Sub-Decision 3: Whether to Add a Reranker
+**Step three:** decide whether to add agent.
 
-```
-            Signals to add a reranker
-            ─────────────────
+Hesheng phase one's scope is just "triage" — given a ticket, output a structured judgment (dispatch group + fault type + priority). No "call external tools" requirement.
 
-  ✓ Top-10 recall contains the right answer, top-3 doesn't
-  ✓ Business is sensitive to recall precision (legal / medical)
-  ✓ Document corpus > 10K
-  ✓ Budget allows it (one extra model call per query)
+If phase two expands to "after triage, auto-call ERP for parts inventory" — that's agent. But phase two isn't in phase-one scope.
 
-  → hit any 2 → add a reranker
-```
-
-### Sub-Decision 4: Index Update Frequency
-
-```
-  T+1 (daily index)
-    → docs visible the next day
-    → simple (daily batch)
-
-  T+1h (near real-time)
-    → one-hour latency
-    → needs an incremental indexing pipeline
-
-  Real-time
-    → write-then-query immediately
-    → high complexity, use sparingly
-```
-
-### AWS Hands-On: Bedrock Knowledge Bases as One-Stop RAG
-
-```
-        Bedrock Knowledge Bases architecture
-        ─────────────────────────────────────
-
-  Sources: S3 / Confluence / Salesforce / Web
-            ↓
-  Bedrock automatically:
-    - Chunks (configurable chunking strategy)
-    - Embeds (Titan Embed v2 / Cohere Embed)
-    - Writes to vector store (OpenSearch Serverless by default)
-            ↓
-  Retrieve API:
-    - retrieve(query, top_k)
-    - retrieveAndGenerate(query, model)
-            ↓
-  Generation + citations
-```
-
-Minimal runnable config:
-
-```
-1. Create the KB:
-   - Bedrock console → Knowledge bases → Create
-   - Data source: S3 bucket
-   - Chunking: default (300 tokens, 20% overlap)
-   - Embedding: Titan Embed v2
-
-2. Sync data:
-   - One-click sync, minutes to hours (depending on size)
-
-3. Test query:
-   - retrieveAndGenerate(query="...", modelArn="claude-3-5-sonnet")
-   - Output comes with citations
-```
-
-> **AWS reference**: search "Amazon Bedrock Knowledge Bases setup" for the latest supported source types.
+**Conclusion:** phase one is prompting only. No RAG, no agent. Simplest architecture, lowest cost, easiest for the customer's engineers to maintain.
 
 ---
 
-## 7.5 Agent — When to Reach for One
+## 7.5  Key engineering decisions for RAG (if you go there)
 
-Agent ≠ "complicated RAG". An Agent's value is **actively calling external tools to complete tasks**.
+If your project does need RAG (Hesheng phase one doesn't, but many LLM application projects do), the key decision points are below.
 
-```
-        Signals you need an Agent
-        ─────────────────
+### Chunking strategy
 
-  ✓ The task requires 2+ "decide + act" steps
-  ✓ Need to call external APIs / databases / systems
-  ✓ The input doesn't map to a fixed answer
-  ✓ Single prompt + RAG has been tried and failed
+Chunking is the easiest place to mess up RAG. Two common errors:
 
-  → 3+ of these → consider an Agent
-```
+- **Too granular**: 500 tokens per chunk, retrieval returns incomplete fragments, the model answers from broken information.
+- **Too coarse**: 4,000 tokens per chunk, token cost explodes, and the model's ability to focus across long context degrades.
 
-### Three Typical Agent Shapes
+Practical experience: **chunk by document structure first** (chapter, paragraph) preserving semantic completeness; **chunk long paragraphs again at 800–1,500 tokens** with 100–200 token overlap to prevent information cuts. Bedrock Knowledge Bases ships hierarchical chunking by default — saves you from rolling your own.
 
-```
-1. Reactive Agent (single-step tool)
-   query → LLM picks a tool → execute → return
+### Retrieval method
 
-   Fits: simple lookups ("where's my order?")
-   Tool count: 5-20
+Three mainstream:
 
-2. ReAct Agent (multi-step loop)
-   query → LLM thinks → call tool → see result → think again → ...
+- **Dense retrieval (vector similarity)**: embed query and docs, compute cosine. Strong for semantic match (synonyms, paraphrases). Weak on exact-keyword matches (people, product IDs, error codes).
+- **Sparse retrieval (BM25)**: traditional keyword matching. Strong on exact keywords, weak on semantics.
+- **Hybrid retrieval**: dense + sparse in parallel, results merged. Standard in most production RAG systems.
 
-   Fits: multi-step tasks (order + shipping + refund)
-   Tool count: 10-50
+For Hesheng's alarm-code-bearing scenario: pure vector retrieval would miss alarm codes. Hybrid is required. Bedrock Knowledge Bases now natively supports hybrid search — one config flag.
 
-3. Multi-agent (multiple agents)
-   master agent splits the task → sub-agents execute → aggregate
+### Reranking
 
-   Fits: cross-team complex flows
-   Tool count: 50+
-```
+Top 10 retrieved docs almost always include several irrelevant ones. Stuffing all of them into the prompt wastes tokens and disrupts the answer.
 
-### Agent Failure Modes
+Add a reranking layer — use a small model (Cohere Rerank, Bedrock's built-in rerank) to rescore top 10, pick top 3–5 into the prompt. This step measurably improves answer quality at minimal cost (rerank calls are an order of magnitude cheaper than generation calls).
 
-```
-❌ Tool count > 30 → probability of picking the wrong tool spikes
-❌ Tool descriptions sloppy → Agent calls the wrong one or skips
-❌ No fallback → one wrong step, everything fails
-❌ No trace → can't locate failures
-❌ Multi-agent nesting → debugging hell
-```
+### Evaluation
 
-**The FDE rule of thumb on Agents**: start with a single Agent + tool augmentation; only escalate to Multi-agent when a single Agent can't cope.
+RAG evaluation is harder than pure prompting. Two independent dimensions:
 
-### AWS Hands-On: Getting Started with Bedrock Agents
+- **Context Relevance**: are the retrieved docs actually relevant to the query? Retrieval system's responsibility.
+- **Answer Faithfulness**: is the generated answer grounded in the retrieved docs, or hallucinating? Generation system's responsibility.
 
-```
-Bedrock Agents core components
-─────────────────────────────────
-
-1. Agent: the entry point (bound to a foundation model)
-2. Action Groups: the toolset
-   - Lambda function (your code)
-   - OpenAPI schema (describes the tool)
-3. Knowledge Bases: linked RAG
-4. Guardrails: input/output filtering
-5. Memory: cross-session state (new feature)
-```
-
-Minimal runnable flow:
-
-```
-Step 1: Write a Lambda function (one tool)
-        e.g., get_order_status(order_id) → returns order status
-
-Step 2: Write an OpenAPI schema describing the Lambda
-        - paths: /get_order_status
-        - parameters: order_id
-        - responses: { status: string, eta: string }
-
-Step 3: Bedrock console → Agents → Create
-        - Foundation model: Claude 3.5 Sonnet
-        - Instructions: "You are an order-support assistant ..."
-        - Action group: link the Lambda above
-
-Step 4: Test in Agent playground
-        "Where is my order #1234?"
-        Agent: auto-calls Lambda → returns a structured answer
-```
-
-> **AWS reference**: search "Bedrock Agents quick start".
+Both scored separately. Bedrock Knowledge Bases Evaluation has these two built-in. Chapter 8 expands on evaluation methodology.
 
 ---
 
-## 7.6 The Master Decision Table
+## 7.6  Common fine-tune misjudgments
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  Typical scenario           Recommended approach                  │
-├──────────────────────────────────────────────────────────────────┤
-│  Internal KB Q&A            RAG (Bedrock KB + Sonnet)            │
-│  FAQ support                RAG + light prompting                │
-│  Contract / doc review      Long-context prompting (Claude 200K) │
-│  Code generation / review   Prompting + Few-shot (Opus / GPT-4)  │
-│  Cross-system order lookup  Reactive Agent (Bedrock Agents)      │
-│  Cross-team ticket routing  ReAct Agent + 5-10 tools             │
-│  Email auto-reply           RAG + Prompting + Style few-shot     │
-│  Industry-term translation  Fine-tune (LoRA on Llama 3 8B)       │
-│  Regulatory report gen      RAG + multi-step prompting + rules   │
-│  Research / info gathering  Multi-agent (CrewAI / LangGraph)     │
-└──────────────────────────────────────────────────────────────────┘
-```
+Closing with several common fine-tune misjudgments to keep beginner FDEs from going down the wrong path:
 
-**80% of real projects fall in the first 5 rows.**
+**Misjudgment 1: customer asks "can you train an exclusive model on our data"**
 
----
+Their actual intent is usually "make the model understand our business." That can be achieved by RAG, by prompt + few-shot, or by fine-tune. The customer doesn't care about technique — they care about effect. **Try the first two; only escalate to fine-tune when needed** — same outcome, 90% less work for the first two.
 
-## 7.7 Switching Signals
+**Misjudgment 2: fine-tune solves "hallucination"**
 
-In practice you rarely pick right the first time. Learn to read the "switching signals".
+It doesn't. Fine-tune changes the model's output style and domain adaptation; it doesn't change its tendency to fabricate facts. Factual accuracy is solved by RAG (anchor the model to real docs) and guardrails (have it admit when it doesn't know), not by fine-tune.
 
-```
-Currently using Prompting, you observe:
-  ✓ Eval score is stuck at 70%, not climbing
-  ✓ Need repeated lookups against external knowledge
-  → switch to RAG
+**Misjudgment 3: fine-tune is one-and-done**
 
-Currently using RAG, you observe:
-  ✓ Recall is fine, but answer style / format is hard to tune
-  ✓ Few-shot keeps growing the prompt
-  → add Fine-tune (lightweight LoRA)
+Wrong. Fine-tuned models have a "maintenance cycle" — when the customer's business changes, new data arrives, base model upgrades, you'll need to re-fine-tune. Each cycle takes days to weeks; that's ongoing burden for the customer. That's the core reason to keep fine-tune to a minimum — **it creates a class of long-term debt at the customer's site.**
 
-Currently using RAG, you observe:
-  ✓ Users start asking "do X for me" instead of "what is X"
-  ✓ Need to write to / modify external systems
-  → upgrade to Agent
+**Misjudgment 4: fine-tune is necessarily more accurate than RAG**
 
-Currently using an Agent, you observe:
-  ✓ Tool count < 10 yet accuracy < 80%
-  ✓ Trace shows the wrong tool gets called repeatedly
-  → fall back to Prompting + templates (don't force the Agent)
-```
-
-**An FDE's craft is in "knowing when to switch".**
+Not necessarily. On many tasks, RAG + a strong model beats a fine-tuned smaller model. Fine-tune's advantage is latency and cost, not accuracy. If your customer isn't latency-sensitive, RAG is almost always the better choice.
 
 ---
 
-## Key Quotes
+## 7.7  AWS implementation cross-reference
 
-> "*Most LLM problems are not LLM problems — they're product problems.*"
-> — A. Lawrence, *FDE Rule Book*, 2025
+If the project runs on Bedrock, services for each connector:
 
-> "*Try prompting first. Always.*"
-> — OpenAI internal best practices, 2025
+| Connector | Primary AWS service | Operational note |
+|---|---|---|
+| **Prompting** | Bedrock model + 1h prompt cache | Long system prompt → enable cache, save money |
+| **RAG** | Bedrock Knowledge Bases + OpenSearch / pgvector | Default hybrid search + reranking |
+| **Agent** | Bedrock AgentCore (refer to Chapter 6 §6.4 on whether to upgrade to Level 2 orchestration) | Phase one with single agent + single tool doesn't need AgentCore |
+| **Fine-tune** | Bedrock Custom Models / SageMaker JumpStart | Prefer LoRA fine-tuning on Bedrock; don't spin up SageMaker training jobs from scratch |
 
-> "*Fine-tuning is the last 10% you do for the last 10% of cases.*"
-> — AWS GenAI Innovation Center, 2025
-
----
-
-## Action Checklist
-
-Must-dos in the first week of a new project:
-
-1. **Write the customer's pain points in 5 sentences** and locate the main path against §7.2's decision tree
-2. **Run 10 seed samples to set a Prompting baseline** (don't jump straight to RAG)
-3. **If the baseline is < 70%, add RAG and run a comparison**
-4. **Write a "why we're not fine-tuning" memo** (default: no fine-tune; need a strong reason to do it)
-5. **If the customer brings up "Agent", run them through §7.5's 4 signals first**
-6. **Review switching signals every two weeks**; don't push through.
+Each row needs its own engineering expansion. Knowledge Bases hands-on lives in Chapter 9 (data engineering). Agent toolset design is Chapter 14. Fine-tune dataset prep is at the end of Chapter 9. This chapter only decides **which connector to use**; it doesn't expand the implementation of each.
 
 ---
 
-## Anti-Pattern Checklist
+## Closing
 
-- ❌ **Customer says "AI customer support" → straight to multi-Agent** (RAG covers 80%)
-- ❌ **Any inaccuracy → add Fine-tune** (Fine-tune doesn't solve knowledge-update problems)
-- ❌ **Layering RAG + Fine-tune + Agent in the same project** (impossible to localize the cause)
-- ❌ **Skipping the baseline and going straight to a complex approach** (you don't know if the complexity pays off)
-- ❌ **Tool list > 10 → force Multi-agent** (try a single Agent first)
-- ❌ **Putting trendy frameworks (CrewAI / AutoGen) into production** (fine for PoC, careful in production)
+This chapter gives a judgment order: prompting first, RAG if not, agent if not, fine-tune as last resort. Validate each step with the customer's real data; step down only when the bar isn't met.
+
+Hesheng phase one lands on prompting alone — no RAG, no agent, no fine-tune. The least "AI-looking" plan, but the most likely to deliver inside 12 weeks.
+
+The next chapter handles the last D5 question — evaluation and observability. Chapter 6 picked the model, this chapter picked the connector, the next decides **how you know you're doing it right.** That's the last piece of the FDE puzzle, and the easiest for new FDEs to underestimate.
 
 ---
 
-## Relation to the Next Chapter
+## Public references for this chapter
 
-This chapter answered "which approach". The next chapter says: **whatever the approach, you must turn the Eval set into a CI gatekeeper before you start writing code** — the concrete way to live the Eval-driven rule.
-
-[← Previous: Tech Stack Quick-Decision Matrix](chapter-06.md) · [Next: Eval First, Code Second →](chapter-08.md)
+- Anthropic / OpenAI engineering blogs — prompting-first, then RAG, then fine-tune ordering methodology
+- Lewis et al., *Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks* (2020) — the original RAG definition
+- AWS Bedrock docs — product specs for Knowledge Bases, AgentCore, Custom Models

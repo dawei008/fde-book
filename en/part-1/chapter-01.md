@@ -1,278 +1,164 @@
 ---
-title: "part-1/chapter-01.md"
-nav_exclude: true
-search_exclude: false
+title: "Chapter 1  The Real FDE Workflow"
+parent: "Part I — Role and Mindset"
+nav_order: 1
 ---
 
-# Chapter 1: The FDE Workflow — A Real Week, A Real Quarter
+# Chapter 1  The Real FDE Workflow
 
-## Opening
+The first week into an FDE job, the biggest source of confusion is rarely "I don't know the tech." It's not knowing where the time is supposed to go.
+
+Does meeting with the customer count as work? Does writing a demo count as delivery? Does spending a morning labeling 50 Eval samples count as real work? Does pulling the customer's Ops into a channel to configure SSO fall inside the FDE remit?
+
+That's the question this chapter answers. It doesn't teach any specific technology. The point is to build a coordinate system — "what should I be doing right now?" — before you open the IDE. Every later chapter assumes you already have it.
+
+I'll walk you through the shape of a single FDE day first, then lay out the four phases a project goes through end to end.
+
+---
+
+## 1.1  A Day in the Life
+
+The day below isn't any one company's real schedule. It's several B2B AI projects' "actual workdays" compressed into one. If you do FDE work, some of your days will look exactly like this.
 
 ```
-Tuesday, Shanghai, conference room at a fintech customer.
+Tuesday, on the customer's site.
 
-09:00  Customer Ops @-mentions you in Slack — "RAG recall dropped from
-       0.82 to 0.61 overnight"
-09:15  Open LangFuse traces, scroll through the last 200 failed requests
-       from yesterday. 78 of them are about "policies issued in the last
-       3 days" — the customer added a batch of new insurance products
-       last week and didn't sync them into the KB
-09:40  Drop a two-line re-ingest SOP into the channel
-10:00  Standup with the customer's business PM: 4 new intents to add,
-       boss wants a demo next week
-10:30  Pair with customer engineering on an OAuth error (you didn't
-       write it, but you know the system best)
-11:00  30-minute call with a remote staff engineer at your company —
-       should we split retrieval into a separate retriever-ensemble
-       service? Park it for now
-12:00  Lunch in the customer cafeteria. Someone in Operations across
-       the table grumbles "that dashboard from last time is slow" —
-       you note it down. May not matter for this project, but it's
-       a signal
-13:30  Write the 4 prompt variants you'll demo this afternoon, run them
-       against the Eval set first — you do not freestyle in front of
-       the customer
-15:00  Demo. The customer's business owner throws out 2 new scenarios
-       on the spot. You don't engage head-on —
-       "Let me run them through Eval and come back tomorrow with a
-       pass/fail call"
-17:00  Author Eval cases: 4 new scenarios × 5 edge samples = 20 entries
-17:30  Ship last night's ingest fix to a 10% canary
-18:00  Daily report: today's progress / 3 things for tomorrow / 1 risk
+09:00  Slack ping — "RAG recall dropped from 0.82 to 0.61 overnight"
+09:30  Scrolled through traces. 78 of 200 failed requests trace back
+       to entries the customer added last week
+       — the business team uploaded new data without syncing the KB
+10:00  Standup with the customer's business PM: they want 4 new intents
+13:30  Write the 4 prompt variants for this afternoon's demo, run them
+       on the Eval set first — you do not freestyle in front of the customer
+15:00  Demo. The customer throws 2 new scenarios on the spot. You don't engage head-on
+       — "Let me pull this through Eval and come back tomorrow with a pass/fail call"
+17:00  Decompose those 2 scenarios into 20 new Eval samples
+17:30  Canary the ingest fix from last night to 10% traffic
+18:00  Daily report: progress / 3 things for tomorrow / 1 risk
 ```
 
-That's a day of FDE.
+A few moments in this day are worth slowing down on:
 
-Less than 25% of it is writing code, but every single thing you did was an engineering action.
+**The 09:30 triage.** Using traces to attribute 200 failed requests to a single root cause is a standard engineering action. It just happens in a Slack channel, with the customer as the audience instead of your PR reviewer.
+
+**13:30, running 4 prompt variants on the Eval set.** This is the move that distinguishes an FDE from a "presales demo engineer." You're not adjusting things live in front of the customer; you've already run the variants, looked at the numbers, and picked the best one to bring on stage. This will reappear over and over — it's the smallest unit of evaluation-driven development.
+
+**15:00, refusing to engage head-on when new requirements land mid-meeting.** This is judgment. If you say "great, I'll have it ready this afternoon," your next project may already be doomed. The FDE rhythm in conversation is "I'll answer you with the Eval set," not "I'll give it a try."
+
+If you count the hours actually spent typing in an IDE, it's less than half a day. Across the FDE projects I've been on, coding time stays steady at 25–35%. In the occasional Discovery week, it can drop to 10%. But **the rest of the time isn't wasted.** Triage, writing Evals, qualifying requests, canary releases — every one of these is an engineering action. They just don't take the form of writing code.
+
+Once that lands, "less than half a day on code" stops being a source of anxiety. That's the shape of the work.
 
 ---
 
-## 1.1 The Weekly Rhythm — The FDE's "Clocks"
+## 1.2  The Four Phases of a Project
 
-Abstract an FDE week into three "clocks":
+Pulling the camera back from "a day" to "a project." From kickoff to steady state, an FDE project roughly walks through four phases.
 
 ```
-            ┌─────────────────────────────────────────────┐
-            │ Customer Cadence                            │
-            │ - Monday standup / Friday demo / monthly    │
-            │   review                                    │
-            │ - Driven by the customer's calendar; FDE    │
-            │   cannot miss it                            │
-            ├─────────────────────────────────────────────┤
-            │ Engineering Cadence                         │
-            │ - PR cadence, Eval cadence, release cadence │
-            │ - Driven by you and your team               │
-            ├─────────────────────────────────────────────┤
-            │ Learning Cadence                            │
-            │ - Read customer business docs, browse their │
-            │   wiki, eat lunch with Ops                  │
-            │ - Only you can protect this one             │
-            └─────────────────────────────────────────────┘
+        Week 1-3            Week 4-7           Week 8-10          Week 11-12
+        ─────────           ─────────          ──────────         ─────────
+        Discovery           Scaffolding        Production         Handoff
+        Find the real       Build the minimum   Ship + stabilize  Hand it to
+        problem             closed loop                           the customer
 ```
 
-**The classic rookie FDE mistake is letting the entire week be eaten by the Customer Cadence** — every day spent chasing customer requests, no fixed Engineering Cadence, and certainly no Learning Cadence.
+The timeline is just a reference. To estimate roughly where your project will land, look at three variables:
 
-Three weeks in, you'll notice: delivery quality slowly degrades because you put zero time into Eval, and the customer starts going around you to your manager because you're no longer offering anything insightful.
+- **Is the data already on the customer's cloud and accessible?** If yes, save 1–2 weeks. If no, add 2–4 weeks (data egress / network whitelisting / DBA approvals).
+- **Does it require an on-prem deployment or a compliance review?** (Common in finance, healthcare, government.) If yes, add 4–8 weeks.
+- **How many decision-making layers are inside the customer?** A single department that can decide for itself usually clears 6–10 weeks. Group IT / Risk / Legal review usually starts at 12 weeks. Cross-BU, possibly half a year.
 
----
+The specific number of weeks doesn't matter. What matters is that **each of the four phases has one identifiable thing it's doing.**
 
-### Recommended Weekly Template (5-day version)
+**Discovery** is the phase most worth spending time on. You're doing one thing — translating "we want to build an AI assistant" out of the customer's mouth into "which role, in which workflow, needs to solve which specific problem; what does success look like; what number measures it."
 
-```
-        Mon         Tue         Wed         Thu         Fri
-        ─────       ─────       ─────       ─────       ─────
-07:00                                                     ← Reserve learning time
-09:00   Customer    Deep work   Customer    Deep work   Weekly demo
-        standup     (no-mtg)    standup     (no-mtg)    + weekly
-        + plan                  + Eval                   report
-                                review
+Why is this phase the most expensive? Because most projects veer off course here, and the cost of veering doesn't surface until Scaffolding or Production. The customer's PM says "we want an agent that writes emails automatically" — you hear it, you start integrating tools, writing orchestration logic. Three weeks later, when you ship, you find out the customer's actually urgent need was "Sales pushing data into ERP at month-end," a tiny piece of automation you could've finished in a morning. This pattern recurs in the FDE community for one reason every time: Discovery wasn't done deeply enough.
 
-Lunch   With        Remote sync With        Read         With customer
-        customer    with your   customer    customer     decision-makers
-        Ops         own team    business    wiki
-                                PM
+**Scaffolding** turns the conclusions of Discovery into the smallest working version. "Smallest" is load-bearing here — not a demo, but a small system that can be run against an Eval set for a score, and that one or two people from the customer's business side can actually use for a week. The most common mistake at this phase is **treating a demo as Scaffolding.** A demo gets shown to the executive once and then it's over. Scaffolding is something a real user runs for over a week and that you can keep collecting feedback from. The engineering bar is very different. The most important artifact out of Scaffolding isn't code — it's **Eval set v0 + a script that runs the score**. Without those two, none of the optimization that comes later has a direction.
 
-PM      Discovery   Engineering Customer    Engineering  Customer demo
-        interview   deep work   eng         deep work    + feedback
-                                handoff                  digest
+**Production** scales "two or three users for a week" up to "tens of users for a few months." The bulk of the work here isn't new features. It's **resilience to operational deformation and to faults.** The customer's network will jitter. Upstream data will be dirty. Someone will paste a 10,000-character ticket from Excel into your input box. You'll spend most of Production handling these edge cases and adding monitoring. New feature velocity drops noticeably. This is the first phase where FDEs feel "the work has turned into operations" — that's not a perception, that's literally what's happening.
 
-17:00   Daily       Daily       Daily       Daily        Weekly report
-        report      report      report      report       + next week's
-                                                         plan
-```
+**Handoff** is the most underestimated phase. The customer being able to use the system ≠ the customer being able to maintain it. If Handoff is done badly, six months later the system breaks at the customer's site, no one knows how to fix it, and it gets quietly retired. That whole quarter of work was wasted. The artifacts of this phase are runbooks, training materials, code permissions for the customer's internal owner, and a release process. If you're still writing new features in Handoff, it's pretty much guaranteed the project won't last.
 
-The non-negotiable piece is the **Tuesday / Thursday "Deep Work Days (no-meeting days)"**. Lose them and all you have left is "senior PM + pre-sales" — you're no longer a Forward Deployed *Engineer*.
+### The boundaries between the four phases are blurry
 
----
+Discovery never "ends" — even in Production you'll discover new customer pain points; the Eval set never "feels enough" — six months after launch you'll still be adding samples. But **each phase has a primary task, and most of your time should be on that primary task.**
 
-## 1.2 The Quarterly Rhythm — The FDE's "Four Quadrants"
+In Discovery, most of your time should be talking to people and watching how the customer actually works — not writing code. In Scaffolding, most of your time should be running Evals, tuning prompts, fixing retrieval — not preparing customer demos. In Production, most of your time should be on traces, edge bugs, monitoring. In Handoff, most of your time should be writing docs, training the customer's engineers, transferring permissions and release process.
 
-A quarter is roughly 12 weeks. A typical FDE project unfolds across "four quadrants":
+If your week's time allocation doesn't match the phase you think you're in, that's a signal — either you've **misjudged the phase**, or **you're avoiding the hardest thing about the current phase**.
 
-```
-        Week 1-3          Week 4-7          Week 8-10        Week 11-12
-        ─────────         ─────────         ─────────        ─────────
-        DISCOVERY         SCAFFOLDING       PROD-IZATION     HANDOFF
+### How to tell which phase you're in
 
-        ─────────         ─────────         ─────────        ─────────
+Across the projects I've been on, the most common failure mode is misjudging the phase — thinking you're in Scaffolding when you're still in Discovery, ending up building a pile of features no one wants. This has happened to me more times than I'd like to admit.
 
-Goal    Pin down the      Get a minimal    Stable launch +   Customer
-        "real problem"    closed loop      rollback plan     takes over
-        and "real         + Eval baseline                    + pattern
-        budget"                                              extraction
+Ask the four questions below in order. The first one you can't answer "yes" to is the phase you're actually in:
 
-Output  Discovery        Demoable build +  Production        Runbook +
-        report +         Eval set v0.1     deploy +          Eval v1.0 +
-        SOW draft                          monitoring        Handoff doc
-                                           dashboards
+1. **Is "success" defined as a specific number for the customer?** Not "we want an AI assistant to improve efficiency" — but "ticket triage accuracy 90%, mean handle time down 30%." If no, you're in Discovery. Don't write code.
 
-Iron    Sell outcome     Eval-driven       Fix Forward       All three
-rule
-focus
+2. **Do you have an Eval set you can score the current version against?** Not "the customer thinks it's pretty good" — but a fixed sample set + a script that can tell you in 30 minutes whether v0.3 is better or worse than v0.2. If no, you're in Scaffolding. Build the Eval set first, then prepare the demo.
 
-Risk    Drifting         Missing Eval      Production        No one
-        requirements                       incident          maintains
-        + drifting                                           after Handoff
-        expectations
-```
+3. **Have real users on the customer's side used it in production for at least a week?** Not "tried it" — but it's part of the workflow they can't function without. If no, you're in Production. Focus on stability and monitoring.
 
-Remember one thing: **the boundaries between these four phases are blurry**. Discovery never "ends," Eval is never "enough." But each phase has a single **primary task**, and 70% of your time should be on it.
+4. **Is there someone inside the customer who can run it without depending on you?** Including releases, fixing edge bugs, adding new intents, watching dashboards. If no, you're in Handoff. Write runbooks and run training.
+
+All four "yes" — the project is done. Run a postmortem and extract lessons (covered in Chapter 16).
+
+The cost of misjudging is asymmetric. **If you think you're in Scaffolding but you're actually in Discovery, you'll waste weeks building unwanted features. If you think you're in Discovery but you're actually in Scaffolding, you'll lose at most two extra days talking to the customer.** When in doubt, judging "one phase earlier" is the safer bet.
+
+A real example to make this stick: a customer PM handed me a "detailed requirements doc" in week 2 — a 20-page Word doc listing 38 intents with 3–5 dialog examples each. My read at the time: "the customer has thought it through, we can move into Scaffolding." I started building retrieval and routing. Week 5 demo, the customer says "this isn't what we wanted." On postmortem: those 20 pages were the customer PM's own draft. Front-line operators had never seen it. 12 of the 38 intents weren't part of their actual workflow. The cost of my misjudgment was three weeks scrapped and rebuilt. Two extra days putting that doc in front of front-line operators would've prevented it. The cost-benefit is completely asymmetric.
 
 ---
 
-### Reading the Phase You're In
+## 1.3  Where the Time Should Go
 
-When you take over a project, first figure out which phase it's in:
+This section gives three simple self-check questions. Asking yourself once every two weeks beats any project management tool.
 
-```
-  Q1: Has the customer's "definition of success" been pinned to a number?
-        ↓
-  No  ──→ You're in DISCOVERY. Do Discovery first; do not write code.
-  Yes ↓
-  Q2: Do you have an Eval set, and can you score the current version?
-        ↓
-  No  ──→ You're in SCAFFOLDING. Build Eval first, then build the demo.
-  Yes ↓
-  Q3: Has someone in the customer's "real production environment" used
-       it for at least a week?
-        ↓
-  No  ──→ You're in PROD-IZATION. Focus on stability + monitoring.
-  Yes ↓
-  Q4: Is there someone inside the customer who can run it independently
-       of you?
-        ↓
-  No  ──→ You're in HANDOFF. Write Runbook + train.
-  Yes ──→ Project done. Do pattern extraction (Ch 16).
-```
+**One: how many hours over the last two weeks went to "non-coding engineering"?** That includes Discovery interviews, Eval labeling, reading customer business docs, writing runbooks, scanning traces for patterns. These are all engineering work, just not typing code.
 
-90% of FDE failure stories trace back to **misreading which phase you're in**. The most common mistake: thinking you're in Scaffolding when you're still in Discovery, then shipping a pile of features no one asked for.
+What's a healthy ratio? There's no golden number, but you can ask the inverse: if you spent **almost no time** over two weeks on these things — only IDE time and meetings — you've likely turned the project into "remote outsourcing." The customer hands you specs, you write code, no judgment or observation of your own enters the picture. That's not an FDE. That's a contractor running tickets.
 
----
+**Two: how many times in the last two weeks did you walk over to the customer's desk or canteen on your own?** Not in a meeting, but going over yourself. Watching front-line staff actually use the product. Having lunch with someone in Ops, Customer Success, Sales. Sitting at a workstation Friday afternoon and watching the last two things they do before shutting down their laptop.
 
-## 1.3 Workflow Differences Across the Two Tracks
+Zero is a red line — your "understanding of the customer" is becoming abstract. What you're seeing is what the customer's leadership wants you to see, not the actual workflow. There's a phrase in the FDE community for this: "immerse before you judge." Get into the customer's actual work first, then make technical decisions.
 
-The same week looks very different for an **LLM application FDE** versus a **field-delivery FDE**:
+**Three: in the last month, did you push back on any of the customer's requirements or proposed solutions?** Not bickering — pushing back with data. "The customer wants company-wide multi-agent collaboration. Looking at their data integration state, I'm recommending we start with a single agent + tool calling." Or: "The customer wants self-service analytics for everyone. I ran 50 samples — the model gets 60% accuracy on understanding their reports. Let's serve one specific role first."
 
-| Time slot | LLM Application FDE | Field-Delivery FDE (Palantir / AWS GenAIIC style) |
-|---|---|---|
-| Mon AM | Pull LangFuse / LangSmith traces, analyze failure samples | Check customer pipeline alerts, confirm ETL is healthy |
-| Mon PM | Discovery: align with business PM on intents and data shape | Discovery: align with data team on schema and data ownership |
-| Tue full day | Tune prompts / upgrade RAG / swap models | Write ETL jobs / model Ontology entities / tune SQL |
-| Wed AM | Run Eval, ship a new build | Run data-validation batches, deploy pipelines |
-| Wed PM | Customer eng integration: API, rate limits, caching | Customer eng integration: DB connections, Kerberos, network allowlists |
-| Thu full day | Deep work: refine eval set, ablate prompt variables | Deep work: optimize jobs / refactor data model |
-| Fri | Demo: scenario dialogues + metrics | Demo: dashboards + data correctness |
+If you didn't push back at all in a month, you've quietly degraded into "senior implementation engineer" — the customer says it, you build it, no judgment is being applied. Pushing back here doesn't mean defying the customer. It means "I have a better proposal, and I'll show you with data."
 
-**On the FDE job, both tracks are the same mindset and different muscles**. Inside the same company on the same project, you'll switch tracks across phases — that's exactly what Ch 3 unpacks.
+What counts as "data"? The most common kinds:
+
+- **Cost modeling.** Compute token usage, API unit price, and QPS for each candidate solution. Example: the customer wants on-prem deployment of a 70B open-weight model; you compute their QPS and show that managed API serves the same load for a fraction of the monthly ops cost of running it themselves.
+- **Latency measurement.** Test end-to-end latency under the customer's real network conditions. Example: the customer wants two external data sources hitting in real time. You measure, and adding the second source pushes P95 from 1.2s to 4s — past their SLA.
+- **Small-sample evaluation.** Run candidate solutions against a 30–50 sample set, give an accuracy comparison. 30 isn't enough to publish a result, but it's enough to say "this option is clearly worse than that one."
+
+All three of these can be produced in one to two days. Every time the customer says "we want to do X," spend at least two hours on one of these before deciding to go along or push back.
+
+If you can't do these three things in a month, you need to actively reset the tempo of the work. If you can't do them in three months, you should seriously reconsider whether this job is the right fit.
 
 ---
 
-## 1.4 Where Should the Time Go — Three Diagnostics
+## Closing: Why phase judgment matters this much
 
-### Diagnostic 1: ≥ 8 hours per week on "non-coding engineering"
+This chapter gives a coordinate system: the shape of a day, the four phases of a project, a biweekly self-check. But it doesn't answer the most important question — **why is the cost of misjudging the phase so high?**
 
-That includes: Discovery interviews, labeling Eval, reading customer business docs, writing Runbooks, reading traces.
+The short version: there are a few "iron rules" in FDE work, and breaking any of them costs you the customer's trust. And **the rule that's easiest to break is different in each phase.** In Discovery, the easiest one to violate is "sell the outcome, not the product." In Scaffolding, the easiest is "Eval before code." In Production, the easiest is "fix at the customer's site, don't carry the problem back to HQ." If you don't know which phase you're in, you don't know which rule to be most vigilant about right now.
 
-**Below 8 hours and the FDE tends to turn the project into "remote outsourcing."**
-
-### Diagnostic 2: ≥ 1 unsolicited customer face-time every two weeks
-
-Not a meeting you organized — one you walked into yourself. For example:
-- Lunch in the customer cafeteria
-- Friday afternoon, sit at their workstation and watch them use the product
-- A 30-minute 1:1 with a customer Ops or frontline employee
-
-**Less than once every two weeks and the FDE drifts into "increasingly abstract information,"** building things further and further from the customer's real work.
-
-### Diagnostic 3: At least once a month, "push back" against the customer
-
-Not arguing for sport — **rejecting a request or a proposal with evidence and numbers**.
-
-Examples:
-- The customer wants "company-wide multi-Agent collaboration"; you push back and propose starting with a single Agent + tool augmentation
-- The customer wants to self-host Llama 70B; you cost out the inference and recommend starting on a hosted API
-
-**Less than once a month and the FDE has usually already degraded into a "senior implementation engineer"** — judgment is no longer in play.
+The next chapter unpacks those three iron rules. After reading it, come back and re-read this chapter's four phases — why they're divided this way will become a lot clearer.
 
 ---
 
-## 1.5 A Real Counter-Example
+## Further Reading
 
-An anonymous FDE shared a failure story on Substack (2025):
+**On the name "FDE."** It's not a universal title across the industry. Palantir uses it as a core role title (the term was born there). Engineers doing AI delivery work go by different titles at different companies — Solutions Architect, Customer Engineer, Delivery Consultant, Deep Learning Architect, all of them. This book uses "FDE" because it most precisely captures the essence of the role: "embedded with the customer, accountable for the outcome." Your title may say something else, but if your work matches the rhythm in 1.1, this book applies.
 
-> *Week 3 of the project, the customer said "we want an agent that can write emails, query CRM, edit calendars — all wired up." I didn't ask follow-ups. I went back and built a 6-week project with 3 tool integrations and orchestration logic. Demoed in week 8. Customer said "looks good" and ghosted us.*
->
-> *Later I found out their CRM was 80% empty fields, and the CEO said that line because he'd just sat through someone else's demo. What was actually urgent was their sales team migrating data into ERP at month-end — a one-morning automation. I built a 6-week demo, and they couldn't buy it.*
+**On the difference between LLM-application FDEs and data-delivery FDEs.** The same FDE title masks very different tech stacks across companies. The LLM-application track (most AI-app companies) spends most of the week on prompts, traces, Evals, retrieval. The data-delivery track (Palantir-style data-platform and ontology work) spends most of the week on ETL, data modeling, data validation. Same mindset (embedded, accountable) but **different muscles** (tech stack and tooling). Worth knowing: **even within a single project, different phases call for different postures.** Discovery skews toward data delivery (reading schemas, mapping workflows). After Scaffolding, things shift toward LLM application (prompt tuning, token cost). When you walk into your next project and find yourself doing things you've never touched, no need to panic. Switch posture, not mindset.
 
-**Diagnosis**:
-- Jumped into Scaffolding while still in Discovery (wrong phase)
-- No Eval, so "agent writes emails" had no quantifiable bar (broke Eval-driven)
-- Didn't sell the outcome (data into ERP); sold the product (multi-tool agent)
+**Public references for this chapter:**
+- A. Lawrence, *Forward Deployed Engineer Rule Book* (2025) — the four-phase naming in 1.2 borrows from this taxonomy
+- Conikeec, *The FDE Playbook: A Practitioner's Field Manual* (2025, Substack) — describes a similar phase model
+- Bob McGrew @ Y Combinator (2025) — the source interview for "Sell the outcome, not the product"
+- Nabeel Qureshi, *Reflections on Palantir* — an internal view of Palantir's FDE working model
 
-Every later chapter in this book is, in some sense, helping you avoid this counter-example.
-
----
-
-## Key Citations
-
-> "*The most expensive line of code is the one nobody asked you to write.*"
-> — Conikeec, *The FDE Playbook*, 2025
-
-> "*Forward deployment is not a job; it's a posture toward the customer's workflow.*"
-> — A. Lawrence, *FDE Rule Book* (paraphrased), 2025
-
-> "*The best FDEs don't sell the agent; they sell the after-state of the workflow.*"
-> — Bob McGrew @ YC, 2025
-
----
-
-## Action Checklist
-
-When you take on a new FDE project, do the following 7 things in week 1:
-
-1. **Get access to the customer's existing wiki / Confluence** — not a "to-do," it must be in place by the end of week 1
-2. **Start a personal "project journal" file** (Obsidian / Notion private space recommended); spend 5 minutes a day capturing 3 observations
-3. **Draw your "Customer Cadence"**: which days of the week the customer has which standing meetings, and align your calendar to them
-4. **Force two "Deep Work Days"** (Tuesday and Thursday recommended) — refuse all non-urgent meetings
-5. **Before your first Discovery meeting**, prepare a 12-question checklist (see Ch 4)
-6. **Find 1-2 frontline employees on the customer's "non-decision tier,"** and book a 30-minute coffee (this is Lawrence's *Immersion Before Judgment*)
-7. **By the end of the first weekend, write a memo titled "I assumed the customer wants X, but it might actually be Y"** (a guard against the §1.5 counter-example)
-
----
-
-## Anti-Pattern Checklist
-
-- ❌ **Letting the entire week go to the Customer Cadence** (you become a "senior PM")
-- ❌ **No "Deep Work Days"** (interrupted constantly, never get any engineering depth)
-- ❌ **Skipping Discovery and writing demos directly** (the most expensive code is code no one asked for)
-- ❌ **Not writing daily / weekly reports** (six months later you can't remember what you did, and pattern extraction is impossible)
-- ❌ **Never "pushing back" on the customer** (the customer asks, you build — a few weeks from FDE degrading into implementation engineer)
-- ❌ **Not knowing which phase you're in** (use the §1.2 decision tree to self-check)
-
----
-
-## Relation to the Next Chapter
-
-This chapter mapped out the FDE's "shape of time." The next chapter maps the "shape of judgment" — the three iron rules that decide whether you're doing the job right. After both chapters, you'll have a complete coordinate system for FDE engineering.
-
-[← Back to Contents](../README.md) · [Next: Three Iron Rules →](chapter-02.md)
+Full bibliography and links in the *References* at the end of the book.

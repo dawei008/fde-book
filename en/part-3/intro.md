@@ -1,39 +1,25 @@
 ---
-title: "part-3/intro.md"
-nav_exclude: true
-search_exclude: false
+title: "Part III — Tech Stack Selection"
+nav_order: 13
+has_children: true
 ---
 
-# Part III: Scaffolding — Six Weeks to a Running LLM Workflow
+# Part III  Tech Stack Selection
 
-> Applies to: **LLM application track** (data-driven track readers, jump to Part IV)
+Discovery is done. The FDE has the outcome, Eval set v0.1, and SOW in hand. The Monday after, the customer's CTO asks a very concrete question: which model are you using, where will it run, how do you call it, who orchestrates.
 
----
+At this moment, beginner FDEs most often fall into two pits. One is over-selection — two weeks of cross-comparing five vector stores, three Agent frameworks, four LLMs, a stack of meetings, and not a single line of business code. The other is zero-selection — grab the stack you know best and start, only to find six weeks later that the choice was wrong, and rollback cost is huge.
 
-## What This Part Solves
-
-Discovery is done. The FDE walks away with an outcome, an Eval set v0.1, and a SOW.
-
-What goes into the next six weeks?
-
-90% of new FDEs fall into one of two anti-patterns at this step:
-
-1. **Over-selection**: spend two weeks comparing five vector stores / three Agent frameworks / four LLMs — without writing a single line of business code.
-2. **Zero-selection**: grab the most familiar model + most familiar framework and start hacking — only to discover six weeks later that they picked wrong.
-
-This Part gives you a third path: **a "quick-decision matrix + decision tree + Eval-first" trio that turns the six-week scaffolding stage into a controllable engineering task.**
-
-## Chapters
-
-- **Chapter 6: Tech Stack Quick-Decision Matrix** — one table to pick model / framework / database / orchestration in 30 minutes
-- **Chapter 7: Decision Tree** — RAG / Fine-tune / Prompting / Agent — which one? what signal triggers a switch?
-- **Chapter 8: Eval First, Code Second** — hands-on: how to turn the Eval set into a CI gatekeeper
-
-## Relation to Other Parts
-
-- **Upstream**: Part II's outcome + Eval v0.1 + SOW are the entire input to this Part
-- **Downstream**: Part V pushes the Scaffolding artifacts into production; Part VI adds Agents on top of an existing scaffold
+Part III gives a third path: split "tech stack" into five independent dimensions and lock them in order, turning week-one selection into a controllable engineering task instead of an endless debate.
 
 ---
 
-[← Back to Contents](../README.md)
+Chapter 6 covers locking the model, hosting, and orchestration on a single page in week one. The core is a five-dimensional structural diagram (D1 hosting, D2 model, D3 invocation pattern, D4 orchestration, D5 evaluation), where upper layers depend on lower ones — so you must lock from bottom to top. The chapter uses a manufacturing customer case (Suzhou Hesheng Precision Heavy Industries) for demonstration. AWS Bedrock is the platform we work on, but the selection framework is platform-independent.
+
+Chapter 7 covers the D3 invocation-pattern layer — RAG / Fine-tune / Prompting / Agent, which to use, and what signals trigger a switch. This chapter doesn't give "who's better" judgments. It gives a decision tree: data update frequency, answer determinism, inference budget, compliance constraints — combine these dimensions and you naturally land on one of the patterns. After this chapter, the next time someone says "we should use an Agent," you'll know how to push back.
+
+Chapter 8 covers D5 — evaluation and observability. The hard part of evaluation isn't tooling, it's discipline: actually wiring the Eval set into CI, running scores on every PR, blocking merges when scores drop below last week. This chapter takes Part I, Chapter 2's Eval-driven iron rule and grounds it in concrete engineering actions. It's the hinge between Part III and Part V's productionization.
+
+---
+
+Part III's input is Part II's Eval set and SOW. Its output is a minimum closed loop that can score, demo, and continue iterating. Part V's productionization and Part VI's Agent work both build on this loop.
