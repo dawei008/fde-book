@@ -3,3 +3,13 @@ book/
 *.swp
 /tmp/fdebook-*-combined.md
 research/
+
+# Demo workspace artifacts (keep code, drop build/cache/secrets)
+demos/**/cdk.out/
+demos/**/__pycache__/
+demos/**/.venv/
+demos/**/node_modules/
+demos/**/.env
+demos/**/*.log
+demos/**/cost-snapshots/
+demos/**/data/raw/
