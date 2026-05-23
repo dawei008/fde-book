@@ -1,420 +1,274 @@
 ---
-title: "part-4/chapter-09.md"
-nav_exclude: true
-search_exclude: false
+title: "Chapter 9 — Data Engineering"
+parent: "Part IV — Engineering for the Real Customer Environment"
+nav_order: 1
 ---
 
-# Chapter 9: The Customer Data Stack — Ontology / ETL / Real-Time Pipelines
+# Chapter 9: The Customer Data Stack — Ontology, ETL, and Trade-offs in Real-Time Pipelines
 
-## Opening
+That ticket Agent at Suzhou Hesheng Precision Heavy Industries — in Chapter 6 we signed the architecture sheet in the conference room, in Chapter 7 we settled on RAG + tool use, in Chapter 8 we wired the eval set into CI. Now Scaffolding is in week three, and the job is turning "the model can run" into "the data can flow."
 
-```
-A financial-services customer. The FDE's LLM Agent demo runs beautifully,
-but it has to ship to production.
+There was one line on the board's wishlist I didn't dare answer lightly back then: "Should the Agent pull real-time spare-parts inventory from the customer's local distributors?" — behind that single line sat the data-integration workload of 5 sites in Southeast Asia + 1 ERP at HQ + 8 external systems at distributors in each region. I told Gu Jianguo that day, "I need to draw a data map before I can answer this." That map is what this chapter is.
 
-The first week of data integration is brutal:
-  - Five customer databases: PostgreSQL (primary) + Oracle (contracts) +
-    SQL Server (finance) + MongoDB (logs) + a shared drive of Excel (30%)
-  - Primary keys disagree: CRM uses customer_id, ERP uses cust_no,
-    finance uses client_code, no mapping table exists
-  - Time zones disagree: UTC + Asia/Shanghai + customer's local TZ, mixed
-  - One critical report pulls from 4 systems,
-    each with a different definition of "customer"
-
-The FDE walks away with one line:
-  "80% of the engineering before an Agent goes live is data governance.
-   Skip data governance and ship the Agent anyway,
-   and the smarter the Agent the more confidently
-   it will splice inconsistent data into a wrong answer."
-
-This chapter is about taking a customer's data stack
-from "scattered everywhere" to "an Agent can call it safely."
-```
+This chapter doesn't teach you "what is a data warehouse" — you've done five years of backend work, you know all that. What this chapter is about is **looking at the data stack from the customer's perspective, deciding what to integrate first and what to defer, what to gather under Ontology and what to leave to raw SQL** — these judgments are the FDE's core actions on customer site, and they're not the same thing as the "data architecture" in textbooks.
 
 ---
 
-## 9.1 The Typical Shape of a Customer Data Stack
+## 9.1 The "5-Layer Data Map" You Must Draw in Week 1
+
+Across the projects I've personally been in, data integration accidents are never because somebody didn't know how to use a tool — they happen because the FDE didn't spend a morning in the first two weeks drawing the customer's data stack clearly. Week 3 starts and you're trying to integrate, and you discover that "customer" means four different IDs in four systems, and "yesterday's orders" can't even be aligned on which timezone's "yesterday."
+
+I make a habit of drawing a map like this in week 1 — five layers, bottom up:
 
 ```
-        The "5 layers" of a customer's data
-        ─────────────────────────────────────
+  L5  Application / Agent / API           ← Most FDE work lives here
+        Bedrock Agent / Lambda / internal apps
 
-  L1 Operational databases (OLTP)
-     - PostgreSQL / MySQL / Oracle / SQL Server
-     - Primary store for business systems
+  L4  BI / Dashboard                      ← What the business looks at daily
+        QuickSight / Tableau / Power BI / in-house
 
-  L2 Data warehouse / data lake (OLAP)
-     - Snowflake / Redshift / BigQuery / Databricks / Iceberg
-     - Where analytics runs
+  L3  Metric layer / Data Mart            ← "Customer" is defined here
+        dbt models / business views / canonical definitions
 
-  L3 Middle layer (Data Mart / Cube)
-     - dbt models / homegrown views
-     - The "canonical definition" of business metrics
+  L2  Warehouse / Data Lake               ← Where analytics runs
+        Redshift / Snowflake / S3 + Iceberg / Databricks
 
-  L4 BI / dashboards
-     - Tableau / Power BI / Quicksight / Looker
-
-  L5 Business apps / Agents / APIs
-     - Where data is consumed (most FDE work lives here)
+  L1  OLTP databases                      ← Primary store for business systems
+        PostgreSQL / Oracle / SQL Server / MongoDB
 ```
 
-**In Week 1, the FDE should draw a "5-layer data diagram"** and pin down what the customer actually has.
+Hesheng's map ended up like this: L1 has 5 — HQ PostgreSQL (CRM tickets), Oracle (contracts/finance), Singapore RDS (MES), local MongoDB at each site (field operations logs), and 30% of critical data sitting in Excel files on a shared drive (spare-parts inventory is one of those). L2 is a Redshift in the Singapore region that's been running for two years. L3 is a pile of views maintained by two people on the data team, no dbt. L4 is QuickSight plus a few static weekly reports for the board. L5 is empty right now — they've never built an Agent before.
+
+The point of drawing this map isn't aesthetics, it's to answer three questions:
+
+- **Which layer is the data in now, and which layer is it going to?** Our Agent is at L5. The data it queries is either at L1 (real-time ticket status) or at L2/L3 (historical dispatch records). Which layer is the Excel spare-parts inventory in? Strictly, it's in the "unstructured corner" of L1 — and that's a textbook integration headache.
+- **How many layers does it cross?** The more layers it crosses, the more engineering work. The Agent reading directly from L1 PostgreSQL is the fastest but most coupled approach; routing through L2 → L3 is a day slower but stable. That choice is what 9.3 unpacks.
+- **Does L3 have "unified definitions"?** Most B2B customers are messy at this layer — the same "customer" is `customer_id` in CRM, `cust_no` in ERP, `client_code` in the finance system. No mapping table, the business side patches it together by experience. That's the Ontology problem 9.2 covers.
+
+> Lawrence in *Forward Deployed Engineer Rule Book* wrote a line that stuck with me: *Most LLM hallucinations are actually data quality problems wearing a costume.* After a few projects I increasingly agree — the smarter the Agent, the more easily it confidently composes inconsistent data into a wrong answer. Drawing this map clearly in week 1 is how you save time on every "why did the Agent get this wrong" incident later on.
 
 ---
 
-## 9.2 Ontology — Unifying What's Scattered
+## 9.2 Ontology: Bringing the Five Lakes and Four Seas Under One ID Card
 
-Ontology is the concept Palantir introduced and popularized. At its core it is a unified definition of **business objects + relationships + properties**.
-
-```
-              The 3 components of an Ontology
-              ───────────────────────────────
-
-  Object:
-    Customer / Order / Product / Contract / Employee
-    Each object has a "gold-standard definition"
-
-  Property:
-    Customer.id, Customer.name, Customer.tier
-    Each property has a source-of-truth
-
-  Relationship:
-    Customer 1:N Order
-    Order 1:N OrderItem
-    Order N:1 Salesperson
-```
-
-### The 4 questions an Ontology has to answer
+Ontology was the term Palantir popularized — they built it into the core abstraction of their product. Strip the marketing layer and it's three things:
 
 ```
-1. Who counts as a "customer"?
-   - The CRM record? The paying entity? The contract counterparty?
-   - Different departments answer differently → must be unified
+  Object       The "gold standard" definition of a business object
+               Customer / Order / Product / Contract / Asset
 
-2. Which ID is the canonical one?
-   - The CRM's customer_id?
-   - The contract counterparty's unified_party_id?
-   - One ID has to be the gold ID
+  Property     Attributes of each object + source-of-truth
+               Customer.id = ?, Customer.tier = ?
 
-3. How is the mapping built?
-   - Most of the time it's a hand-curated table
-   - There is no silver bullet
-
-4. Who has authority to change the Ontology?
-   - Without an owner you'll see "A renames a field today,
-     B renames it back tomorrow"
+  Relationship Relationships between objects
+               Customer 1:N Order, Order 1:N Item
 ```
 
-### AWS in practice: a lightweight Ontology with Lake Formation + Glue Data Catalog
+This sounds like Data Modeling 101, but Ontology has one critical distinction from traditional data modeling — **it isn't defined behind closed doors by the data team; it's a contract co-signed by business, data, and application teams**. Who is "the customer"? That decision can't be made by a data engineer alone — the business side has to speak.
 
-AWS doesn't ship a full "Ontology framework" the way Palantir does, but Glue + Lake Formation give you a workable lightweight version:
+At Hesheng, in week 2 I sat down with Chen Xue and Gu Jianguo and walked through it. The questions I asked weren't technical, they were four business questions:
+
+**One, who is "the customer"?** In Hesheng's CRM "customer" is the buyer; in ERP "customer" is the paying party; in the after-sales system "customer" is the equipment user. For one five-axis machining center, the buyer might be an agent in Singapore, the paying party a factory in Malaysia, the user the workshop in Ho Chi Minh City. Three different "customer" IDs. Our Agent ingests tickets from the user — so **the after-sales system's `customer_id` is the gold ID**.
+
+**Two, what's the primary key?** The after-sales system's `customer_id` looks like `SVC-VN-HCM-001423`. Region prefix, sequence number — looks tidy, but more than 200 historical records were hand-keyed and the prefix isn't consistent (`VN-HCM` vs `VHCM` vs `HCM-VN`). We can't use it directly — we have to build a "gold ID → actual system ID" mapping table that anchors the dirty data. Chen Xue and two customer-service reps spent two days in week 3 hand-fixing it. **There's no silver bullet here, just hand work**.
+
+**Three, who has the right to change it?** Once the Ontology is set, every downstream dbt model and every Agent prompt is built on top. Renaming a single field is a major event. We agreed Chen Xue (the business side) is the Ontology owner; any change needs her email confirmation. That clause went into the SOW appendix.
+
+**Four, how many objects does v1 cover?** Hesheng's first phase is just ticket triage — only Customer, Asset (equipment), Ticket, Engineer — 4 objects. Order/Contract aren't in Ontology v1. **Don't model objects the business scope doesn't reach** — Ontology isn't "build it ahead just in case," it's "build the ones you use."
+
+That's the Ontology design done. What tool do we land it on? Hesheng is an AWS customer with the primary region in ap-southeast-1; there's no reason to bring in Palantir Foundry — overkill, and it wouldn't get past Gu Jianguo ("don't open up a second vendor relationship"). On AWS in this customer scenario, we built a lightweight version with Glue Data Catalog + Lake Formation:
 
 ```
-        Glue Data Catalog as the Ontology registry
-        ───────────────────────────────────────────
+  Glue Data Catalog as the Ontology registry
 
-  Database: customer_360_ontology
+    database: hesheng_ontology_v1
 
-  Table: customer  (← business object definition)
-    Columns:
-      - customer_id    (string, gold ID)
-      - source_systems (struct: crm_id, erp_no, finance_code)
-      - tier           (string)
-      - tags           (LF tags: PII, region=APAC)
+    table: customer
+      customer_id        string  PK    -- gold ID
+      legal_name         string
+      country            string
+      tier               string
+      crm_id             string        -- maps to CRM
+      erp_no             string        -- maps to ERP
+      finance_code       string        -- maps to finance
+      lf_tags:           PII=yes, region=APAC
+      owner:             chen.xue@hesheng.com
 
-  Table: order
-    ...
-
-  ↓
-  Lake Formation Tags (LF-Tags):
-    - PII: yes / no
-    - sensitivity: public / internal / restricted
-    - region: APAC / EMEA / NA
-
-  ↓
-  IAM roles + LF-Tags decide who can query which fields
-  on which object
+    table: asset
+      asset_id           string  PK
+      customer_id        string  FK -> customer
+      model              string
+      install_date       date
+      ...
 ```
 
-**Why this works**:
+Permissions go through Lake Formation LF-Tags: PII fields are masked unconditionally in dev, and in prod they're partitioned by IAM role. This isn't a "complete Ontology framework" — it doesn't have Foundry's GUI object browser, it doesn't have automatic lineage — but it's enough, and it doesn't introduce a new vendor. This is the most common trade-off the FDE makes on customer site: **using the customer's existing platform capabilities to deliver 70% of what Palantir's abstraction does, and patching the remaining 30% with SOPs and dbt models**.
 
-- Ontology metadata is maintained in Glue
-- Permissions are maintained via LF-Tags + IAM
-- Athena / Redshift / EMR can all query it
-- Bedrock Knowledge Bases reads Glue metadata directly
-
-> **AWS reference**: search "AWS Lake Formation tags" and "Glue Data Catalog cross-account."
+If your customer is on Snowflake or Databricks, the equivalents are Snowflake Tags + Polaris and Databricks Unity Catalog. Different cloud, same thinking.
 
 ---
 
-## 9.3 ETL — Making the Data Flow
+## 9.3 ETL: Deciding "Fresh Enough" and "Accurate Enough"
 
-ETL (Extract / Transform / Load) is the engineering of L1 → L2 → L3.
+Ontology defines what an object looks like; ETL solves how that object gets assembled out of 5 systems.
 
-### The 3 engineering signals for ETL
+I never debate "which ETL tool is best" on customer site. The order of judgment is reversed — **answer the SLA first, then the tool**.
 
-```
-  Is the data "fresh enough"? → look at the SLA
-    - T+1: next-day (covers 90% of projects)
-    - T+1h: hourly (when latency matters)
-    - Real-time: seconds (only CDC can deliver this)
-
-  Is the data "accurate enough"? → look at quality tests
-    - Primary key uniqueness
-    - No nulls where there shouldn't be
-    - Numeric values within sane ranges
-    - Business rules (order amount > 0)
-
-  Is the data "stable enough"? → look at the dependency graph + monitoring
-    - When upstream fails, downstream should fail gracefully
-    - Failures must alert
-    - Reruns must be idempotent
-```
-
-### ETL tooling cheat-sheet
+I work in three SLA tiers:
 
 ```
-                    Scenario → recommended tooling
-                    ──────────────────────────────
+  T+1 (next day)        ──→ 90% of projects, this tier is enough
+                            Fits: weekly / monthly reports, history,
+                                  customer-service RAG
+                            Engineering baseline: 1x
 
-  Cloud + Spark family   Databricks / EMR + Delta
-                         AWS Glue (serverless-friendly)
+  T+1h (hourly)         ──→ Roughly 8% of projects need this
+                            Fits: business adjusts in the morning,
+                                  wants to see results in the afternoon
+                            Engineering baseline: 2-3x (incremental sync)
 
-  Cloud + warehouse-     dbt + Snowflake / BigQuery / Redshift
-  native
-
-  Cloud + streaming      Kafka + Kinesis Data Streams + Flink
-
-  Self-hosted / offline  Airflow + Spark + Iceberg
-
-  Small / simple         AWS Step Functions + Lambda + S3
+  Real-time (seconds)   ──→ Less than 2% of projects truly need this
+                            Fits: risk control / recommendations /
+                                  online status / inventory contention
+                            Engineering baseline: 5-10x (CDC + streaming)
 ```
 
-### dbt is the FDE's "Swiss Army knife"
+That spare-parts inventory at Hesheng — I asked Chen Xue once: "If the system recommends a part to an engineer, but inventory has actually been booked by another site, how long can you tolerate before discovering that?" She thought for a second: "A few hours. If a dispatch goes out in the morning, being able to fix it in the afternoon is fine."
 
-If the customer runs a cloud warehouse, **80% of your ETL will be written in dbt**:
+That's T+1h. Not real-time. We saved ourselves a whole CDC pipeline.
+
+In engineering reality, **jumping straight to a real-time pipeline is one of the most common holes the FDE falls into**. I personally fell into it on my second FDE project — the customer offhandedly said "ideally real-time," I didn't circle back to verify, I built out Kinesis + Flink end to end, and three weeks later realized what the business actually needed was "fixable in the morning, fixable in the evening." Three weeks wasted. Since then I've made it a habit: **for any "real-time" requirement, I ask back "could you accept a half-hour delay?", and if yes, I drop it one tier**.
+
+Once the SLA is set, you pick the tool by scenario. I've drawn a quick-decision table; Hesheng went with row 1:
+
+| Customer scenario | Recommended stack | Notes |
+|---|---|---|
+| AWS + transforms in warehouse | dbt + Redshift / Athena | First choice for 80% of projects, SQL-only |
+| AWS + Spark-friendly | Glue / EMR + Iceberg | Glue suits customers who prefer serverless |
+| AWS + simple scheduling | Step Functions + Lambda | Cheapest when data volumes are small and logic is simple |
+| AWS + real-time | MSK / Kinesis + Flink/Firehose | Only if it has to be real-time |
+| Customer on Snowflake | dbt + Snowflake | Same as above, different warehouse |
+| Customer on Databricks | dbt + Databricks or pure PySpark | Depends on team style |
+
+We ended up with dbt + Redshift. Hesheng's Redshift had been running two years; dbt was introduced by the data team last quarter (before that it was a pile of views), and the Agent project was a good occasion to systematize the customer_360 migration. The dbt project structure on Hesheng's side ended up like this:
 
 ```
-        Standard dbt project structure
-        ──────────────────────────────────
-
   models/
     staging/
-      stg_crm_customers.sql        (clean raw)
-      stg_erp_customers.sql
+      stg_crm__customers.sql      -- clean CRM raw tables
+      stg_erp__customers.sql      -- clean ERP
+      stg_svc__tickets.sql        -- clean after-sales tickets
+      stg_finance__clients.sql    -- clean finance
     intermediate/
-      int_customer_unified.sql     (joins / mappings)
+      int_customer__id_mapping.sql   -- stitch customer_id across 4 systems
+      int_ticket__enriched.sql       -- enrich tickets with asset + customer
     marts/
-      dim_customer.sql             (business-object layer)
-      fct_orders.sql
+      dim_customer.sql            -- the customer object in Ontology
+      dim_asset.sql
+      fct_ticket.sql
 
   tests/
-    not_null_customer_id.yml       (data quality)
+    not_null_customer_id.yml
     unique_customer_id.yml
-
-  macros/
-    pii_mask.sql                   (reusable logic)
+    referential_asset_to_customer.yml
 ```
 
-Why dbt:
-
-- SQL-only (the FDE doesn't have to learn a new language)
-- Built-in lineage (data lineage visualized for free)
-- Built-in testing (uniqueness / not-null / accepted-values)
-- Git-managed + code review (data engineering becomes engineering)
+dbt at this layer has three benefits that map directly to FDE pain points: **SQL-only** (the team doesn't have to learn a new language), **lineage built in** (`dbt docs serve` visualizes it), **tests built in** (uniqueness / not-null / referential integrity / accepted values). The third matters most — what an Agent project fears most isn't "today the data is wrong," it's "today the data is wrong and nobody knows." Three dbt tests per main table is now my default on every project.
 
 ---
 
-## 9.4 Data Lineage — The Lifeline of Failure Diagnosis
+## 9.4 Data Lineage: 5 Minutes vs 5 Days When Failures Happen
 
-```
-        Without lineage:
-        "downstream report is wrong" → one person hunts through 5 systems
-                                       for 3 days
+Two weeks before Hesheng went live, we hit a small incident. A dbt model `dim_customer` suddenly had an extra row — a `customer_id` had been renamed in CRM, then renamed back, and that triggered an edge-case bug in a left join in the staging layer. The downstream Agent prompt picked up a record where "customer name = NULL" and pushed an absurd dispatch suggestion to an engineer.
 
-        With lineage:
-        "downstream report is wrong" → 5 minutes to see which upstream ETL
-                                       changed schema
-```
+Chen Xue @ed me in the Slack channel: "Why is this ticket assigned to the electrical group?" I traced from this ticket back to the Agent's prompt, then back to the customer info the prompt referenced, then back to that one row in `dim_customer` — the whole walk took 4 minutes thanks to dbt's built-in lineage.
 
-### Tools
+If there had been no lineage — I'd have had to open CRM, ERP, the finance system, and Redshift's view definitions one by one and reconcile by hand. Conservative estimate: half a day.
 
-```
-  Open source:
-    - OpenLineage (supported by dbt / Airflow / Spark)
-    - Marquez (the OpenLineage backend)
+This is why "wire up lineage" isn't a nice-to-have; it's one of the first-week actions for the FDE. The minimum bar:
 
-  Commercial / cloud:
-    - DataHub
-    - Atlan
-    - AWS Glue (has a lineage view)
-    - Unity Catalog (Databricks)
-    - Foundry (Palantir)
-```
+- **dbt projects**: built in by default, just run `dbt docs generate` + `dbt docs serve` and share the link with the customer and your team
+- **Glue / Airflow non-dbt jobs**: install the OpenLineage hook and ship lineage to Marquez or DataHub
+- **Bedrock Agent calling Athena**: write the query and the returned `query_id` into CloudWatch Logs — that's the last mile of lineage
 
-### The FDE's minimum bar
-
-Don't try to instrument "the whole company's lineage," but **every dbt model / Glue Job you write must emit lineage**:
-
-```
-1. dbt: lineage is generated automatically (dbt docs serve)
-2. Airflow / Glue: install the OpenLineage hook
-3. When something breaks, the first move is to read the lineage
-   and find the root cause
-```
+Commercial products (DataHub Cloud, Atlan, Foundry) are worth it for compliance-heavy customers — they bundle IAM, audit, and cross-cloud lineage. But for a customer at Hesheng's scale, dbt's built-in is enough. **Don't deploy heavy tooling where the customer doesn't need it** — that's a boring but valuable bit of FDE judgment.
 
 ---
 
-## 9.5 Real-Time Data Pipelines — Use Sparingly
+## 9.5 PII and "the Minimum 5 Things Before Going Live"
 
-### When you genuinely need real time
+Hesheng does B2B tickets, so PII looks light — but customer data still contains contact phone numbers, emails, signatory names. Several Southeast Asian countries have data localization requirements (Indonesia PP 71/2019, Vietnam Cybersecurity Law). On the compliance side we confirmed with Gu Jianguo: customer data does not leave ap-southeast-1.
 
-```
-  ✓ Business flow demands sub-second feedback (risk / recommendation / ad bidding)
-  ✓ Decision windows are short (inventory / pricing)
-  ✓ User-perceptible (presence / real-time notifications)
-
-  → If 1 of these holds, consider real time
-  → If none hold → use T+1 and save 70% of the engineering
-```
-
-### The engineering traps in a real-time pipeline
+For PII handling we did three things:
 
 ```
-  ❌ Going real-time on day one → debugging hell
-  ❌ No idempotency → replays produce wrong data
-  ❌ No schema-evolution plan → any upgrade breaks it
-  ❌ No dead-letter queue → one bad record blocks everything
-  ❌ No lag monitoring → you find out from a user complaint
+  1. PII fields tagged in Glue Data Catalog with LF-Tag: PII=yes
+  2. dev environment: column-level hash mask via Lake Formation
+  3. prod environment: only the IAM role used by the Agent gets access,
+     traffic stays inside the VPC via VPC endpoint
 ```
 
-### AWS in practice: the MSK + Kinesis + Firehose trio
+Three sentences went into the SOW — very concrete: IAM role names, LF-Tag names, VPC endpoint IDs. **PII controls written in the SOW must be engineering-verifiable**; "strictly protect customer privacy" is useless. Writing "customer data access is controlled by IAM role `hesheng-agent-runtime-role` + LF-Tag `PII=yes`, dev environment uses hash masking" gives you something to put in front of an auditor.
+
+Before the data engineering goes live, the FDE has to clear at least these 5 items — this isn't a "complete governance regime," it's the minimum bar for a typical B2B customer like Hesheng:
 
 ```
-        Typical AWS real-time pipeline
-        ─────────────────────────────────
-
-  Producer
-    ↓
-  MSK (Managed Kafka) or Kinesis Data Streams
-    ↓
-  Consumer choice:
-    A. Lambda processes directly (low traffic)
-    B. Flink on EMR / KDA (high traffic + complex logic)
-    C. Kinesis Firehose lands directly to S3 / Redshift
-    ↓
-  Downstream: S3 (Iceberg) / Redshift / OpenSearch
+  1. Each main table has an owner (person + email)
+  2. All PII fields have LF-Tags, dev environment masked
+  3. Schema changes go through PR review, downstream notified
+  4. At least 3 dbt tests per main table
+  5. Lineage wired up (can answer "where did this number come from"
+     in 5 minutes)
 ```
 
-For simple cases use Firehose (auto buffering + compression + S3 partitioning); for complex logic use Flink.
-
-> **AWS reference**: search "Amazon MSK best practices," "Kinesis Data Firehose."
+If any of the 5 are missing → the Agent walks into a minefield on day one. This isn't fearmongering — on a previous project I skipped item 4 (dbt tests). In week 3 of go-live, an upstream library schema change altered a column type; the downstream Agent silently picked up nulls; three days later the business side noticed during reporting. After that incident I wrote those 5 items into my own checklist, and I run it once per new project.
 
 ---
 
-## 9.6 The "Minimum 5 Things" of Data Governance
+## 9.6 Stitching 9.1-9.5 Together: What Hesheng's Phase Actually Looked Like
 
-This is not a "complete data governance system" — it's the bare minimum the FDE has to put in place on customer site:
+Back to Hesheng's ticket Agent. From week 3 to week 5, the actual data-engineering timeline was:
 
-```
-1. Data ownership table
-   Every table / dbt model has one owner (person + email)
+**Week 3 (data profile + Ontology)**
 
-2. PII tagging
-   Which fields are PII; they must be tagged and masked in dev
+- Monday morning: drew the 5-layer data map with Chen Xue and Gu Jianguo
+- Monday afternoon to Wednesday: walked Chen Xue through the 4 Ontology business questions, settled on Customer/Asset/Ticket/Engineer as the 4 objects
+- Thursday and Friday: Chen Xue and customer-service reps hand-fixed the customer_id mapping (200+ rows); I registered the 4 Ontology v1 tables in Glue Data Catalog with LF-Tags
 
-3. Schema-change process
-   Adding a field: notify + document
-   Changing a type / dropping a field: review + notify downstream
+**Week 4 (dbt models + tests)**
 
-4. Test coverage
-   Every primary table has at least 3 dbt tests
-   (uniqueness / not-null / referential)
+- Monday and Tuesday: wrote the staging layer (cleaning the 4 systems) and the intermediate layer (id mapping + ticket enrichment)
+- Wednesday: wrote the marts layer's `dim_customer` / `dim_asset` / `fct_ticket`
+- Thursday: added 5-7 dbt tests per main table (uniqueness / not-null / referential / accepted-values)
+- Friday: ran `dbt docs generate`, sent the lineage link to the customer
 
-5. Lineage visualization
-   You can answer "where did this number come from?" in 5 minutes
-```
+**Week 5 (spare-parts inventory T+1h + Agent integration)**
 
-**Miss any of the five and the Agent is walking onto a minefield.**
+- Monday and Tuesday: spare-parts inventory (Excel) goes through Glue crawler + Athena, with a Step Functions pipeline running every 4 hours (not real-time)
+- Wednesday: Bedrock Agent connects to the Athena tool and can query `dim_customer` + `dim_asset` + `fct_ticket`
+- Thursday: ran eval-v1 (200 rows), found the NULL issue from the `dim_customer` left join (the 9.4 incident)
+- Friday: fixed it, added the corresponding dbt test, re-ran the eval set above the go-live threshold
 
----
-
-## 9.7 A Real End-to-End Example
-
-```
-  Customer: an insurance company
-  Agent's job: automated underwriting (applicant risk assessment)
-
-  Data needs (surfaced by the FDE in Discovery):
-    - Applicant basic info (CRM)
-    - Historical claims (claims system, Oracle)
-    - Health declaration PDFs (scans + OCR)
-    - Blacklist (compliance system, SQL Server)
-    - Credit score (external API)
-
-  → 5 systems: 4 internal + 1 external
-
-  The FDE's engineering plan:
-    Week 1: Register the 4 internal systems in Glue Data Catalog
-            Build a customer Ontology (unified customer_id mapping)
-    Week 2: Write dbt models to merge the 4 systems' customer data
-            into customer_360
-            Apply LF-Tags (mask PII fields)
-    Week 3: Lambda + EventBridge to pull external API credit scores
-    Week 4: Bedrock Agent calls Athena to query customer_360
-            + calls Lambda for credit + calls OCR
-    Weeks 5-6: Eval + canary
-
-  Key engineering moves:
-    - No real-time pipeline (Discovery confirmed T+4h was acceptable)
-    - Glue Data Catalog as the Ontology (lightweight)
-    - All PII fields masked in dev
-    - Every dbt model has an owner + tests
-```
+The whole data-engineering effort consumed three weeks. If we had built the spare-parts inventory in real-time in phase one, that would have added at least two weeks by my experience — and the business didn't actually need it.
 
 ---
 
-## Key Quotes
+## Wrapping Up
 
-> "*The Ontology is the contract between data engineering and the rest of the company.*"
-> — Palantir Blog, *On Ontology*, 2024
+Data engineering isn't the showiest part of an FDE project — talk RAG, Agents, model comparisons in the conference room and the business side's eyes light up; talk Ontology, dbt tests, PII tagging, and they want to scroll their phones. But **80% of Agent go-live incidents have their root cause in the data layer** — if you can't fix Ontology inconsistencies, even the best model will just confidently misstate the chaos.
 
-> "*Most LLM hallucinations are actually data quality problems wearing a costume.*"
-> — A. Lawrence, *FDE Rule Book*, 2025
-
-> "*If you can't explain where the number came from, the customer can't trust the answer.*"
-> — AWS GenAI Innovation Center, 2025
+These days, the first week on every customer site I make sure to: draw the 5-layer data map, walk the Ontology with the business side once, look at the PII status. Each of the three takes 1-2 hours, all done within the same week. Once they're done, I have a rough sense of whether this project can ship and how long it'll take. If you take over a customer with a chaotic data stack and you're being pushed to demo an Agent in week 2 — that's a red light. The next chapter is on a related topic: how the FDE works inside the customer's network-isolated environment.
 
 ---
 
-## Action Checklist
+## Public references cited in this chapter
 
-When you walk into a data-heavy FDE project, weeks 1-2 must include:
+- A. Lawrence, *Forward Deployed Engineer Rule Book* (public GitHub document)
+- Palantir engineering blog — *Ontology* series
+- AWS docs — *Lake Formation Tag-Based Access Control*, *Glue Data Catalog cross-account*
+- AWS docs — *Amazon MSK best practices*, *Kinesis Data Firehose*
+- dbt official docs — *Tests*, *Documentation and Lineage*
+- OpenLineage / Marquez project documentation
+- Indonesia PP 71/2019, Vietnam Cybersecurity Law (public data localization compliance materials)
 
-1. **Draw the customer's "5-layer data diagram"** (§9.1)
-2. **Identify the source-of-truth for 3 core business objects** (customer / order / product)
-3. **Stand up a Glue Data Catalog database** (even for a PoC)
-4. **Tag every table with owner + LF-Tags (PII / region / sensitivity)**
-5. **Write a unified view like customer_360 in dbt**
-6. **Wire up OpenLineage** (dbt has it built in)
-7. **Decide the SLA**: T+1 / T+1h / real-time (default to T+1; if T+1 works, ship T+1)
-
----
-
-## Anti-Pattern Checklist
-
-- ❌ **Skipping Ontology and plugging an Agent straight in** (the Agent will confidently splice inconsistent data into wrong answers)
-- ❌ **Connecting 5 systems directly without unification** (any small upstream change breaks everything)
-- ❌ **Tables without owners** (a schema change ships and nobody downstream is told)
-- ❌ **Real-time pipeline in v1** (10x debugging cost, often not worth it)
-- ❌ **Real PII in dev** (the most common compliance incident)
-- ❌ **dbt project with no tests** (you only learn about bad data when downstream complains)
-- ❌ **No lineage** (data-issue triage goes from 5 minutes to 5 days)
-
----
-
-## Bridge to the Next Chapter
-
-You have the data stack — but most customers won't let you use cloud "out-of-the-box" services. The data has to live inside the customer's VPC / private deployment / offline data center. The next chapter covers the FDE's engineering moves inside network-isolated environments.
-
-[← Part IV intro](intro.md) · [Next: Working in the Customer's VPC →](chapter-10.md)
+[← Part IV intro](intro.md) · [Next: Working in the customer's VPC →](chapter-10.md)

@@ -1,38 +1,23 @@
 ---
-title: "part-5/intro.md"
-nav_exclude: true
-search_exclude: false
+title: "Part V — Going Live and Operating"
+nav_order: 15
+has_children: true
 ---
 
-# Part V: PoC → Production — Crossing the Hardest Gap
+# Part V: Going Live and Operating
 
-> Applies to: Both tracks (both main lines have to clear this gap)
+The distance between "the PoC works" and "it's in production" is longer than the PoC itself.
 
----
+A number that comes up repeatedly in the industry: roughly 30-40% of PoCs convert to production. The remaining 60-70% don't fail because the model isn't good enough — they fail because the engineering work needed for productionization wasn't seeded during the PoC phase. The eval set isn't wired into CI, observability is bolted on after the fact, cost and latency were never quantified, and there's no canary path or rollback plan when GA day arrives.
 
-## What This Part Solves
-
-The distance between a working PoC and going to production is greater than the work of building the PoC itself.
-
-OpenAI has an internal saying:
-> "From PoC to production is 6 weeks of joy followed by 6 weeks of yak shaving."
-
-The industry-average PoC-to-production conversion rate is about 30–40%. The AWS GenAI Innovation Center has pushed that number to 73% — not by using better models, but by **embedding production engineering moves into the PoC stage itself**.
-
-This Part has two chapters:
-
-- **Chapter 12**: PoC pass-line conditions — the 6 things that let a PoC actually reach production, and the 4 things that will stall it dead.
-- **Chapter 13**: Observability / cost / canary / rollback — the production "four-piece set."
-
-## Chapters
-
-See [SUMMARY.md](../SUMMARY.md).
-
-## Relation to Other Parts
-
-- **Prerequisites**: Eval-driven from Part III, and data + integration from Part IV, are inputs to this Part.
-- **Follow-on**: Part VI adds Agents on top of the production environment; Part VII completes delivery and wrap-up.
+The moment the customer wants to go live, all those gaps surface at once, and the FDE realizes "another few weeks" can't fill them in. The two chapters in Part V are about how to seed those engineering actions during the PoC phase itself, so that the road from PoC to production is a road, not a cliff.
 
 ---
 
-[← Back to Contents](../README.md)
+Chapter 12 is on PoC pass-line conditions — which things, once done, qualify a PoC for going to production, and which gaps, once missed, will jam the project in the final week before launch. This chapter isn't a flat checklist; it's a causal judgment framework: every pass-line condition maps to a real failure mode it prevents.
+
+Chapter 13 is on the core actions of operating in production — monitoring, observability, Guardrails, canary, rollback. Operating an LLM application is unlike operating a traditional service: failures don't show up as 5xx, they show up as degraded outputs; the metrics aren't just latency, they're hallucination rate, tool-call success rate, and the token cost curve. This chapter gives a minimum operating skeleton an FDE can stand up directly in the customer's environment.
+
+---
+
+Part V's prerequisites are Part III's eval-driven loop and Part IV's data / integration foundations — the outputs of those two Parts are the hard inputs to the pass-line conditions. Part VI's Agents add a new layer of operational complexity on top of production; Part VII's handoff is about putting this operating skeleton into the customer's hands so it keeps running.

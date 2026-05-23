@@ -1,400 +1,285 @@
 ---
-title: "part-7/chapter-16.md"
-nav_exclude: true
-search_exclude: false
+title: "Chapter 16 — Project Handoff"
+parent: "Part VII — Handoff and Continuity"
+nav_order: 1
 ---
 
-# Chapter 16: Handoff + Pattern Extraction — Abstracting the Solution into Reusable Assets
+# Chapter 16: Project Handoff
 
-## Opening
+Suzhou Hesheng Precision Heavy Industries, overseas business unit, week 11 after phase-two GA.
 
-```
-An FDE wraps up a 12-week Agent project. Technically, it's a success.
+The phase-two parts-ordering + cross-site coordination agent had been running steadily for two and a half months. The Bedrock Agent runs in ap-southeast-1; of the 14 tools, 12 are Hesheng-specific (Ch14), 3 external SaaS go through stateful MCP on AgentCore (Ch15). Eval-v3 has 200 cases, runs weekly in CI, passes at 92%. The phase-one Haiku triager is still running as fallback for phase two — the signature on the A4 in Ch6 has held for an entire year.
 
-3 months later, the customer's ops team asks:
-  "We want to change that prompt — how do we change it?"
-She flies in. 2 hours and it's done.
+In a weekly sync Zhou Mingyuan dropped a line: "The FDE contract ends end of December. Next year we want to take this over ourselves." Chen Xue and Gu Jianguo were both there; nobody picked up the thread — but that line was Hesheng's final exam for both phases.
 
-6 months later, customer:
-  "The Agent's error rate is creeping up — can you take a look?"
-She flies in. A full day of debugging.
-
-9 months later, customer:
-  "We want to add another use case."
-She flies in, opens her own old code, and realizes
-  she's a little fuzzy on it too.
-
-A teammate at the FDE's company picks up a similar project
-for a new customer and comes by to ask her:
-  "How did you do this again?"
-Her answer: "Look at my old code...
-            but every customer is different. Just redo it."
-
-Her CEO sees the proposal for the third customer and asks:
-  "Why are we quoting 12 weeks for three similar projects?
-   It should be 4 weeks."
-
-She has no answer.
-
-This chapter covers two things:
-  1. Handoff — getting the customer to truly take over
-     (so you stop getting the call to fly back in)
-  2. Pattern extraction — making the next similar project a 4-week job
-```
+The next eight weeks are my answer to that exam.
 
 ---
 
-## 16.1 The Engineering Definition of Handoff
+## 16.1 Handoff Isn't the Demo After Launch
+
+Lots of FDE handoffs make the same mistake: scheduling handoff after launch as a closing ceremony. The customer's ops team gathers, the FDE reads a deck, an acceptance form gets signed, the contract closes. Three months later, customer ops can't change a prompt; they call back; the FDE flies out again.
+
+That isn't a handoff. That's an FDE treating the project as their project.
+
+The engineering definition of handoff is one sentence: **the customer can run this system independently without you**. That sentence unpacks into four observable capabilities:
 
 ```
-        Handoff = "the customer can run this system without you"
+        Whether handoff is really done — four things:
 
-        The bar (4 capabilities):
-        ──────────────────────────────────────
+  1. The customer can independently change a config and deploy it
+     —— prompt / KB data / model id, change one, canary out
 
-  1. The customer can deploy a hot fix on their own
-     (change a prompt / KB / model id)
+  2. The customer can independently read traces and find root cause
+     —— accuracy drop, they don't pick up the phone first
 
-  2. The customer can read the dashboard and find root cause on their own
-     (you don't read the trace for them)
+  3. The customer can independently run an eval
+     —— before upgrading models / changing prompt, they have data first
 
-  3. The customer can run an Eval on their own
-     (no longer dependent on you before a model upgrade)
-
-  4. The customer can handle the top 5 incident types on their own
-     (instead of calling you on every P1)
+  4. The customer can independently handle the top 5 failure types
+     —— P1 stops the bleeding in 5 minutes, not escalates first
 ```
 
-**All 4 must be met → real handoff. Miss one = the project isn't fully delivered.**
+All four in place — handoff is done. Miss one, you'll be called back next quarter.
+
+None of these are things that "just teach them after launch" can teach. They're designs from project day one — built so the customer can take this over later. Discovery's interview pool must include the receiver-to-be; Scaffolding's code style must match what they can maintain; Production's alerts must go to the customer's on-call channel — not to my own Slack. Handoff is design, not closing ceremony.
+
+The way I do this at Hesheng is to count down 8 weeks from GA. From GA forward, handoff is on the clock; one milestone per week; in the final week the customer drives, I sit in the back row.
 
 ---
 
-## 16.2 The 3-Week Handoff Countdown
+## 16.2 The 8-Week Countdown
 
-Handoff doesn't start at launch — it starts three weeks before launch:
+The countdown's starting point is a simple list — who is the customer's receiver, where are the capability gaps, which gap each week fills.
+
+The receivers at Hesheng were chosen before GA:
+
+- **Wang Lei**, ops on Gu Jianguo's IT team, 5 years AWS experience, can write Python but not deeply. Owns D1 (Bedrock config / VPC endpoint / IAM policy).
+- **Shen Jia**, product manager on the after-sales business systems team, reports to Chen Xue, Python beginner-level. Owns D2-D4 (prompt / KB maintenance / agent orchestration logic).
+- **Zhang Wei**, an overseas service engineer turned internal data analyst, writes SQL not code. Owns D5 (run eval / dashboards / failure post-mortems).
+
+These three profiles set the capability gaps I had to fill: Wang Lei doesn't need AWS basics, but does need Bedrock-specific traps; Shen Jia needs "how to safely change a prompt" — not prompt engineering, but how to validate after changing through eval, then ship; Zhang Wei needs to learn how to read traces, how to write CloudWatch Logs Insights queries.
+
+These three gaps aren't my guesses; in week 2 after GA I had each of them do a "if I take over now" hands-off drill. Given a real alert (error rate climbed from a 0.4% baseline to 1.2%), they were each given 30 minutes to operate independently. Results:
+
+- Wang Lei found Bedrock's service status page but didn't realize that when cross-region inference profile breaks, you need to look at the other region's health.
+- Shen Jia changed the prompt correctly but pushed straight to production canary without running eval.
+- Zhang Wei navigated from dashboard to trace but couldn't read the tool call's input/output JSON.
+
+These three specific stuck points became the training targets for the next 8 weeks. **Handoff isn't "explain it once and we're done"; it's "the specific stuck point passes after practice."**
+
+The countdown:
 
 ```
-        T-3 weeks ── T-2 weeks ── T-1 week ── T launch ── T+4 weeks
-        ─────────    ─────────    ─────────    ────────    ─────────
-
-        Plan         Train        Shadow       Independent  FDE exits
-        kickoff      + docs       ops          ops
-
-  T-3   ✓ Identify the customer ops owner (person + email + rotation)
-        ✓ Outline the Runbook
-        ✓ Give the customer dashboard access
-
-  T-2   ✓ 4-hour training (Runbook + dashboard + Eval)
-        ✓ Have the customer owner perform every action hands-on once
-        ✓ Q&A
-
-  T-1   ✓ Customer owner shadows the FDE through everything
-        ✓ FDE doesn't drive — only reviews the customer's actions
-        ✓ End of week: customer owner writes "what I learned"
-
-  T     Launch + canary
-        ✓ Customer owner leads, FDE in the back row
-
-  T+4   FDE fully steps away
-        ✓ Still on-call, but not actively watching
-        ✓ Customer reports their own ops status weekly
+  T-8   Capability assessment + training plan locked
+  T-7   Runbook v1 + dashboard permissions for everyone
+  T-6   Wang Lei drives a prompt canary release (I ride along)
+  T-5   Shen Jia drives a KB incremental update + eval rerun
+  T-4   Zhang Wei drives a failure post-mortem (real alert from last week)
+  T-3   Three of them collaborate on a simulated failure (I inject an error)
+  T-2   Three of them independently handle a real alert (I'm absent, review after)
+  T-1   Full pair: I sit half a day with each, watch their full workflow
+  T     Contract ends. I rotate to on-call, fully exit after 4 weeks
 ```
+
+T-3's simulated failure is the critical milestone. If the three together can't pass, handoff doesn't close on schedule — I made this clear to Zhou Mingyuan in week 1, and wrote "handoff admission threshold" into the SOW amendment.
 
 ---
 
-## 16.3 The Runbook — the Customer's Operations Manual
+## 16.3 The Runbook Isn't a Document, It's a Practice Book
 
-A Runbook is not documentation — it's an **executable instruction list**.
+A Runbook isn't written for the customer to refer to; it's written for them to follow. The difference: a reference can be "complete" — list every possibility; a practice book must be "good enough" — every line maps to a specific operational action, every line operated by the customer at least once.
+
+Hesheng's Runbook splits into 6 sections:
 
 ```
-        The 7 sections every Runbook needs
-        ─────────────────────────────────────
-
-  1. System architecture diagram (one A4 page)
-  2. Deploy / rollback steps (commands / screenshots)
-  3. Top 10 incident types + handling SOPs
-  4. How to run Eval + what the thresholds mean
-  5. Where the key configs live + how to change them
-  6. Data / KB update SOP
-  7. Escalation path (when to call whom)
+  1. System architecture diagram (one page; mark each component's account / region / VPC)
+  2. Deploy + rollback SOPs (command-level; every line copy-pastable)
+  3. Top 10 failures + handling flow
+  4. Eval trigger conditions + how to run + threshold meanings
+  5. Configuration items list (which value lives in which file; what to do after editing)
+  6. Escalation paths (when to call whom; including AWS support tier and contacts)
 ```
 
-### A sample Runbook SOP
+Section 3, Top 10 failures, is the body of the Runbook. The 10 aren't imaginary; they're picked from real customer incidents during the 11 production weeks. Each follows this format, length capped at one screen:
 
 ```
 ═══════════════════════════════════════════════════════════════════
-  SOP-001: Sudden spike in Agent error rate
+  SOP-003: Agent tool-call rate suddenly drops
 ═══════════════════════════════════════════════════════════════════
 
-  Symptom: dashboard shows error rate > 1% (baseline 0.3%)
+  Symptom: dashboard "tool_call_count_per_session" drops from baseline 3.2 to 1.1
+           often paired with rising "agent_returned_text_only" ratio
 
-  Step 1: Check Bedrock service status
-    - Open https://health.aws.amazon.com
-    - Check us-east-1 Bedrock service health
-    - If AWS incident → wait + notify users
+  Step 1: Check Bedrock model availability
+    Console → Bedrock → Cross-region inference → us.anthropic.claude-haiku-4-5
+    If shown throttled → go to Step 2
+    If normal → go to Step 3
 
-  Step 2: Check recent commits
-    - GitLab → main branch, last 5 commits
-    - Any prompt / KB / model changes?
-    - If yes → go to Step 3 (rollback)
+  Step 2: Switch to fallback inference profile
+    In Parameter Store change ACTIVE_PROFILE to FALLBACK_PROFILE
+    Path: /hesheng/agent/active_profile
+    Effective: < 1 minute (Lambda reads on next cold start)
 
-  Step 3: Rollback
-    - Command: ./scripts/rollback.sh prod --target-version=$LAST_GOOD
-    - Wait 5 minutes and watch the dashboard
-    - Error rate back to baseline → done
-    - Not back → go to Step 4
+  Step 3: Look at agent trace
+    CloudWatch Logs Insights:
+      filter @logStream like /agent-orchestrator/
+      | filter @message like /tool_selection/
+      | stats count() by tool_name, action
+    If "no_tool_selected" share > 30% → go to Step 4
 
-  Step 4: Page the FDE on-call
-    - Slack: @fde-oncall
-    - Phone: +XX-XXX-XXXX (24h)
+  Step 4: Check prompt
+    git log --oneline -5 -- prompts/
+    Did the last 3 commits touch system prompt?
+    Yes → ./scripts/rollback.sh prod --to-prev
+    No → escalate (Step 6)
 
-  Step 5: Write the incident report
-    - Template: docs/incident-template.md
-    - Submit within 24 hours
+  Step 5: Run eval-v3 to confirm recovery
+    ./scripts/run_eval.sh prod --suite=v3
+    Pass rate back > 90% → write incident report
+    Pass rate still < 90% → escalate
+
+  Step 6: Escalate
+    Slack: #hesheng-fde-oncall
+    Urgent (P1): Zhou Mingyuan + Wang Lei phone call
+    AWS Support: Business tier, case + Bedrock label
 ═══════════════════════════════════════════════════════════════════
 ```
 
-**A good Runbook lets the customer stop the bleeding on a P1 in 5 minutes.**
+A principle for writing Runbooks: **every SOP, after you write it, have the customer's receiver do it themselves without you demonstrating**. Whatever runs through stays; what doesn't, go fix the doc. The 10 SOPs got revised at least three times this way.
+
+Section 4 (eval) matters more than it looks. The most common mistake the customer will make after taking over: "edited the prompt, shipped it directly" — not because they don't want to run eval, but because eval has cost (time / token / mental load), and at the moment of an urgent fix, the first instinct is to skip it. So the opening line of section 4: "Any change to prompt / KB / model id requires eval-v3 to run before canary release. **No exceptions.** For P1 emergency fixes, run eval-v3-smoke (30-case quick set, 5 minutes)."
+
+That sentence pairs with SOP-003's Step 5 above. At this density, the customer will follow it.
 
 ---
 
-## 16.4 Training — a 4-Hour Course
+## 16.4 Eval Set and Runbook Must Run Independently
 
-```
-        Handoff training: 4-hour agenda
-        ─────────────────────────────────────
+This is one I learned the hard way.
 
-  Hour 1: Architecture + business flow
-    ├── Where data comes from and where it goes (15 min)
-    ├── The Agent's toolset and capability boundaries (15 min)
-    ├── What Eval is for (15 min)
-    └── Walkthrough of every monitoring panel (15 min)
+A previous 16-week project, I wrote a Runbook at handoff, handed off the eval set, and considered the docs complete. Six months later the customer's engineers tried to run eval — couldn't. The script depended on a conda env I had locally; the docker image didn't have it; a few fixtures referenced a file in my own S3 bucket whose permissions had expired; the Runbook said "follow section 6.2's steps" — section 6.2 was actually in another doc on my laptop, never merged into delivery.
 
-  Hour 2: Daily operations
-    ├── How to read the dashboard (hands-on) (20 min)
-    ├── How to run an Eval (hands-on) (20 min)
-    └── How to change a prompt + canary it (hands-on) (20 min)
+The customer spent three weeks getting the env running. Since then I've made "runs independently" a hard handoff metric.
 
-  Hour 3: Incident handling
-    ├── Top 10 incident drills (hands-on) (40 min)
-    └── Rollback drill (hands-on) (20 min)
+Specifically: in T-4 I run a "sandbox drill":
 
-  Hour 4: Data / KB maintenance + Q&A
-    ├── KB update SOP (hands-on) (30 min)
-    └── Q&A (30 min)
-```
+1. In the customer's account, open a brand-new AWS account (not region — account).
+2. Hand Wang Lei a `git clone`, a README, and the Runbook — **only these**.
+3. Have him deploy the whole system from scratch, run an eval, ship a prompt change.
+4. I sit next to him but don't guide; I just record where he gets stuck and which sentence in the doc is inaccurate.
 
-**Key**: every segment must be **hands-on by the customer**, not the FDE demoing.
+At Hesheng Wang Lei took 1.5 days, got stuck at 11 points. The two worst:
+
+- The IaC has a Bedrock model access state dependency. Under a new account, model access defaults to off, but our CDK doesn't auto-enable it (must be enabled by hand in the console). The Runbook had this step but in section 5 "configuration items"; Wang Lei reading in deploy order didn't reach it. Fix: move that line to Step 1 of section 2 "deploy SOP."
+- A customer email field in the eval golden set was redacted (compliance requirement), but the redaction script was something I ran by hand — not in IaC. Under a new account, eval errors with "email format invalid." Fix: write the redaction into a CDK custom resource that runs at deploy time.
+
+After those 11 fixes, Zhang Wei ran from scratch — this time 4 hours.
+
+**Eval set and Runbook must run independently** — the criterion is the sandbox drill passing. The criterion isn't doc completeness or process completeness; it's "ran from zero successfully."
 
 ---
 
-## 16.5 Pattern Extraction — Making the Next Project 5x Faster
+## 16.5 The Final Week's Pair
 
-### What "pattern extraction" means
+In T-1 I did one thing: sat half a day each with the three of them, working through every real piece of work they got that week.
 
-At the end of every project, ask 4 questions:
+Not training, not demo — pair. I sat next to them, they worked normally, and I only spoke when they got stuck — and even then, didn't give the answer; instead I asked back: "what data did you just look at; what should you look at now?"
 
-```
-  Q1: Which work in this project would be "basically the same" for another customer?
-       → That's a reusable asset.
+This week's design comes from reading Conikeec's *FDE Playbook*. He describes Palantir handoff's last week with a phrase: "shadowing in reverse" — for the first six weeks, the customer follows the FDE; in the last week, the FDE follows the customer. That reverse shadowing is the final test of whether handoff actually took.
 
-  Q2: Which work "ate huge time but could be avoided next time"?
-       → That's the source of an engineering template.
+Hesheng's most valuable discovery that week was Shen Jia's workflow. When she edits prompts, she doesn't actually edit the system prompt I wrote — she edits the "business glossary" in the KB. I hadn't realized that for Hesheng's ops people, "prompt" and "KB doc" are the same thing in their mental model — they think as long as the agent "sees" the right description, it'll act accordingly. That mental model isn't wrong, but it means in my Runbook the KB maintenance section needs to be promoted in priority and the prompt section can be simplified.
 
-  Q3: Which "customer-specific" things are actually shared by many customers?
-       → That's the source of an industry template.
+In T-1 I rewrote section 5 of the Runbook (configuration items) to treat KB doc versions equally with prompts — all KB changes go through git commit + eval + canary. Shen Jia's downstream work follows that path.
 
-  Q4: Which things "I thought were easy turned out hard"?
-       → That's the source of a warning card.
-```
-
-### Pattern extraction outputs — 4 asset classes
-
-```
-        The FDE's "post-project asset library"
-        ───────────────────────────────────
-
-  1. Code templates
-     - LLM RAG starter kit
-     - Bedrock Agent starter kit
-     - Eval CI starter kit
-     - Lambda MCP server starter kit
-
-  2. Document templates
-     - Discovery report template (Ch 4)
-     - SOW template (Ch 5)
-     - Runbook template (this chapter)
-     - Acceptance criteria template
-
-  3. Decision cards
-     - "Customer asks this → answer that" cheat sheet
-     - "This signal appears → switch to this approach"
-     - "For this kind of problem, do these 3 things first"
-
-  4. Anti-pattern case files
-     - Real incident postmortems
-     - Cost of the mistake + lesson learned
-```
-
-### Template "granularity" — lessons learned
-
-```
-  ❌ Too coarse: "Bedrock starter template"
-     → Still requires major rework on day one
-
-  ✓ About right: "Bedrock + Knowledge Bases + Aurora pgvector,
-                  VPC deployment + IAM Identity Center starter template"
-     → 80% of customer use cases use it as-is
-
-  ❌ Too fine: "China Merchants Bank private-cloud RAG starter template"
-     → Granularity so narrow it's only ever used once
-```
+Without that week's pair, this mental-model gap would never have been visible. The Runbook would have been written in my "prompt first, KB second" order; Shen Jia would have followed but inefficiently, error-prone — three months later it'd become "the customer didn't use the tool well." Actually, the tool's shape didn't fit the customer.
 
 ---
 
-## 16.6 The Engineering Moves of Pattern Extraction
+## 16.6 Phase 2 Boundaries
 
-Within 1 week of every project ending, do 5 things:
+The day the contract ends, Zhou Mingyuan asked me: "After phase two, next year we want to do a sales agent on Salesforce — can your firm continue?"
 
-```
-  1. Write a 1-page "project retrospective"
-     - What we did
-     - What we got right / wrong
-     - Numbers (outcome / Eval / cost / time)
+This isn't a handoff question; it's a commercial one — but it has to be answered during handoff because the answer affects handoff boundaries.
 
-  2. Code review your entire project
-     - Which blocks are "obviously reusable"
-     - Lift them into the company internal repo
+My judgment: Hesheng's handoff completion means Hesheng can independently run **the current system**, not that they can independently do the next phase. The next phase is a new project — redo Discovery, realign outcomes, sign a new SOW. Handoff cannot slide into "well, they can always ask me later" — that isn't handoff; that's the engineer becoming a part-time consultant.
 
-  3. Pull out 3 "decision moments"
-     - At that moment, what did you judge → write it as a card
+Zhou Mingyuan and I agreed on three things:
 
-  4. Pull out 1-2 "if I redid it, I would..."
-     - Write it into "project template v X+1"
+1. **Current system on-call**. After contract end I have an 8-week on-call window: P1 4-hour response, P2 24-hour. After 8 weeks, fully off; further requests go through commercials.
+2. **Next phase Discovery**. If Hesheng wants the sales agent next year, our firm can take it, but we run Ch4's full Discovery — starting from a week of desk-shadowing. Not "extend the current agent."
+3. **Code IP**. The code, prompts, eval set, and Runbook for this system all belong to Hesheng. Our firm retains only "experience" (the patterns covered in 16.7), no code.
 
-  5. Run a 1-hour brown-bag with teammates
-     - Not bragging about wins — talking about the pitfalls they don't know
-```
+Item 1 is handoff's hard boundary — within 8 weeks it's "extended warranty"; after 8 weeks the customer's problems are the customer's problems. Item 2 prevents "the next phase becomes free overtime." Item 3 is a compliance matter, but also engineering — once handed off, the customer can change anything without coming back to ask us.
+
+These three were written into a "Handoff Completion Acknowledgement," with three signature fields: Zhou Mingyuan, Chen Xue, Gu Jianguo. This sheet plays the same role as the A4 in Ch6 — it's the talisman in every "whose problem is this" conversation later.
 
 ---
 
-## 16.7 Industry Templates — One Example
+## 16.7 Project Post-Mortem and Pattern Extraction
+
+The week the contract ended I didn't immediately move into the next project. I held five days for post-mortem.
+
+Post-mortem isn't writing a deck; it's answering four questions:
 
 ```
-  Industry: Insurance
-  Template: "Insurance RAG/Agent starter kit v3.2"
+  Q1: What work on Hesheng would be "basically the same on another customer"?
+       → Source of templates
 
-  Contents:
-  ├── Industry knowledge
-  │   ├── Common org structures of insurance companies
-  │   ├── Three main flows: underwriting / claims / sales
-  │   ├── Common regulatory requirements (CBIRC / MLPS)
-  │   └── Common data stack (core + ECIF + channels + risk)
-  │
-  ├── General Discovery template
-  │   ├── 12 insurance-specific questions
-  │   └── Checklist of 5 critical deliverables
-  │
-  ├── Code templates
-  │   ├── Policy clause chunking (PDF + tables)
-  │   ├── Customer identity matching (ID card / customer no. / policy no. mapping)
-  │   ├── Bedrock + Aurora pgvector + KMS deployment IaC
-  │   └── MLPS-compliant audit logging spec
-  │
-  ├── Eval templates
-  │   ├── 200 golden insurance Q&A
-  │   ├── 50 safety items (PII / inappropriate promises)
-  │   └── Business-expert calibration process
-  │
-  └── Handoff templates
-      ├── Insurance ops handover SOP
-      └── Regulatory inspection response template
+  Q2: What work "took a lot of time but could be saved next time"?
+       → Source of tooling / scaffolding
+
+  Q3: What was "easier than I thought, harder than I expected"?
+       → Source of warnings, things to ask in next Discovery
+
+  Q4: What "I did wrong but the customer didn't pursue"?
+       → Most expensive class of experience
 ```
 
-**A new FDE picking up an insurance customer**: starts from v3.2, and by week 4 the customer is already seeing a demo.
+What I extracted from Hesheng:
+
+**Q1 outputs (templates)**: an overseas-service Discovery questionnaire for manufacturing (the 28 items from Ch4 with 5 overseas-specific additions — timezone, cross-region data compliance, native language vs working language); a Bedrock Agent + AgentCore stateful MCP IaC starter (CDK, 500 lines, with Hesheng business specifics stripped); an Eval CI starter (GitHub Actions + bedrock-runtime + three tiers smoke/full/regression).
+
+**Q2 outputs (scaffolding)**: an MCP server health-check script (born from the OAuth token expiry incident in Ch15); a Lambda template for Bedrock cross-region inference profile auto-switching (born from the region jitter incident in Ch13); a Runbook Markdown + Mermaid template (10 SOPs in standard format).
+
+**Q3 outputs (warnings)**: customer ops mental-model differences (the prompt vs KB finding from 16.5), written as a card "ask these 3 questions to gauge how the customer understands prompts"; customer receiver capability assessment (the hands-off drill from 16.2), written as a reusable 30-minute test sheet.
+
+**Q4 outputs (most expensive)**: in Hesheng phase one's eval-v0 labeling I let Chen Xue do it alone (the trap at end of Ch6); only by phase two did we add double-blind. With a less forgiving customer this would have crashed phase one. I wrote it as a "Discovery must-do 5" card; item 1 says "eval labeling is double-blind from day 1."
+
+These outputs don't go into my own Notion; they're merged into the company internal wiki. Each is tagged with origin (Hesheng phase one Ch6 / phase two Ch14 / Handoff Ch16) and the problem it solves. The next FDE picking up an insurance or manufacturing-overseas-service project starts here — not from zero, but on top of Hesheng's year of experience.
+
+In *Reflections on Palantir* Nabeel Qureshi describes Palantir's FDE culture: every project, FDEs do an internal share — not "we won," but "what was our most expensive lesson this time." That culture holds for AI-application FDEs too. Win stories: colleagues nod. Hole stories: colleagues avoid the same hole. **What's most valuable isn't the success story; it's the failure written clearly.**
 
 ---
 
-## 16.8 Pattern Management at the Company Level
+## Holes I've Stepped In on This Topic
 
-Pattern extraction is not an individual habit — the company should accumulate it in a structured way:
+This chapter mostly covered what we did right at Hesheng. But the holes I stepped in on prior projects are also worth recording.
 
-```
-        Structure of an FDE team's "knowledge center"
-        ─────────────────────────────────
+The first time I did handoff, I scheduled it after launch by two weeks. Result: those two weeks customer ops was busy supporting the launch, no time for training; training pushed to week three, by then launch had stabilized, customer urgency was gone, training quality suffered. **The handoff countdown has to start from an early production milestone, not after launch.** Starting from GA at Hesheng was learned from that hole.
 
-  Company Wiki:
-    /fde-knowledge/
-      patterns/                (cross-industry)
-        rag-starter/
-        agent-starter/
-        eval-ci-starter/
-      industries/              (industry)
-        insurance/
-        finance/
-        retail/
-        manufacturing/
-      anti-patterns/           (counter-examples)
-        2025-Q3-incidents.md
-        ...
-      decision-cards/          (decision cards)
-      tools/                   (internal tools)
+The second time I wrote an 80-page Runbook, considering it complete. Three months later the customer told me: they had never read it through; every time something broke, they ctrl-F searched for keywords. **Runbook length isn't a quality metric; executable density is.** Hesheng's Runbook capped at 22 pages, every SOP one screen.
 
-  Code Repo:
-    fde-platform/
-      starter-kits/
-      common-lambdas/
-      shared-prompts/
-      eval-suites/
-```
+The third time, in handoff week I taught too much — covering "everything you might possibly need." The customer's engineer told me afterwards: "I nodded at everything you taught, but forgot it once back." **Handoff doesn't teach knowledge; it teaches muscle memory.** At Hesheng I had each of the three practice 1-2 things, but each thing 4+ times.
 
-**80% of the gap between a senior FDE and a junior one lives in the depth of this knowledge center.**
+The fourth time (didn't fall in but came close): at Hesheng, T-3's simulated failure took the three of them 50 minutes to handle, slower than my expected 20. I had the urge to say "close enough; close handoff on schedule." But mapping that to 16.1's four capabilities — independently handle top 5 failure types — 50 minutes vs 20 minutes of bleeding is the gap of tens of minutes of real customer business loss. I added a week; in T-2 they did it in 18 minutes. **The handoff admission threshold cannot be lowered at the last moment.** If I had lowered it, three months later when that failure actually happened, the customer would take 50 minutes to stop the bleeding, and I'd be called back.
 
 ---
 
-## Key Citations
+## Next Chapter
 
-> "*Handoff is not a milestone — it's a 4-week process you start 3 weeks before launch.*"
-> — A. Lawrence, *FDE Rule Book*, 2025
+Hesheng's project closes the loop end-to-end here, from Discovery through Handoff. From Ch4 to Ch16 it took me a year; what's been written down is the year's actual moves and judgments.
 
-> "*The second project on a customer should take 1/3 the time of the first.*"
-> — Bob McGrew @ YC, 2025
-
-> "*Pattern extraction is the difference between a consultant and an engineer.*"
-> — AWS GenAI Innovation Center, 2025
+But FDE as a profession isn't stacking experience project after project — that just lets you do "more" projects, not "different" projects. The next chapter is on the FDE's own long-term growth: how to layer industry depth onto engineering depth, how to avoid becoming a "senior implementation engineer" by your third or fifth similar project.
 
 ---
 
-## Action Checklist
+## Public references cited in this chapter
 
-Mandatory in the last 4 weeks of a project:
+- A. Lawrence, *Forward Deployed Engineer Rule Book* (2025) — the framework "handoff is design, not event"
+- Conikeec, *The FDE Playbook: A Practitioner's Field Manual* (2025, Substack) — "shadowing in reverse" framing for the final pair week
+- Nabeel Qureshi, *Reflections on Palantir* — origin of Palantir's FDE post-mortem culture of "talk holes, not wins"
 
-1. **Start the Handoff countdown at T-3 weeks** (Section 16.2)
-2. **Write the 7 Runbook sections** (Section 16.3)
-3. **Run the 4-hour customer ops training** (hands-on)
-4. **Have the customer owner shadow-run ops for 1 week**
-5. **Within 1 week of project end, write the retro + extract 3 decision cards**
-6. **Pull out reusable code / docs / configs into the company internal repo**
-7. **Run a 1-hour brown-bag with teammates** (talk pitfalls, not wins)
+Full bibliography and links in the *References* section at the end of the book.
 
----
-
-## Anti-Pattern Checklist
-
-- ❌ **Only thinking about Handoff in launch week** (no time to train)
-- ❌ **Writing the Runbook as a "feature doc"** (instead of an executable SOP)
-- ❌ **Training that's all slides, no hands-on** (the customer won't remember)
-- ❌ **Customer ops paging the FDE on every P1** (the 4 capabilities weren't trained in)
-- ❌ **Project ends, straight to the next, no retro** (every project starts from zero)
-- ❌ **Patterns live only in your own head** (teammates don't know, the company doesn't know)
-- ❌ **Retros that only cover the wins** (the most valuable part is the pitfalls)
-
----
-
-## Relation to the Next Chapter
-
-By here, the full loop is closed: Discovery → Scaffolding → production → Handoff → pattern extraction.
-
-The final chapter covers how the FDE's *own* capability grows over the long run — not chasing the latest tech, but **T-shape growth**: deepening engineering depth and industry depth in both directions.
-
-[← Part VII Intro](intro.md) · [Next: T-Shape Growth →](chapter-17.md)
+[← Part VII intro](intro.md) · [Next: T-Shape Growth →](chapter-17.md)

@@ -1,45 +1,23 @@
 ---
-title: "part-6/intro.md"
-nav_exclude: true
-search_exclude: false
+title: "Part VI — Agents and MCP"
+nav_order: 16
+has_children: true
 ---
 
-# Part VI: The Agent Era — New Engineering Tasks for the FDE
+# Part VI: Agents and MCP
 
-> Applies to: **LLM application track** (optional reading for the data-driven track)
+Across 2025-2026, the meaning of "Agent" inside enterprise projects compressed into one specific thing — not chat Q&A, but actually getting the model to run errands across systems. Open PRs, move CRM records, read ERP, drive a browser, work a terminal, chain multiple internal APIs to close a ticket.
 
----
+Once that lands in a customer environment, the FDE immediately hits a few new engineering problems: how many tools should the model actually be exposed to, how do you draw the sandbox and permission boundary, how do you resume a multi-step task after it breaks, how does MCP coexist with the customer's existing RBAC and audit. None of the earlier Parts touched these.
 
-## What This Part Solves
-
-2025–2026 is the year Agents truly entered the enterprise.
-
-Not the "customer-service Q&A" flavor of RAG, but:
-- Auto-writing / editing / submitting PRs
-- Running cross-system errands (CRM + ERP + email + calendar)
-- Driving a browser / terminal / API to complete tasks
-
-The new engineering problems Agents bring to the FDE:
-
-1. **Toolset design** — not "more is better," but "enough + won't go wrong"
-2. **Sandbox and permission boundaries** — once an Agent oversteps, the blast radius is uncontrollable
-3. **Failure recovery** — how do you resume a multi-step task that broke mid-flight
-4. **Enterprise integration** — how MCP (Model Context Protocol) plugs an Agent into the customer's tools
-
-This Part gives you two hands-on chapters:
-
-- **Chapter 14**: Deploying Agents in customer environments — toolsets / sandboxing / failure recovery
-- **Chapter 15**: MCP and enterprise integration — wiring Agents into customer tools
-
-## Chapters
-
-See [SUMMARY.md](../SUMMARY.md).
-
-## Relation to Other Parts
-
-- **Prerequisites**: Part III (Eval) + Part IV (data / integration) + Part V (productionization) are all foundations for Agents
-- **What follows**: Part VII completes handoff and craft progression
+The two chapters in Part VI handle these Agent-era engineering questions.
 
 ---
 
-[← Back to Contents](../README.md)
+Chapter 14 is on Agent toolset design. The most common anti-pattern is "more tools is better" — wrapping all fifty APIs from the customer's systems as tools and dumping them on the model. The result is the model picking the wrong tool, filling the wrong arguments, getting the call sequence backwards. This chapter is about designing a toolset by "enough + won't go wrong," how to draw the sandbox boundary, and how to keep recoverable intermediate state when a multi-step task fails.
+
+Chapter 15 is on MCP (Model Context Protocol) and enterprise integration. MCP has become the de facto standard for connecting Agents to enterprise tools, but there's still a meaningful gap between "install an MCP server" and "run it safely under the customer's compliance architecture" — identity propagation, permission narrowing, audit landing, network isolation. This chapter is about wiring MCP into the customer's existing SSO / RBAC / audit stack, not standing up a parallel permission world next to it.
+
+---
+
+Part VI's prerequisites are everything Part III (Eval) + Part IV (data / integration) + Part V (productionization) produced — Agents can't go live without an eval set, are just demos without the data foundation, and won't hold up without the operating skeleton. Part VII covers how to hand all of this off to the customer.

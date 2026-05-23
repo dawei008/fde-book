@@ -1,455 +1,282 @@
 ---
-title: "part-6/chapter-15.md"
-nav_exclude: true
-search_exclude: false
+title: "Chapter 15 — MCP Integration"
+parent: "Part VI — Agents and MCP"
+nav_order: 2
 ---
 
-# Chapter 15: MCP and Enterprise Integration — Wiring Agents into Customer Tools
+# Chapter 15: MCP Integration — Wiring Agents Into the Customer's Existing Tool Stack
 
-## Opening
+Hesheng Precision Heavy Industries, overseas business unit, month 2 after phase-two GA.
 
-```
-In November 2024, Anthropic released MCP (Model Context Protocol).
+The 14 tools in phase two were ours — Lambdas wrapping ERP / CRM / tickets / email / calendar, five systems direct. After running for a month, Zhou Mingyuan came over: the sales director wanted the agent to also read their Salesforce; Gu Jianguo, IT lead, wanted it to query internal Confluence; Chen Xue from after-sales hoped the agent could read Jira tickets directly. Three new interfaces, three different SaaS tools.
 
-Through 2025–2026, almost every enterprise B2B project demands MCP support.
+If I wrote them in the phase-two style, I'd need six more Lambdas, six schemas, six dry_runs. I estimated three weeks.
 
-An FDE's first MCP engagement:
-  - The customer already has: Confluence + Jira + Salesforce + internal Wiki
-  - The customer wants: "Claude / Bedrock Agent should be able to use all of them"
-  - Old approach: hand-write a LangChain Tool for each → 6 weeks
-  - With MCP:
-      → Confluence MCP server (community already has one)
-      → Jira MCP server (community already has one)
-      → Salesforce MCP server (FDE writes one)
-      → Internal Wiki MCP server (FDE writes one)
-      → Wire it into Claude Desktop / Bedrock Agent
-      → 1 week
+Chen Xue asked: "These tools — other companies must've integrated them already, right? Why are we writing from scratch?"
 
-  10x development efficiency.
-
-But MCP's "power" is also a "risk":
-  - One MCP server exposes the customer's internal API
-  - The Agent can hit 50+ tools at once
-  - Security / audit / permission boundaries are 100% the FDE's design
-
-This chapter covers the engineering practice of deploying MCP inside a
-customer's enterprise.
-```
+She was right. MCP (Model Context Protocol) is the answer to that question.
 
 ---
 
-## 15.1 What MCP Is
+## 15.1 What MCP Is Solving
+
+Anthropic open-sourced the MCP protocol in November 2024, and it's now hosted by the independent working group at [modelcontextprotocol.io](https://modelcontextprotocol.io). Its engineering motivation is one sentence: have a standard interface between LLM applications and tools, like LSP for editors and languages, like USB-C for devices and peripherals.
+
+Before MCP, every integration like phase two's meant writing one Lambda, one schema, one error-handling block per SaaS. N agents × M tools = N×M of work. MCP turns it into N+M: each tool implements an MCP server once, each agent implements an MCP client once, both speak standard JSON-RPC.
+
+The protocol itself defines three resource categories:
 
 ```
-        World without MCP                World with MCP
-        ────────────────────             ────────────────────
-
-  Agent 1 integrates Tool A        Every Agent shares the MCP protocol
-  Agent 1 integrates Tool B
-  Agent 2 integrates Tool A        Tool A implements one MCP server
-  Agent 2 integrates Tool B        Tool B implements one MCP server
-
-  An N × M integration nightmare    A standard interface — N + M
+tools       Functions the LLM can call
+            The 14 tools from Chapter 14 are this category
+resources   "Data" the LLM can read
+            URIs like confluence://wiki/pages/123
+prompts     Pre-defined prompt templates from the tool side
+            "Summarize this PR" / "Review this SQL" type
 ```
 
-MCP is essentially **a USB-C interface between LLMs and tools**:
-
-```
-        The three layers of MCP
-        ──────────────────────────────────
-
-  Client (LLM application)
-    Claude Desktop / Cursor / Bedrock Agent / homegrown Agent
-       ↕ JSON-RPC over stdio / SSE / HTTP
-  Server (tool implementation)
-    File / Slack / Jira / Salesforce / internal API ...
-       ↕
-  Resource (capabilities exposed by the tool)
-    - tools (function calls)
-    - resources (files / data)
-    - prompts (predefined prompt templates)
-```
-
-### An MCP server exposes three kinds of capability
-
-```
-  Tools — functions the LLM can invoke
-    e.g., list_jira_issues(status, project)
-
-  Resources — things the LLM can read
-    e.g., file:///docs/policy.md
-          confluence://wiki/space/PROD/pages/123
-
-  Prompts — predefined prompt templates
-    e.g., "summarize_pr" template
-          "review_security" template
-```
+All 14 of Hesheng's phase-two tools are tools. The three new ones — Confluence / Salesforce / Jira — have tool capabilities not specific to Hesheng's business; they're "general SaaS" tools used by many companies, with community-written MCP servers already available. That's where MCP saves the most work: reuse community for general capabilities, write your own for business-specific ones.
 
 ---
 
-## 15.2 Three Forms of Enterprise MCP Deployment
+## 15.2 When to Use MCP, When to Write a Function Yourself
+
+My judgment criterion is two signals; meet either and go MCP, otherwise stick to the phase-two style of writing your own Lambda:
 
 ```
-  Form 1: Local MCP server (developer machine)
-    Scenario: Cursor / Claude Desktop
-    Deployment: process launch, stdio transport
-    Fit: individual / small team
+Signal 1: Tool is "generic SaaS / generic infrastructure"
+          Confluence, Jira, Salesforce, GitHub, Slack,
+          Postgres, S3, file system ...
+          Community probably has an MCP server already, take it
 
-  Form 2: Remote MCP server (HTTP/SSE)
-    Scenario: shared across the enterprise / multiple users
-    Deployment: K8s / ECS / Lambda + API Gateway
-    Fit: enterprise-grade
-
-  Form 3: Centralized MCP gateway
-    Scenario: 50+ MCP servers to manage
-    Deployment: one gateway aggregates every server
-    Fit: large enterprise + multi-tenant
+Signal 2: The same tool group is reused across multiple agents / multiple IDEs
+          Used once by developers in Claude Desktop, once by developers
+          in Cursor, once by a production agent — implement the tool
+          once, used in three places
 ```
 
-**90% of enterprise B2B projects are Form 2; some large customers are Form 3**.
+12 of Hesheng's 14 phase-two tools are Hesheng-specific — `create_part_order`'s schema hard-codes "amount ceiling ¥50,000, must pass `destination_site`"; no other company will reuse it. MCP has no benefit here, and adds a JSON-RPC serialization layer.
+
+But Confluence / Jira / Salesforce — community MCP servers are listed at [modelcontextprotocol.io/servers](https://modelcontextprotocol.io/servers). I spent half a day reviewing implementation quality, update frequency, issue response on three servers — conclusion: the official/community Confluence and Jira servers are usable; Salesforce had too many issues, so we wrote our own. Three weeks of work became five days.
+
+Conversely, what I didn't do: I didn't convert phase two's 14 tools into MCP servers. They were already running stable in Bedrock Agent action groups, business-specific, with no reuse, maintained internally — converting to MCP would just add a layer. **MCP isn't "the more the better"; it's "the cost of standardizing the interface should be lower than writing your own."**
 
 ---
 
-## 15.3 Writing an Enterprise MCP Server — Hands-On
+## 15.3 MCP's Two Communication Forms
 
-Take a "Salesforce CRM MCP server" as an example:
+The MCP protocol itself defines two transports:
 
-### Step 1: Design the tools
+```
+stdio       Local process, communicates over stdin/stdout
+            Scenario: a developer's machine running Claude Desktop / Cursor
+                      starts a local server, processes pipe between each other
+            Pros: zero network configuration, fast startup
+            Cons: one copy per machine, can't be shared across people, can't cross network
+
+streamable HTTP   HTTP long connection, server-side streaming
+            Scenario: enterprise deployment, one server serving many users
+            Pros: deploy once, call from many; auth follows HTTP standards
+            Cons: requires deployment + TLS + auth setup
+```
+
+For an enterprise scenario like Hesheng's, stdio is out — you can't have Chen Xue start a Confluence MCP process on her machine every day. **Enterprise deployment goes streamable HTTP only.** That's the prerequisite for the deployment architecture in 15.4.
+
+---
+
+## 15.4 Deploying MCP Servers on AgentCore
+
+In phase two we didn't use AgentCore — the A4 in 6.4 is clear: single agent, single team, Level 0 direct-write. But making MCP servers callable by Bedrock Agent while preserving session state, with standard auth + observability, isn't worth standing up from scratch.
+
+In March 2026 AWS made AgentCore's stateful MCP capability GA ([AWS What's New, 2026-03](https://aws.amazon.com/about-aws/whats-new/) post; public-materials list at end of chapter). Briefly, AgentCore Runtime can now host MCP servers directly, giving you three things for free:
+
+One, **session persistence**. The MCP protocol has session as a first-class concept (the client maintains context once connected); stateful MCP stores session state in AgentCore-managed storage — server pods restart without losing state and scale horizontally without splitting. Phase two we wound around statelessness in Lambda; this layer is now handled.
+
+Two, **auth wires straight into Identity Center / Cognito**. The HTTP layer goes through IAM SigV4 or OAuth bearer tokens; AgentCore validates before forwarding to the server's handler. I don't have to re-write token validation in server code.
+
+Three, **observability lands in CloudWatch**. Each tool call records a trace, errors hit metrics — same source as phase two's 14.6 trace dimension; one CloudWatch Logs Insights query joins across agent and MCP server.
+
+Hesheng's deployment landed on AgentCore like this:
+
+```
+        Hesheng Bedrock Agent (already in phase two)
+              │
+              ├─ action group: 14 in-house tools (Lambda)
+              │
+              └─ action group: MCP servers
+                    │
+                    │  HTTPS + SigV4
+                    ▼
+              AgentCore Runtime (stateful MCP)
+                    │
+                    ├─ confluence-mcp  (community server, wrapped)
+                    ├─ jira-mcp        (community server, wrapped)
+                    └─ salesforce-mcp  (FDE-written)
+                          │
+                          ▼
+                    Each SaaS API
+```
+
+Hesheng's 14 in-house tools stay on Lambda action groups — they're unrelated to MCP. The three new SaaS go through MCP servers deployed on AgentCore. Two paths coexist.
+
+---
+
+## 15.5 Writing an Enterprise MCP Server — the Salesforce Example
+
+Community Salesforce server unusable; written ourselves. The Python SDK runs in roughly two days; the interesting part is a few engineering decisions.
+
+**One, control the tool set to 5-15.** Salesforce REST exposes 300+ objects and thousands of endpoints. I had Chen Xue and the sales director list the "sales scenarios this agent really needs at Hesheng" — six came out: query customers, view opportunities, find recent contact records, query products, log activities, change stage. Six tools, each a clear verb; no `salesforce_query(action, params)` catch-all. 14.1's lesson applies to MCP servers verbatim.
+
+**Two, write-class tools still get dry_run + idempotency.** The MCP protocol doesn't mandate these — it only specifies how a tool's schema is serialized. But I write them into every write tool:
 
 ```python
-# Enumerate the customer's business-critical operations
-tools = [
-    "list_accounts",
-    "get_account_details",
-    "search_opportunities",
-    "create_task",  # write
-    "log_activity",  # write
-    "update_stage",  # write, requires confirmation
-]
-```
+from mcp.server.fastmcp import FastMCP
+from typing import Literal
 
-### Step 2: Implement the MCP server (Python SDK)
+mcp = FastMCP("salesforce-mcp")
 
-```python
-from mcp import Server, Tool
-from mcp.types import TextContent
-import simple_salesforce as sf
+@mcp.tool()
+async def update_opportunity_stage(
+    opportunity_id: str,
+    new_stage: Literal["Prospecting", "Qualification",
+                       "Negotiation", "Closed Won", "Closed Lost"],
+    idempotency_key: str,
+    dry_run: bool = True,
+) -> dict:
+    """Update the Stage field of a Salesforce opportunity.
 
-server = Server("salesforce-mcp")
+    Use ONLY when the user has explicitly asked to change an
+    opportunity's stage. The first call MUST be dry_run=true so
+    the agent can confirm with the user before committing.
+    """
+    cached = await idem_lookup(idempotency_key)
+    if cached:
+        return cached
 
-@server.tool()
-async def list_accounts(name_contains: str = None, limit: int = 10):
-    """List Salesforce accounts. Use when user asks about customers/accounts."""
-    sf_client = get_sf_client()  # uses user-scoped OAuth token
-    query = "SELECT Id, Name, Industry FROM Account"
-    if name_contains:
-        query += f" WHERE Name LIKE '%{name_contains}%'"
-    query += f" LIMIT {limit}"
-    results = sf_client.query(query)
-    return TextContent(text=json.dumps(results['records']))
-
-@server.tool()
-async def update_stage(opp_id: str, stage: str, dry_run: bool = True):
-    """Update opportunity stage. Use only when user explicitly asks to change stage."""
     if dry_run:
-        return {"status": "dry_run", "would_set": stage}
-    sf_client = get_sf_client()
-    sf_client.Opportunity.update(opp_id, {'StageName': stage})
-    return {"status": "updated"}
+        return {"status": "dry_run",
+                "would_set_stage": new_stage,
+                "opportunity_id": opportunity_id}
 
-if __name__ == "__main__":
-    server.run()
-```
-
-### Step 3: Authentication — the critical part
-
-```
-        Three auth modes for an enterprise MCP server
-        ─────────────────────────────────
-
-  Mode A: User OAuth (recommended)
-    User signs in → obtains token → starts MCP server
-    → MCP server calls downstream with that token
-    → Downstream system enforces permissions
-
-  Mode B: Service account
-    MCP server calls downstream with a service account
-    Problem: anyone can use MCP to escalate privileges
-    Only acceptable for internal admin tools
-
-  Mode C: Per-call token forwarding
-    Every MCP call carries the user's token
-    MCP server forwards the token to downstream
-    Most rigorous, but more complex to implement
-```
-
-**Enterprise production**: Mode A or Mode C. Mode B is reserved for tightly controlled internal tools.
-
-### Step 4: Deploy into the customer's VPC
-
-```
-        Enterprise deployment architecture
-        ─────────────────────────────────────
-
-  Customer VPC
-    ├── ECS Service: salesforce-mcp-server
-    │     ├── ALB (HTTPS, customer cert)
-    │     ├── Container (Python, MCP SDK)
-    │     └── Secrets Manager: SF OAuth config
-    │
-    ├── ECS Service: jira-mcp-server
-    │     └── ...
-    │
-    ├── ECS Service: confluence-mcp-server
-    │     └── ...
-    │
-    └── Bedrock Agent
-          └── Action Group: hits the HTTP endpoint of the three MCP servers above
-```
-
----
-
-## 15.4 Four Engineering Pitfalls of MCP
-
-### Pitfall 1: the MCP server exposes too much
-
-Newcomers writing an MCP server tend to "expose every API." The result:
-
-```
-  ✗ Salesforce MCP exposes 80 tools
-    → Agent picks the wrong one 60% of the time
-    → Maintenance cost explodes
-
-  ✓ Salesforce MCP exposes 8 high-frequency tools
-    → Covers 90% of business scenarios
-    → 90%+ accuracy
-```
-
-**Rule of thumb**: keep each MCP server to 5–15 tools. More than that, split the server.
-
-### Pitfall 2: loose parameter schemas
-
-```python
-# Bad
-@server.tool()
-async def query(text: str):  # what is text?
-    ...
-
-# Good
-@server.tool()
-async def search_opportunities(
-    name_contains: str = None,
-    stage: Literal["Prospecting", "Qualification", "Negotiation"] = None,
-    amount_min: int = None,
-    limit: int = 10
-):
-    """Search Salesforce opportunities..."""
-```
-
-**Strict schemas = the model picks wrong far less often**.
-
-### Pitfall 3: sloppy error handling
-
-```python
-# Bad
-try:
-    result = sf_client.query(...)
+    # Downstream call uses the user-propagated OAuth token; see 15.6
+    sf = get_salesforce_client_from_session()
+    sf.Opportunity.update(opportunity_id, {"StageName": new_stage})
+    result = {"status": "updated", "opportunity_id": opportunity_id}
+    await idem_save(idempotency_key, result)
     return result
-except Exception:
-    return None  # the model has no idea what happened
-
-# Good
-try:
-    result = sf_client.query(...)
-    return {"status": "ok", "data": result}
-except sf.SalesforceMalformedRequest as e:
-    return {"status": "error", "type": "bad_query", "message": str(e), "hint": "check field names"}
-except sf.SalesforceAuthenticationFailed:
-    return {"status": "error", "type": "auth_failed", "message": "OAuth token expired", "hint": "re-authenticate"}
-except Exception as e:
-    return {"status": "error", "type": "unknown", "message": str(e)}
 ```
 
-**Make errors readable so the model can recover on its own**.
+The schema design principles from 14.1 carry into here unchanged. An MCP server is just another packaging form for tool implementation; **the underlying engineering discipline is the same**.
 
-### Pitfall 4: missing audit
-
-```python
-# Every MCP call must write audit
-@server.tool()
-async def update_stage(opp_id, stage):
-    audit_log({
-        "user_id": current_user_id(),
-        "tool": "update_stage",
-        "params": {"opp_id": opp_id, "stage": stage},
-        "timestamp": now(),
-        "trace_id": get_trace_id()
-    })
-    # actual execution
-```
-
-**An MCP server without audit is not production-shippable**.
+**Three, structured error returns.** The MCP protocol allows tools to return errors, but the error fields are open. I make every error return `error_code` (enum) + `error_message` + `suggested_action` — same shape as in 14.5. The "shape of errors" the agent sees is the same across in-house tools and MCP tools; reasoning doesn't have to learn two schemas.
 
 ---
 
-## 15.5 AWS in Practice: Bedrock Agent + MCP Integration
+## 15.6 Auth: User Identity Must Propagate Downstream
+
+The judgment in 14.3 — "tools calling downstream must use user context, not service account" — only gets stricter under MCP. An MCP server is usually deployed once and shared by many agents; if it uses one service account to call Salesforce, any client that can reach the MCP server can read the entire company's sales data.
+
+Hesheng's approach is OAuth on-behalf-of:
 
 ```
-        MCP deployment architecture on AWS
-        ───────────────────────────────────────
-
-  Customer Bedrock Agent
-       ↓ (Action Group)
-  Lambda: mcp-bridge
-       ↓ (HTTP/SSE)
-  ALB / API Gateway
-       ↓
-  ECS Fargate: MCP servers
-    ├── salesforce-mcp
-    ├── jira-mcp
-    ├── confluence-mcp
-    └── internal-wiki-mcp
-       ↓
-  Downstream systems (each SaaS / internal API)
+Engineer signs into web ─── Cognito
+                              │
+                              ▼
+              Get Salesforce OAuth token
+              (Salesforce SSO connected to Cognito)
+                              │
+                              ▼
+              session attribute carried to Bedrock Agent
+                              │
+                              ▼
+              Agent calls MCP server, HTTP header carries token
+                              │
+                              ▼
+              MCP server uses this token to call Salesforce
+                              │
+                              ▼
+              Salesforce sees the engineer themselves; permission
+              decided by Salesforce's profile / sharing rules
 ```
 
-A minimal Lambda bridge:
+AWS calls this combination of [inbound auth + outbound auth](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html) — inbound is how the client proves which user it is; outbound is how the server uses that user identity to call downstream. Neither side can be flattened to a service account.
 
-```python
-# Lambda: mcp-bridge
-import boto3
-import requests
-
-def lambda_handler(event, context):
-    # Called by the Bedrock Agent
-    action_group = event['actionGroup']
-    api_path = event['apiPath']
-    parameters = event['parameters']
-
-    # Forward to the matching MCP server
-    mcp_url = MCP_SERVER_MAP[action_group]
-    user_token = event['sessionAttributes'].get('user_token')
-
-    response = requests.post(
-        f"{mcp_url}/tools/call",
-        json={"name": api_path, "arguments": parameters},
-        headers={"Authorization": f"Bearer {user_token}"}
-    )
-
-    return {
-        'response': {
-            'actionGroup': action_group,
-            'apiPath': api_path,
-            'httpStatusCode': response.status_code,
-            'responseBody': {
-                'application/json': {'body': response.json()}
-            }
-        }
-    }
-```
-
-> **AWS reference**: search "Bedrock Agent action group OpenAPI." The official MCP-to-Bedrock bridge story is still evolving through 2025–2026; track AWS announcements.
+The #1 incident I've seen: an MCP server cheaped out with a service account — fine in demo, then in prod a user asks the agent "show me Director Wang's recent opportunities," the service account is sales-director-level, and the agent reads the entire company's sales data. That customer was lucky there wasn't a PR incident. **Before MCP servers go to production in an enterprise, the auth chain must pass a full pen test.**
 
 ---
 
-## 15.6 Multi-Server Choreography — A Customer Scenario
+## 15.7 Tool Counts With Multiple Servers
+
+Hesheng wired in three MCP servers — Confluence, Jira, Salesforce — each capped at 6 tools or fewer:
 
 ```
-  Scenario: a sales assistant Agent
+Hesheng MCP servers (3 servers, 18 tools total)
+─────────────────────────────────────────────
 
-  MCP servers wired into the Agent:
-    1. crm-mcp (Salesforce, 8 tools)
-    2. email-mcp (Outlook / Gmail, 5 tools)
-    3. calendar-mcp (Google Calendar, 4 tools)
-    4. wiki-mcp (internal Confluence, 3 tools)
-    5. order-mcp (internal ERP, 6 tools)
+[confluence-mcp · 4]
+  search_pages(query, space_key=None, top_k=5)
+  get_page(page_id)
+  list_recent_pages_by_user(user_email, days=7)
+  get_page_attachments(page_id)
 
-  Total tools: 26 → within the 14.1 "magic number ≤ 30"
+[jira-mcp · 5]
+  search_issues(jql, top_k=10)
+  get_issue(issue_key)
+  list_my_open_issues(user_email)
+  add_comment(issue_key, body)              write
+  transition_issue(issue_key, transition)   write
 
-  A representative dialogue:
-    User: "What did ABC Corp give us as feedback last time?
-           I'm visiting them next week."
-
-    Agent path:
-      Step 1: crm-mcp.search_accounts("ABC Corp")
-      Step 2: crm-mcp.get_account_details(account_id="...")
-      Step 3: crm-mcp.list_recent_activities(account_id="...")
-      Step 4: email-mcp.search_emails(from="abc.com", days=30)
-      Step 5: wiki-mcp.search("ABC Corp")
-      Step 6: synthesize the answer
-      Step 7 (after user confirmation): calendar-mcp.create_event(...)
+[salesforce-mcp · 6]
+  search_accounts(name_contains, top_k=10)
+  get_account(account_id)
+  search_opportunities(filters, top_k=10)
+  get_recent_activities(account_id, days=30)
+  log_activity(account_id, type, body)      write
+  update_opportunity_stage(...)             write
 ```
 
-**26 tools spread across 5 servers — each server cohesive and single-purpose**.
+Plus the 14 in-house tools, Hesheng's agent now has 32 tools total. But 14.4's action group routing still applies — on any one invocation the model still sees 3-6 tools. **MCP widens the source of tools; the discipline from 14.4 ("the model sees only one group at a step") must be upheld.** Anthropic's argument in [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) about tool count affecting selection accuracy only matters more once MCP is wired in.
 
 ---
 
-## 15.7 Security Checklist
+## 15.8 Pre-Launch Security Check for MCP
+
+Before MCP went to production at Hesheng, Gu Jianguo and I walked the following list together. It's not a textbook list; it's what I assembled after the service-account near-miss in phase two:
 
 ```
-        Enterprise MCP deployment security checklist
-        ─────────────────────────────────────
-
-  □ User OAuth, not service account
-  □ MCP server inside the VPC, HTTPS enforced
-  □ Every tool has a detailed description + JSON schema
-  □ Write tools default to dry_run
-  □ Dangerous operations go through HITL
-  □ End-to-end trace_id
-  □ Audit log (who / what / when / result)
-  □ Bedrock Guardrails as a second line of defense
-  □ Rate limit per user (not just per IP)
-  □ Tool enable/disable through a config service (not code edits)
-  □ Minimal toolset (each server ≤ 15)
-  □ MCP server gets its own vuln scan + pen test
+□ Each MCP server deployed inside the VPC, not reachable from public
+□ Streamable HTTP + TLS, not bare HTTP
+□ Inbound auth: SigV4 or OAuth bearer; reject anonymous
+□ Outbound auth: tools call downstream with user OAuth tokens, not
+   service accounts; if service account is genuinely needed, write
+   it explicitly in the server README and route through approval
+□ Every write tool defaults dry_run=true; idempotency_key required
+□ Tool descriptions explicitly say "use only when..." / "do not use for..."
+□ Tool input schema uses enum / pattern / min / max to constrain values
+□ Errors structured (error_code + alternatives + suggested_action)
+□ Each tool call writes audit log: who / what / when / result / trace_id
+□ Rate limit per user, not just per IP
+□ Tool toggles managed via config center (feature flag), not code redeploy
+□ MCP servers run a vulnerability scan once before launch, quarterly thereafter
 ```
 
----
-
-## Key Citations
-
-> "*MCP turned tool integration from O(N×M) to O(N+M).*"
-> — Anthropic MCP launch, 2024-11
-
-> "*A poorly designed MCP server is a backdoor with documentation.*"
-> — A. Lawrence, *FDE Rule Book*, 2025
-
-> "*The future enterprise agent will use 50+ MCP servers — the FDE's job is to make all 50 boring.*"
-> — AWS GenAI Innovation Center, 2025
+This list is printed and pinned on the wall in Hesheng IT. Run through it for every new MCP server.
 
 ---
 
-## Action Checklist
+## Wrapping Up
 
-In the first week of an MCP integration project, you must:
-
-1. **Inventory the customer's tools** — which SaaS, which internal APIs
-2. **Check whether the community already has an MCP server** (Awesome MCP / Anthropic's official repo)
-3. **For the rest, write your own MCP server** — one or two days with the Python SDK
-4. **Wire up user OAuth** (no service accounts)
-5. **Write a complete description + schema for every tool**
-6. **Add tracing + audit logging**
-7. **Build an Eval set** (including counter-examples for "wrong calls")
-8. **Deploy inside the VPC + HTTPS + auth**
+This chapter pairs with Chapter 14: Chapter 14 is on cutting an agent's own tool stack from 47 to 14, writing schemas, adding dry_run; this chapter is on when not to write your own, when to reuse community MCP servers, deploying to AgentCore stateful MCP runtime, propagating user identity. Both chapters share the same engineering discipline — strict schemas, dry_run for write-class, structured errors, never lose user context, tool-count partitioning — the only thing that changes is the packaging from Lambda action groups to MCP servers. Hesheng's 32 tools are this coexistence: business-specific stays on Lambda, generic SaaS goes through MCP. The next Part walks into delivery and craft progression — handing this off so the customer's engineers can maintain it independently, abstracting reusable patterns from the project, and the FDE's own T-shape growth path.
 
 ---
 
-## Anti-Pattern Checklist
+## Public references cited in this chapter
 
-- ❌ **Exposing all 60 tools in v1** (accuracy is folklore)
-- ❌ **Running an MCP server under a service account** (auth incident #1)
-- ❌ **No schema, letting the LLM "guess" parameters** (error rate skyrockets)
-- ❌ **Returning None on error** (the model has no idea what happened)
-- ❌ **Deploying an MCP server on the public internet** (anyone who finds it can call it)
-- ❌ **Tools too coarse-grained** (omnibus functions like "smart_helper")
-- ❌ **Shipping with no audit** (compliance fails immediately)
+- Anthropic, [Model Context Protocol website](https://modelcontextprotocol.io) — protocol spec, SDKs, community server list
+- Anthropic, [MCP launch blog (2024-11)](https://www.anthropic.com/news/model-context-protocol) — MCP design motivation and the N×M → N+M argument
+- Anthropic, [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) — tool description quality, tool partitioning
+- AWS, [Bedrock AgentCore — Stateful MCP Runtime GA announcement (2026-03)](https://aws.amazon.com/about-aws/whats-new/) — AgentCore-hosted MCP server capability list
+- AWS, [Bedrock Agents — Session attributes docs](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html) — inbound / outbound auth propagation mechanism
+- modelcontextprotocol.io, [Servers directory](https://modelcontextprotocol.io/servers) — community-maintained MCP server list; review this page before adopting
 
----
-
-## Relation to the Next Part
-
-By this point, the FDE has walked the entire arc inside the customer's environment — "PoC → production → Agent → enterprise integration."
-
-One Part remains: **Delivery and Craft Progression** — Handoff so the customer can take it forward, pattern extraction that turns engagements into reusable assets, and the FDE's own T-shaped growth.
-
-[← Previous: Deploying Agents in Customer Environments](chapter-14.md) · [Next Part: Delivery and Craft Progression →](../part-7/intro.md)
+[← Previous: Agent Toolset Design](chapter-14.md) · [Next Part: Handoff and Mastery →](../part-7/intro.md)

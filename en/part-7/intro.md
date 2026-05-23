@@ -1,39 +1,23 @@
 ---
-title: "part-7/intro.md"
-nav_exclude: true
-search_exclude: false
+title: "Part VII — Handoff and Continuity"
+nav_order: 17
+has_children: true
 ---
 
-# Part VII: Handoff and Mastery
+# Part VII: Handoff and Continuity
 
-> Applies to: Both tracks
+A lot of FDE projects "go live," then three months later slide into a half-dead state — the customer's ops team doesn't really understand the system, so every time something breaks they call the original FDE; no one on the FDE side has taken over either, so the project-specific prompts, data, and accumulated landmines all live inside one person's head; when the customer asks "can you do the next project," the FDE themselves can't say clearly what's reusable and what would have to be rewritten from scratch.
 
----
+This state isn't an isolated incident — it's one of the standing failure modes of the FDE industry. The root cause isn't that engineering wasn't done well on launch day; it's that "handoff" was never designed in as a part of the project from day one.
 
-## What This Part Solves
-
-90% of FDE projects "go live," but 60% of them stall into a half-dead state three months after launch:
-
-- The customer's ops team doesn't really understand the system; when something breaks, they call the FDE
-- No one on the FDE's side has picked it up either; nobody is maintaining it
-- Project-specific prompts, data, and lessons all live in one FDE's head
-- When the customer asks for "the next project," the FDE has no idea what is reusable
-
-This Part solves two things:
-
-1. **Handoff** — the engineering method for *actually* handing the project to the customer
-2. **Pattern extraction + T-shape growth** — turning this project's output into "assets the next project can use," and building the FDE's long-term capability
-
-## Chapters
-
-- **Chapter 16**: Handoff + pattern extraction — abstracting the solution into reusable assets
-- **Chapter 17**: The FDE's T-shape growth — engineering depth + industry depth
-
-## Relation to Other Parts
-
-- **Prerequisite**: all six previous Parts
-- **Next**: once this Part is done, the FDE moves on to "the next project," and the cycle repeats
+The two chapters in Part VII handle this, and pull the lens out from the single project to the FDE's own long-term capability building.
 
 ---
 
-[← Back to Contents](../README.md)
+Chapter 16 is on project handoff. Handoff isn't "push the code to the customer's git, write a README" — it's about getting a specific person or team inside the customer to be able to keep maintaining, change prompts, add new evals, and locate root causes during incidents after the FDE leaves. This chapter walks through the deliverables (runbook, training materials, permissions handover, launch process) and also how to abstract this project's engineering experience into assets the next project can reuse.
+
+Chapter 17 is on the FDE's own next step. After finishing a project, the FDE's capability stack shouldn't just be "one more customer case study" — it should grow on both axes of the T-shape: engineering depth (model / system / data) and industry depth (the know-how of one or two verticals). This chapter offers a framework for taking stock of where you are now and planning what's next.
+
+---
+
+Part VII's prerequisite is the entire output of every prior Part — handoff quality is the final aggregate of every phase's quality. Once you're done reading, the FDE moves into the next project, and the cycle repeats.
