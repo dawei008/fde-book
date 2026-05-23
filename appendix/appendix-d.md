@@ -255,7 +255,7 @@ flowchart TB
 
   ID | Risk                | 影响 | 概率 | 缓解 + Owner | 状态
   R1 | 数据交付延迟        | 高   | 中   | W1 升级 IT    | Open
-  R2 | Bedrock 配额不足    | 中   | 高   | 提前申请      | Closed
+  R2 | Bedrock 配额不足    | 中   | 高   | 申请配额 / 评估 Reserved Tier | Closed
   R3 | 业务专家时间不够    | 中   | 中   | 锁定 8h/周    | Open
   R4 | Guardrails 误杀      | 中   | 中   | Eval + 人审   | Open
   R5 | 客户无人接手 Handoff| 高   | 中   | T-3 周培训    | Open
@@ -330,7 +330,7 @@ python eval/run.py --set golden --output report.html
 
 ## 5. 关键配置
 - AppConfig: prompt_template_v3
-- 模型 ID: us.anthropic.claude-3-5-sonnet-...
+- 模型 ID: us.anthropic.claude-sonnet-4-5-...（按主区域可用版本写，含 cross-region inference 前缀）
 - KB ID: KB-XXXXX
 
 ## 6. 数据 / KB 更新 SOP

@@ -8,81 +8,106 @@ nav_order: 1
 
 每类 3-5 个候选 + 选型维度。供 PoC 选型时 30 分钟决策用。
 
+> 立场说明：本书以 AWS 为演示平台。下文清单包含 AWS 之外的开源/第三方工具，仅作为客户已有栈对接时的参考，不作横向对比。
+
 ---
 
-## A.1 模型 API
+## A.1 模型 API（Bedrock 上 2026-05 可用）
 
 | 模型 | 强项 | 适合场景 | 价格档 |
 |---|---|---|---|
-| Claude 3.5 Sonnet | 平衡 + 长上下文 | 通用 RAG / Agent | 中 |
-| Claude 3 Opus | 推理强 | 复杂任务 / Judge | 高 |
-| Claude 3 Haiku | 快 + 便宜 | 高 QPS / 简单任务 | 低 |
-| GPT-4o | 强 + 多模态 | 通用 + 视觉 | 中高 |
-| GPT-4o-mini | 性价比 | 高 QPS 通用 | 低 |
-| Llama 3.1 70B | 开源旗舰 | 私有部署 | 自部署 |
-| Qwen2.5 72B | 中文强 | 中文场景 | 自部署 |
-| DeepSeek V3 | 推理 + 中文 | 中文 + 推理 | 自部署 |
-| Bedrock Titan | AWS 原生 | AWS 一站式 | 中低 |
-| Mistral Large | 欧洲 | 多语言 | 中 |
+| Claude Opus 4.5 | 顶级推理 + tool-search + effort 参数 | 复杂 Agent / Judge / 关键路径 | 高 |
+| Claude Sonnet 4.5 / 4.6 | 平衡 + 长上下文 + 工具调用 | 通用 RAG / Agent 默认 | 中 |
+| Claude Haiku 4.5 | 快 + 便宜 | 高 QPS / 简单分类 | 低 |
+| Claude 4.7 系列 | 最新一代 | 选用主区域可用版本 | 中-高 |
+| Nova 2 Lite | 1M token + code interpreter + web grounding | 长文档 / 成本敏感 | 低 |
+| Nova 2 Pro | AWS 一方旗舰 | AWS 一站式重场景 | 中 |
+| Qwen3-Next / Qwen3 Coder Next | 中文 + 代码 | 中文场景 / 代码任务 | 中-低 |
+| DeepSeek V3.2 | 推理 + 中文 | 中文 + 推理 | 低 |
+| Mistral Large 3 / Magistral | 多语言 / 推理 | 欧洲 / 多语 | 中 |
+| GLM 4.7 / Kimi K2.5 / MiniMax M2.1 | 中文开源 | 中文场景备选 | 低 |
+| gpt-oss / gpt-oss-safeguard | OpenAI API 兼容 | 已有 OpenAI SDK 代码迁移 | 低 |
 
-**选型维度**: 部署形态 (云/私有) / 上下文长度 / 中英文 / 推理需求 / 月度预算
+**说明**：2025-12 与 2026-02 的两批扩展（共 24 个开源权重模型）让 Bedrock 不再等于 Claude；其中 Project Mantle 提供 OpenAI 兼容端点 + PrivateLink，可在 14 个区域跑。
+
+**选型维度**：部署形态（云/VPC/私有）/ 上下文长度 / 中英文 / 推理需求 / 月度预算 / 是否需要 OpenAI SDK 兼容。
+
+**Inference 服务等级**（2025-11 起）：Standard / Priority（实时优先）/ Flex（折扣，容忍延迟）/ Reserved（1 或 3 个月承诺，溢出回 Standard）。Claude 4.5 全家族（Sonnet/Opus/Haiku）已支持 Reserved。
 
 ---
 
-## A.2 编排 / 框架
+## A.2 自部署 / 私有化模型
+
+| 模型 | 形态 | 适合 |
+|---|---|---|
+| Llama 3.2 / 3.3 | 开源旗舰 | 通用私有部署 |
+| Qwen3 系列（含 32B） | 中文/多语 | 中文私有部署 / RFT 基座 |
+| DeepSeek V3.2 | 推理 + 中文 | 中文 + 强推理 |
+| gpt-oss-20B | OpenAI 兼容 | RFT 蒸馏目标 |
+| Gemma 4（E4B / 26B-A4B / 31B） | 多模态 + 函数调用 | 多语 / 非 Anthropic 备选 |
+| Mistral Large 3 / Ministral 3 | 多语 | 欧洲合规 |
+
+**部署平台**：SageMaker JumpStart（2026-04 起 30+ 模型有官方 cost/throughput/latency 优化部署）/ SageMaker HyperPod（含 G7e RTX PRO 6000 实例）/ EKS + vLLM。
+
+---
+
+## A.3 编排 / 框架
 
 | 框架 | 强项 | 适合阶段 | 风险 |
 |---|---|---|---|
+| Strands Agents (Python / TS 1.0) | 轻量 + AWS 一方 SDK | 生产 Agent | 生态较新 |
+| Bedrock AgentCore（2025-10 GA） | Runtime + Gateway + Identity + Observability + Evaluations + Memory | 生产 Agent + VPC + 8h 长任务 | 锁定 AWS |
+| LangGraph | 状态图 + Agent | 生产 Agent | 学习曲线 |
 | LangChain | 生态最大 | PoC 快出 demo | 抽象漏 |
 | LlamaIndex | RAG 专精 | RAG 项目 | Agent 弱 |
-| LangGraph | 状态图 + Agent | 生产 Agent | 学习曲线 |
-| Bedrock Agents | AWS 一站式 | AWS 项目 | 锁定 AWS |
-| AutoGen | 多 agent | 研究 / 复杂多 agent | 不太稳 |
-| CrewAI | 角色扮演 | 内容 / 研究 | 不太稳 |
-| 原生 SDK | 最稳 | 生产关键路径 | 开发慢 |
+| AutoGen / CrewAI | 多 agent / 角色扮演 | 研究 / 内容 | 不太稳 |
+| 原生 SDK + 状态机 | 最稳 | 生产关键路径 | 开发慢 |
 
-**经验**: PoC 用 LangChain, 生产换原生 SDK + 状态机。
+**经验**：PoC 用 LangChain / LlamaIndex；生产 Agent 默认 Strands + AgentCore，或原生 SDK + Step Functions。AgentCore Runtime 自 2025-11 支持直接代码部署（不强制 Dockerfile），自 2026-03 支持有状态 MCP server，自 2026-04 增加 managed harness（preview）和 CLI。
 
 ---
 
-## A.3 向量库 / Knowledge Base
+## A.4 向量库 / Knowledge Base
 
 | 工具 | 形态 | 适合规模 | 备注 |
 |---|---|---|---|
-| Bedrock Knowledge Bases | AWS 托管 | 中 | OpenSearch 后端默认 |
+| Bedrock Knowledge Bases | AWS 托管 | 中 | 2025-11 多模态 GA（文本/图/音/视频） |
 | OpenSearch (Serverless / 自部署) | AWS / 开源 | 中-大 | hybrid search 强 |
-| Pinecone | SaaS | 中-大 | 最省心，但成本高 |
+| Aurora pgvector / RDS PG | AWS Aurora / RDS | 小-中 | VPC 内首选；客户已有 PG 时优先 |
+| Pinecone | SaaS | 中-大 | 最省心 |
 | Weaviate | 开源 + SaaS | 中 | 多 modal |
-| pgvector | PostgreSQL 插件 | 小-中 | 客户已有 PG 时优先 |
 | Milvus | 开源 | 大 | K8s 部署 |
 | Chroma | 开源 | 小 / PoC | 内存型 |
-| Aurora pgvector | AWS Aurora | 小-中 | VPC 内首选 |
 
-**选型维度**: 规模 / 部署 / 元数据过滤 / 客户已有什么
+**选型维度**：规模 / 部署 / 元数据过滤 / 客户已有什么。
 
 ---
 
-## A.4 Eval / Trace
+## A.5 Eval / Trace
 
 | 工具 | 类型 | 强项 |
 |---|---|---|
-| Bedrock Evaluations | AWS 托管 | Model / KB / Agent 三类 eval |
+| Bedrock Evaluations | AWS 托管 | Model / KB / RAG / Agent |
+| AgentCore Evaluations | AWS 托管 | 13 内置 evaluator + 自定 model-based scoring（2025-12 preview） |
+| CloudWatch GenAI Observability | AWS 托管 | 模型调用 + AgentCore 一体面板（2025-12 起含 evaluations） |
+| AgentCore Performance Loop | AWS 托管 | Prompt/工具描述自动优化 + Gateway A/B + 显著性报告（2026-05 preview） |
+| Bedrock Advanced Prompt Optimization | AWS 托管 | 跨模型迁移 + 多模态 + 内置 eval（2026-05） |
 | LangFuse | OSS + Cloud | LLM trace + eval 一站 |
 | LangSmith | LangChain 官方 | LangChain 项目 |
 | Phoenix (Arize) | 开源 | 私有部署友好 |
 | DeepEval | Python 库 | 写在 pytest 里 |
 | Promptfoo | YAML 驱动 | CI 友好 |
 | Ragas | 开源 | RAG 专评 |
-| Helicone | 代理 trace | OpenAI 兼容代理 |
 
-**经验**: PoC 用 LangFuse Cloud，企业用 LangFuse 自部署 / Phoenix。
+**经验**：客户在 AWS → AgentCore Evaluations + CloudWatch GenAI Observability 一站到位；多云或要进 CI → Promptfoo + LangFuse。
 
 ---
 
-## A.5 数据工程
+## A.6 数据工程
 
 | 工具 | 类型 | 适合 |
 |---|---|---|
+| Bedrock Data Automation | AWS 托管 | 文档/图像/音视频抽取（2025-12 起 blueprint 优化；2026-04 起自定语音词表） |
 | dbt | SQL 转换 | 数仓内的 ETL |
 | Airflow | 编排 | 复杂工作流 |
 | AWS Glue | Serverless ETL | AWS 一站式 |
@@ -90,26 +115,26 @@ nav_order: 1
 | Iceberg / Delta | 表格式 | 数据湖 |
 | Snowflake / BigQuery / Redshift | 数仓 | 分析 |
 | Lake Formation | AWS | 权限治理 |
-| OpenLineage | 血缘 | 数据血缘 |
 
 ---
 
-## A.6 部署 / 运行时
+## A.7 部署 / 运行时
 
 | 工具 | 类型 | 适合 |
 |---|---|---|
 | AWS Lambda | Serverless | 单步 LLM / 简单 Agent |
 | ECS Fargate | 容器 | MCP server / 中等服务 |
 | EKS | K8s | 复杂 / 大规模 |
-| SageMaker | 训练 + 部署 | 自训模型 |
-| SageMaker JumpStart | 一键部署 | LLM 自部署 |
+| AgentCore Runtime | AWS 托管 Agent runtime | 8h 长任务 / VPC / MCP |
+| SageMaker Endpoint / JumpStart | 训练 + 部署 | 自部署模型 |
+| SageMaker HyperPod | 训练集群 | 自训 / 大规模 fine-tune |
 | Step Functions | 编排 | 长流程 / HITL |
 | API Gateway | API 网关 | 鉴权 + 限流 |
 | AppConfig | 配置中心 | prompt / model 热切 |
 
 ---
 
-## A.7 安全 / 合规
+## A.8 安全 / 合规
 
 | 工具 | 用途 |
 |---|---|
@@ -120,12 +145,13 @@ nav_order: 1
 | Config | 配置合规 |
 | Security Hub | 综合安全 |
 | Macie | PII 自动发现 |
-| Bedrock Guardrails | LLM 内容过滤 |
+| Bedrock Guardrails | LLM 内容过滤；2025-11 起支持代码用例（注释/标识符/字面量）；2026-04 cross-account safeguards GA |
+| AgentCore Policy（Cedar） | Agent 工具调用层面的策略守门（2025-12 preview） |
 | WAF | 应用防火墙 |
 
 ---
 
-## A.8 IaC
+## A.9 IaC
 
 | 工具 | 类型 | 适合 |
 |---|---|---|
@@ -134,26 +160,25 @@ nav_order: 1
 | AWS SAM | Serverless 专用 | Lambda / API GW |
 | Pulumi | 编程式多云 | 同 CDK 思路但多云 |
 | CloudFormation | AWS 原生 | 简单堆栈 |
-| Bicep | Azure | Azure 项目 |
 
 ---
 
-## A.9 监控 / 告警
+## A.10 监控 / 告警
 
 | 工具 | 用途 |
 |---|---|
-| CloudWatch | AWS 原生 metrics + logs |
+| CloudWatch + GenAI Observability | AWS 原生 metrics + logs + LLM/Agent 仪表盘 |
 | X-Ray | AWS 分布式 trace |
+| OpenTelemetry | 协议 + SDK（Strands / LangChain / LangGraph 兼容） |
 | Datadog | 综合 observability |
 | Grafana / Prometheus | 开源 + 私有部署 |
-| OpenTelemetry | 协议 + SDK |
 | Sentry | 错误追踪 |
 | PagerDuty | on-call |
-| Slack alerts | 协作通知 |
+| Slack / Teams alerts | 协作通知 |
 
 ---
 
-## A.10 客户协作
+## A.11 客户协作
 
 | 工具 | 用途 |
 |---|---|
