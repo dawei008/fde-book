@@ -4,35 +4,20 @@ nav_order: 15
 has_children: true
 ---
 
-# Part V: PoC → 生产 — 跨过最难的鸿沟
+# Part V 上线与运营
 
-> 适用范围：通用（两条主线都要过这一关）
+PoC 跑通和上生产之间的距离，比 PoC 本身还长。
 
----
+业界一个反复被提起的经验数字：PoC 转化到生产的比例大致在三到四成之间。剩下那六七成不是因为模型不行，是因为 PoC 阶段没埋下生产化所需的工程动作——评估集没接 CI、可观测性是事后补的、成本和延迟从来没量化、上线之后没有灰度也没有回滚路径。
 
-## 这个 Part 要解决什么问题
-
-PoC 跑通和上生产之间的距离，比 PoC 本身工作量还大。
-
-OpenAI 自己有个内部说法：
-> "From PoC to production is 6 weeks of joy followed by 6 weeks of yak shaving."
-
-业界平均 PoC 到生产转化率约 30-40%。AWS GenAI Innovation Center 把这个数字拉到了 73%，靠的不是更牛的模型，而是 **PoC 阶段就预埋生产化的工程动作**。
-
-这个 Part 给两章：
-
-- **Chapter 12**：PoC 过线条件 —— 哪 6 件事能让 PoC 真上得了生产，哪 4 件事会卡死
-- **Chapter 13**：可观测性 / 成本 / 灰度 / 回滚 —— 生产化的"四件套"
-
-## 包含章节
-
-详见 [SUMMARY.md](../SUMMARY.md)。
-
-## 与其他 Part 的关系
-
-- **前置**：Part III 的 Eval-driven、Part IV 的数据 + 集成都是这一 Part 的输入
-- **后续**：Part VI 在生产环境上加 Agent；Part VII 完成交付和收尾
+到了客户要上线那一刻，这些缺口同时显现，FDE 才发现"再做几周"补不回来。Part V 的两章就是讲怎么在 PoC 阶段就把这些动作预埋进去，让从 PoC 到生产是一条可走通的路而不是断崖。
 
 ---
 
-[← 返回目录](../README.md)
+第 12 章讲 PoC 过线条件——哪几件事做到了 PoC 才算"具备上生产的资格"，哪几件事一旦缺失会在上线前最后一周把项目卡死。这一章不是验收清单的简单罗列，是一份带因果的判断框架：每一项过线条件背后对应的是什么真实失败模式。
+
+第 13 章讲生产化运营的几个核心动作——监控、可观测、Guardrails、灰度、回滚。LLM 应用的运营和传统服务不太一样：故障形态不是 5xx，是输出变差；指标不只是 latency，还有 hallucination rate、tool-call 成功率、token 成本曲线。这一章给一套 FDE 能在客户环境里直接搭起来的最小可运营骨架。
+
+---
+
+Part V 的前置是 Part III 的 Eval-driven 闭环和 Part IV 的数据 / 集成基础——这两个 Part 的产物是过线条件的硬输入。Part VI 的 Agent 在生产环境上加一层新的运营复杂度；Part VII 的交接，则要把这套运营骨架交到客户手里能继续跑。

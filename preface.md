@@ -53,29 +53,28 @@ Slack 里上一任 FDE 留下的群组 4 个未读，最新一条是
 
 **1. 每个判断都有一个具体场景。**
 
-不写"FDE 应该重视客户访谈"这种空话。写的是"接手项目第一周，前 3 次客户会议你应该做什么、不该做什么、问哪 5 个问题"。
+不写"FDE 应该重视客户访谈"这种空话。写的是"接手项目第一周，前 3 次客户会议你应该做什么、不该做什么、问哪几个问题"。
 
 **2. 每个技术选型都给决策维度。**
 
-不写"RAG 比 Fine-tune 好"或反之。给一张矩阵：数据量 / 更新频率 / 答案确定性 / 推理预算 / 合规约束 — 让你自己判断。
+不写"RAG 比 Fine-tune 好"或反之。给一组判断维度：数据量、更新频率、答案确定性、推理预算、合规约束——让你自己在客户语境里判断。
 
-**3. 每章末尾给"动手清单 + 反模式清单"。**
+**3. 反模式来自真实失败而不是想象。**
 
-动手清单是这一章读完可以立刻照做的工程动作；反模式清单是 FDE 真实失败案例里反复出现的错误。
+书里反复出现的"反模式"段落，每一条都对应至少一个 FDE 真实项目里被反复犯过的错误。客户案例本身是合成虚构的，反模式背后的失败是真的。
 
 ---
 
 ## 这本书引用的核心来源
 
-正文以下面这些为主要依据：
+FDE 这个职能最早是 Palantir 把它做成正式岗的，OpenAI、Anthropic 后来跟进。本书的方法论主要参考下面几位的公开材料：
 
-- **A. Lawrence**, *Forward Deployed Engineer Rule Book* (2025-10)
-- **Bob McGrew @ Y Combinator** (2025) — "Sell the outcome, not the product"
-- **AWS GenAI Innovation Center** — 公开的 45 天 / 73% 数据
+- **A. Lawrence**, *Forward Deployed Engineer Rule Book*（2025-10）
+- **Bob McGrew @ Y Combinator**（2025）"Sell the outcome, not the product"
 - **Conikeec @ Substack**, *The FDE Playbook*
 - **Nabeel Qureshi**, *Reflections on Palantir*
 
-完整引用清单见 [bibliography.md](bibliography.md)。
+AWS Bedrock 在书里只作为动手 demo 的平台出现，不作为方法论来源。完整引用清单见 [bibliography.md](bibliography.md)。
 
 ---
 
