@@ -122,15 +122,15 @@ for nx, ny in trace_nodes:
 # === CENTRAL FDE GRAVITY WELL ===
 center_x, center_y = W // 2, H // 2 - 40
 
-# Concentric rings — 4 layers labeled with FDE work axes
+# Concentric rings — 4 layers, no labels (orbital node labels carry semantics)
 rings = [
-    (420, CYAN,   30, False, "PATTERNS"),
-    (360, ORANGE, 40, True,  "HANDOFF"),
-    (300, CYAN,   50, False, "EVAL"),
-    (240, ORANGE, 35, True,  "DISCOVERY"),
+    (420, CYAN,   30, False),
+    (360, ORANGE, 40, True),
+    (300, CYAN,   50, False),
+    (240, ORANGE, 35, True),
 ]
 
-for radius, color, alpha, dashed, label in rings:
+for radius, color, alpha, dashed in rings:
     if dashed:
         segments = 72
         for i in range(segments):
@@ -148,14 +148,6 @@ for radius, color, alpha, dashed, label in rings:
             outline=alpha_color(color, alpha), width=1
         )
 
-    if label:
-        bbox = draw.textbbox((0, 0), label, font=font_tiny)
-        tw = bbox[2] - bbox[0]
-        draw.text(
-            (center_x - tw // 2, center_y - radius - 18),
-            label, fill=alpha_color(color, 120), font=font_tiny
-        )
-
 # === 8 ORBITAL NODES — the FDE work cycle ===
 connectors = [
     (0,    "DISCOVERY",    CYAN),
@@ -168,7 +160,7 @@ connectors = [
     (315,  "PATTERNS",     ORANGE),
 ]
 
-node_radius = 370
+node_radius = 470
 for angle_deg, label, color in connectors:
     angle = math.radians(angle_deg - 90)
     nx = center_x + node_radius * math.cos(angle)
@@ -186,17 +178,29 @@ for angle_deg, label, color in connectors:
     tw = bbox[2] - bbox[0]
     th = bbox[3] - bbox[1]
 
-    if angle_deg in [0]:
+    if angle_deg == 0:
         lx = nx - tw // 2
-        ly = ny - th - 14
-    elif angle_deg in [180]:
+        ly = ny - th - 18
+    elif angle_deg == 180:
         lx = nx - tw // 2
-        ly = ny + 14
+        ly = ny + 18
+    elif angle_deg == 45:
+        lx = nx + 16
+        ly = ny - th - 8
+    elif angle_deg == 135:
+        lx = nx + 16
+        ly = ny + 8
+    elif angle_deg == 225:
+        lx = nx - tw - 16
+        ly = ny + 8
+    elif angle_deg == 315:
+        lx = nx - tw - 16
+        ly = ny - th - 8
     elif angle_deg < 180:
-        lx = nx + 14
+        lx = nx + 16
         ly = ny - th // 2
     else:
-        lx = nx - tw - 14
+        lx = nx - tw - 16
         ly = ny - th // 2
 
     draw.text((lx, ly), label, fill=alpha_color(color, 220), font=font_label)
@@ -229,14 +233,15 @@ draw.line([(center_x, center_y - ch), (center_x, center_y + ch)], fill=alpha_col
 
 draw.ellipse([center_x-3, center_y-3, center_x+3, center_y+3], fill=alpha_color(CYAN, 50))
 
-# "FDE" in the center
+# "FDE" in the center — use larger title font for visual weight
+font_fde_core = load_font("BigShoulders-Bold.ttf", 84)
 fde_text = "FDE"
-bbox = draw.textbbox((0, 0), fde_text, font=font_equation)
+bbox = draw.textbbox((0, 0), fde_text, font=font_fde_core)
 tw = bbox[2] - bbox[0]
 th = bbox[3] - bbox[1]
 draw.text(
-    (center_x - tw // 2, center_y - th // 2 - 10),
-    fde_text, fill=alpha_color(CYAN, 200), font=font_equation
+    (center_x - tw // 2, center_y - th // 2 - 14),
+    fde_text, fill=(*CYAN, 255), font=font_fde_core
 )
 
 sub = "forward deployed engineer"
@@ -331,16 +336,16 @@ for i, (text, color, highlight) in enumerate(eq_parts):
     if text in ["=", chr(0x00D7)]:
         draw.text((tx, ty), text, fill=alpha_color(color, 220), font=font_equation)
     else:
-        box_alpha = 140 if not highlight else 180
+        box_alpha = 140 if not highlight else 200
+        # Highlighted box: subtle tinted bg first, then border, then text on top
+        if highlight:
+            tint = Image.new('RGBA', (int(tw + pad * 2), int(th + pad * 1.5)), (255, 240, 230, 90))
+            img.paste(tint, (int(tx - pad), int(ty - pad // 2)), tint)
+            draw = ImageDraw.Draw(img, 'RGBA')
         draw.rectangle(
             [tx - pad, ty - pad//2, tx + tw + pad, ty + th + pad],
             outline=alpha_color(color, box_alpha), width=2
         )
-        if highlight:
-            draw.rectangle(
-                [tx - pad + 1, ty - pad//2 + 1, tx + tw + pad - 1, ty + th + pad - 1],
-                fill=alpha_color(ORANGE, 20)
-            )
         draw.text((tx, ty), text, fill=(*color, 255), font=font_equation)
 
     eq_start_x += tw + gap
@@ -385,14 +390,14 @@ for tag in tags:
     )
     draw.text((tag_x + pad_tx, tag_y + pad_ty), tag, fill=(*CYAN, 255), font=font_tag)
 
-    tag_x += tw + pad_tx * 2 + 12
-    if tag_x > W - 200:
+    tag_x += tw + pad_tx * 2 + 10
+    if tag_x > W - 300:
         tag_x = 100
         tag_y += th + pad_ty * 2 + 10
 
 
 # === META ===
-meta_y = div_y + 30
+meta_y = div_y + 90
 meta_lines = [
     "17 chapters + 4 appendices",
     "7 parts · Field Engineering",
