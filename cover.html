@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenBook · FDE Cover</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@300;400;500;600&family=IBM+Plex+Mono:wght@300;400;500&family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --w: 1600px;
+    --h: 2240px;
+    --bg: #FAFAF8;
+    --ink: #1A1A18;
+    --warm: #B8510D;
+    --teal: #1A6B5C;
+    --stone: #8A8578;
+    --line: #E0DDD6;
+    --cream: #F0EDE6;
+  }
+
+  body {
+    background: #E8E6E0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .cover {
+    width: var(--w);
+    height: var(--h);
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* === TOP: Title area === */
+  .top {
+    padding: 120px 120px 60px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .series-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--warm);
+    margin-bottom: 48px;
+  }
+
+  .vol-mark {
+    position: absolute;
+    top: 120px;
+    right: 120px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--stone);
+    text-align: right;
+    line-height: 1.7;
+  }
+
+  .vol-mark .num {
+    color: var(--warm);
+    font-weight: 500;
+  }
+
+  .title-en {
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 120px;
+    font-weight: 300;
+    color: var(--ink);
+    line-height: 1.0;
+    letter-spacing: -3px;
+    margin-bottom: 28px;
+  }
+
+  .subtitle-en {
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 38px;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--stone);
+    letter-spacing: 0;
+    margin-bottom: 36px;
+  }
+
+  .title-zh {
+    font-family: 'Noto Serif SC', 'Songti SC', 'STSong', 'PingFang SC', 'Hiragino Sans GB', serif;
+    font-size: 52px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.5;
+    letter-spacing: 2px;
+  }
+
+  .title-zh .accent {
+    color: var(--warm);
+  }
+
+  /* === MIDDLE: Visual element === */
+  .visual {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 80px;
+    position: relative;
+  }
+
+  .diagram {
+    width: 100%;
+    max-width: 1360px;
+    position: relative;
+  }
+
+  .diagram svg {
+    width: 100%;
+    height: auto;
+  }
+
+  /* === BOTTOM: Equation + metadata === */
+  .bottom {
+    padding: 0 120px 70px;
+    flex-shrink: 0;
+  }
+
+  .equation {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--stone);
+    letter-spacing: 2px;
+    margin-bottom: 36px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .equation .eq-outcome {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .equation .eq-customer {
+    color: var(--warm);
+    font-weight: 500;
+  }
+
+  .tagline {
+    font-family: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    font-size: 20px;
+    font-weight: 300;
+    color: var(--stone);
+    line-height: 1.8;
+    margin-bottom: 44px;
+  }
+
+  .tagline strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .tagline .warm {
+    color: var(--warm);
+    font-weight: 500;
+  }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .topics {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    max-width: 980px;
+  }
+
+  .topic {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--teal);
+    padding: 8px 16px;
+    border: 1px solid var(--teal);
+    border-radius: 2px;
+  }
+
+  .stats {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--stone);
+    text-align: right;
+    line-height: 2;
+    letter-spacing: 1px;
+  }
+
+  .stats .num {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* === Author / WeChat byline === */
+  .byline {
+    margin-top: 56px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .byline-block {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+  }
+
+  .byline-right {
+    text-align: right;
+  }
+
+  .byline-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--stone);
+  }
+
+  .byline-name {
+    font-family: 'Noto Serif SC', 'Songti SC', 'STSong', 'PingFang SC', 'Hiragino Sans GB', serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 4px;
+  }
+
+  .byline-warm {
+    color: var(--warm);
+  }
+
+  /* === Spine accent === */
+  .spine {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 12px;
+    background: var(--warm);
+  }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <!-- Spine color bar -->
+  <div class="spine"></div>
+
+  <!-- TOP: Title -->
+  <div class="top">
+    <div class="vol-mark">
+      OPENBOOK · VOL <span class="num">II</span><br>
+      Field Cartography
+    </div>
+    <div class="series-label">Field Engineering</div>
+    <div class="title-en">OpenBook</div>
+    <div class="subtitle-en">Forward Deployed Engineer</div>
+    <div class="title-zh">
+      AI 应用的<span class="accent">落地</span>工程学
+    </div>
+  </div>
+
+  <!-- MIDDLE: FDE work-cycle diagram -->
+  <div class="visual">
+    <div class="diagram">
+      <svg viewBox="0 0 1100 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer customer-boundary ring (dashed warm) -->
+        <circle cx="550" cy="310" r="290" stroke="#B8510D" stroke-width="1.2" stroke-dasharray="6 4" fill="none" opacity="0.7"/>
+        <text x="550" y="14" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="12" fill="#B8510D" letter-spacing="4">CUSTOMER BOUNDARY</text>
+
+        <!-- Concentric rings (work axes) -->
+        <circle cx="550" cy="310" r="230" stroke="#E0DDD6" stroke-width="1" fill="none"/>
+        <circle cx="550" cy="310" r="170" stroke="#E0DDD6" stroke-width="1" fill="none" stroke-dasharray="3 3"/>
+        <circle cx="550" cy="310" r="110" stroke="#1A6B5C" stroke-width="1" fill="none" opacity="0.4"/>
+
+        <!-- Ring labels -->
+        <text x="550" y="76" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#8A8578" letter-spacing="2">PATTERNS</text>
+        <text x="550" y="136" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#8A8578" letter-spacing="2">HANDOFF</text>
+        <text x="550" y="196" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#1A6B5C" letter-spacing="2" opacity="0.7">EVAL</text>
+
+        <!-- 8 orbital nodes — radius 230 -->
+        <!-- 0° top: DISCOVERY -->
+        <circle cx="550" cy="80" r="11" stroke="#1A6B5C" stroke-width="1.6" fill="#FAFAF8"/>
+        <circle cx="550" cy="80" r="4.5" fill="#1A6B5C"/>
+        <text x="550" y="52" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="17" font-weight="500" fill="#1A6B5C" letter-spacing="2.5">DISCOVERY</text>
+
+        <!-- 45° upper-right: EVAL -->
+        <circle cx="713" cy="147" r="11" stroke="#B8510D" stroke-width="1.6" fill="#FAFAF8"/>
+        <circle cx="713" cy="147" r="4.5" fill="#B8510D"/>
+        <text x="730" y="138" font-family="'IBM Plex Mono', monospace" font-size="17" font-weight="500" fill="#B8510D" letter-spacing="2.5">EVAL</text>
+
+        <!-- 90° right: SCAFFOLDING -->
+        <circle cx="780" cy="310" r="11" stroke="#1A6B5C" stroke-width="1.6" fill="#FAFAF8"/>
+        <circle cx="780" cy="310" r="4.5" fill="#1A6B5C"/>
+        <text x="797" y="315" font-family="'IBM Plex Mono', monospace" font-size="17" font-weight="500" fill="#1A6B5C" letter-spacing="2.5">SCAFFOLDING</text>
+
+        <!-- 135° lower-right: VPC / DATA -->
+        <circle cx="713" cy="473" r="11" stroke="#B8510D" stroke-width="1.6" fill="#FAFAF8"/>
+        <circle cx="713" cy="473" r="4.5" fill="#B8510D"/>
+        <text x="730" y="478" font-family="'IBM Plex Mono', monospace" font-size="17" font-weight="500" fill="#B8510D" letter-spacing="2.5">VPC / DATA</text>
+
+        <!-- 180° bottom: GUARDRAILS -->
+        <circle cx="550" cy="540" r="11" stroke="#1A6B5C" stroke-width="1.6" fill="#FAFAF8"/>
+        <circle cx="550" cy="540" r="4.5" fill="#1A6B5C"/>
+        <text x="550" y="574" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="17" font-weight="500" fill="#1A6B5C" letter-spacing="2.5">GUARDRAILS</text>
+
+        <!-- 225° lower-left: AGENT / MCP -->
+        <circle cx="387" cy="473" r="11" stroke="#B8510D" stroke-width="1.6" fill="#FAFAF8"/>
+        <circle cx="387" cy="473" r="4.5" fill="#B8510D"/>
+        <text x="370" y="478" text-anchor="end" font-family="'IBM Plex Mono', monospace" font-size="17" font-weight="500" fill="#B8510D" letter-spacing="2.5">AGENT / MCP</text>
+
+        <!-- 270° left: HANDOFF -->
+        <circle cx="320" cy="310" r="11" stroke="#1A6B5C" stroke-width="1.6" fill="#FAFAF8"/>
+        <circle cx="320" cy="310" r="4.5" fill="#1A6B5C"/>
+        <text x="303" y="315" text-anchor="end" font-family="'IBM Plex Mono', monospace" font-size="17" font-weight="500" fill="#1A6B5C" letter-spacing="2.5">HANDOFF</text>
+
+        <!-- 315° upper-left: PATTERNS -->
+        <circle cx="387" cy="147" r="11" stroke="#B8510D" stroke-width="1.6" fill="#FAFAF8"/>
+        <circle cx="387" cy="147" r="4.5" fill="#B8510D"/>
+        <text x="370" y="138" text-anchor="end" font-family="'IBM Plex Mono', monospace" font-size="17" font-weight="500" fill="#B8510D" letter-spacing="2.5">PATTERNS</text>
+
+        <!-- Connector lines from center to each node (very faint) -->
+        <line x1="550" y1="195" x2="550" y2="89" stroke="#E0DDD6" stroke-width="1"/>
+        <line x1="630" y1="230" x2="706" y2="154" stroke="#E0DDD6" stroke-width="1"/>
+        <line x1="665" y1="310" x2="771" y2="310" stroke="#E0DDD6" stroke-width="1"/>
+        <line x1="630" y1="390" x2="706" y2="466" stroke="#E0DDD6" stroke-width="1"/>
+        <line x1="550" y1="425" x2="550" y2="531" stroke="#E0DDD6" stroke-width="1"/>
+        <line x1="470" y1="390" x2="394" y2="466" stroke="#E0DDD6" stroke-width="1"/>
+        <line x1="435" y1="310" x2="329" y2="310" stroke="#E0DDD6" stroke-width="1"/>
+        <line x1="470" y1="230" x2="394" y2="154" stroke="#E0DDD6" stroke-width="1"/>
+
+        <!-- Central FDE core (enlarged) -->
+        <circle cx="550" cy="310" r="108" stroke="#1A1A18" stroke-width="2.4" fill="#FAFAF8"/>
+        <circle cx="550" cy="310" r="92" stroke="#1A1A18" stroke-width="1" fill="none" opacity="0.22"/>
+        <circle cx="550" cy="310" r="76" stroke="#B8510D" stroke-width="0.8" fill="none" opacity="0.35" stroke-dasharray="2 3"/>
+
+        <!-- Crosshair -->
+        <line x1="532" y1="310" x2="568" y2="310" stroke="#1A1A18" stroke-width="0.8" opacity="0.35"/>
+        <line x1="550" y1="292" x2="550" y2="328" stroke="#1A1A18" stroke-width="0.8" opacity="0.35"/>
+
+        <text x="550" y="298" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="56" font-weight="600" fill="#1A1A18" letter-spacing="6">FDE</text>
+        <text x="550" y="338" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="11" fill="#8A8578" letter-spacing="3">FORWARD DEPLOYED ENGINEER</text>
+
+        <!-- Cycle arrow hint (clockwise) -->
+        <path d="M 460 80 Q 380 110, 350 180" stroke="#B8510D" stroke-width="1" stroke-dasharray="3 3" fill="none" opacity="0.5"/>
+        <path d="M 350 180 l -3 -8 l -5 6 z" fill="#B8510D" opacity="0.7"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- BOTTOM: Equation + metadata -->
+  <div class="bottom">
+    <div class="equation">
+      <span class="eq-outcome">Outcome</span> = Harness &times; <span class="eq-customer">Customer</span>
+    </div>
+    <div class="tagline">
+      Harness 提供能力，<strong>客户</strong>提供约束<br>
+      <span class="warm">FDE</span> 把 Harness 装到客户身上 — 这本书讲的就是怎么做这件事
+    </div>
+    <div class="meta-row">
+      <div class="topics">
+        <span class="topic">Discovery</span>
+        <span class="topic">Eval-Driven</span>
+        <span class="topic">Scaffolding</span>
+        <span class="topic">VPC / Data</span>
+        <span class="topic">Guardrails</span>
+        <span class="topic">Agent · MCP</span>
+        <span class="topic">Handoff</span>
+        <span class="topic">T-Shape</span>
+      </div>
+      <div class="stats">
+        <span class="num">17</span> chapters + <span class="num">4</span> appendices<br>
+        <span class="num">7</span> parts · Field Engineering
+      </div>
+    </div>
+
+    <!-- Author / WeChat byline -->
+    <div class="byline">
+      <div class="byline-block">
+        <span class="byline-label">AUTHOR</span>
+        <span class="byline-name">大卫</span>
+      </div>
+      <div class="byline-block byline-right">
+        <span class="byline-label">WeChat 公众号</span>
+        <span class="byline-name byline-warm">大卫AI</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
