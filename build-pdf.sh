@@ -59,6 +59,9 @@ build_pdf() {
   sed -i '/← Back to Contents/d' "$combined"
   sed -i '/<p align="center">/,/<\/p>/d' "$combined"
 
+  # Strip emoji that have no glyphs in the embedded fonts (PDF-only — sources keep them)
+  sed -i 's/❌ \?//g; s/✅ \?//g; s/⭐ \?//g; s/🔴 \?//g; s/🟡 \?//g; s/🟢 \?//g' "$combined"
+
   pandoc "$combined" \
     -o "$output" \
     --pdf-engine=xelatex \
