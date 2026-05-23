@@ -1,31 +1,31 @@
 ---
-title: "appendix/appendix-c.md"
-nav_exclude: true
-search_exclude: false
+title: "Appendix C: Eval Set Templates"
+parent: "Appendix"
+nav_order: 3
 ---
 
 # Appendix C: Eval Set Design Templates
 
 > Eval templates for the four most common LLM task types:
-> 1. RAG question answering
+> 1. RAG Q&A
 > 2. Agent task execution
 > 3. Text classification
 > 4. Structured information extraction
 >
-> Each template includes a jsonl schema, field semantics, sampling strategy, evaluation method, and CI example.
+> Each template includes a jsonl schema, field meanings, sampling strategy, evaluation method, and a CI example.
 
 ---
 
-## C.1 Common Design Principles
+## C.1 Shared Design Principles
 
 ```
-  Four tiers of Eval sets
+  4 layers of an eval set
         ──────────────────────────────────
 
-  Seed Set       (5-20 cases)   handwritten, ultra-fast regression, never edited
-  Golden Set     (100-300)      annotated by customer SMEs, the acceptance baseline
-  Adversarial    (50-150)       counterexamples / edge cases / privilege escalation
-  Production     (streaming)    sampled from prod → re-injected weekly
+  Seed Set       (5-20 cases)    hand-written, ultra-fast regression, never modified
+  Golden Set     (100-300 cases) labeled by customer experts, acceptance baseline
+  Adversarial    (50-150 cases)  counter-examples / edge / privilege-escalation
+  Production     (streaming)     sampled from prod → weekly back-feed
 ```
 
 **Common schema fields**:
@@ -46,11 +46,11 @@ search_exclude: false
 }
 ```
 
-**Why jsonl rather than csv**: nested fields, multi-line text, and long prompts are common — csv escaping turns into a nightmare.
+**Why jsonl, not csv**: nested fields, multi-line text, and long prompts are routine — CSV escaping becomes a nightmare.
 
 ---
 
-## C.2 Template 1: RAG QA Eval
+## C.2 Template 1: RAG Q&A Eval
 
 ### Schema
 
@@ -59,17 +59,17 @@ search_exclude: false
   "id": "rag-001",
   "category": "policy_lookup",
   "input": {
-    "question": "Does the customer's health insurance include hospitalization allowance? Policy number P20240315-001"
+    "question": "Does the customer's health insurance plan include a hospitalization daily allowance? Policy number P20240315-001"
   },
   "expected": {
-    "must_contain_keywords": ["hospitalization allowance", "200 RMB/day", "30 days"],
+    "must_contain_keywords": ["hospitalization daily allowance", "USD 30/day", "30 days"],
     "must_not_contain": ["excluded", "not covered"],
     "reference_doc_id": "POL-HC-002-v3.pdf",
     "reference_section": "Chapter 3, Clause 2",
-    "reference_answer": "Includes hospitalization allowance at 200 RMB per day, up to 30 days."
+    "reference_answer": "Includes a hospitalization daily allowance of USD 30 per day, up to 30 days"
   },
   "metadata": {
-    "source": "Customer SME 2026-05",
+    "source": "customer business expert 2026-05",
     "difficulty": "medium"
   }
 }
@@ -91,7 +91,7 @@ def evaluate_rag(case, system_output):
         for kw in case['expected']['must_not_contain']
     )
 
-    # 2. Was the retrieval source correct? (the most common RAG failure)
+    # 2. Did we retrieve from the right source (the most common RAG bug)
     score['retrieval_correct'] = (
         case['expected']['reference_doc_id']
         in [d['doc_id'] for d in system_output['retrieved_docs']]
@@ -103,7 +103,7 @@ def evaluate_rag(case, system_output):
         embed(system_output['answer'])
     )
 
-    # 4. LLM-as-judge (most expensive — reserve for key cases)
+    # 4. LLM-as-judge (most expensive, reserve for hard cases)
     if case['metadata']['difficulty'] == 'hard':
         score['llm_judge'] = call_judge(
             question=case['input']['question'],
@@ -118,22 +118,22 @@ def evaluate_rag(case, system_output):
 
 ```
   Seed Set:
-    - The 5 most frequent questions (the ones the business asks most)
-    - 5 explicit counterexamples (the ones we must never get wrong)
+    - Top 5 most-frequent questions (the ones business asks every day)
+    - 5 explicit counter-examples (must never get wrong)
 
-  Golden Set 200 cases — split like this:
-    - 60% mainstream questions (high-frequency cases the SME named)
-    - 20% edge cases (cross-policy / multi-insured / historical policies)
+  Golden Set 200 cases — recommended mix:
+    - 60% mainstream questions (high-frequency cases per business expert)
+    - 20% edge cases (cross-policy / multi-insured / historical policy)
     - 10% long-tail rare questions
-    - 10% counterexamples (out-of-scope / PII / things we should refuse)
+    - 10% counter-examples (privilege-escalation / PII / things it shouldn't answer)
 
   Adversarial 50 cases:
-    - Rephrasing / typos / synonym swaps
-    - Prompt injection
-    - Cross-domain (asking about another insurer)
+    - rephrased / misspelled / alternate terms
+    - prompt injection
+    - cross-domain (asking about a competitor's insurance)
 ```
 
-### CI thresholds
+### CI threshold
 
 ```yaml
 # .github/workflows/rag-eval.yml
@@ -161,7 +161,7 @@ def evaluate_rag(case, system_output):
   "category": "auto_settle_simple",
   "input": {
     "claim_id": "CLM-2026-001",
-    "user_message": "I want to claim last week's outpatient medication expenses, 580 RMB",
+    "user_message": "I want to claim USD 80 for last week's outpatient visit",
     "context": {
       "customer_id": "C123",
       "policy_id": "P-OPD-001"
@@ -171,13 +171,13 @@ def evaluate_rag(case, system_output):
     "task_completed": true,
     "tool_calls": [
       {"tool": "get_policy", "params_must_include": ["P-OPD-001"]},
-      {"tool": "validate_amount", "params_must_include": [580]},
+      {"tool": "validate_amount", "params_must_include": [80]},
       {"tool": "create_settlement", "must_appear": true}
     ],
     "tool_calls_must_not": ["transfer_funds"],
     "final_state": {
       "claim_status": "approved",
-      "approved_amount": 580
+      "approved_amount": 80
     },
     "max_steps": 8,
     "max_cost_usd": 0.05
@@ -194,16 +194,16 @@ def evaluate_rag(case, system_output):
   1. Task completion
      final_state == expected.final_state ?
 
-  2. Path soundness
-     Do tool_calls satisfy the "must / must-not" constraints?
+  2. Path reasonableness
+     Do tool_calls satisfy "must / must-not" constraints?
      Is the step count ≤ max_steps?
 
   3. Tool-call correctness
-     Are the parameters of each tool call right?
+     Are the parameters of each tool call correct?
 
   4. Side effects
-     Did it call any tool on the must-not list?
-     Did it cause any external state pollution?
+     Did it call any tool on the must_not list?
+     Did it pollute external state?
 
   5. Cost
      Total tokens / dollars ≤ max_cost_usd?
@@ -213,7 +213,7 @@ def evaluate_rag(case, system_output):
 
 ```python
 def evaluate_agent(case, trace):
-    """trace is the agent's full execution trajectory"""
+    """trace is the agent's full execution trace"""
     tool_calls = trace['tool_calls']
 
     # 1. Task completion
@@ -256,11 +256,11 @@ def evaluate_agent(case, trace):
 ### Sampling strategy
 
 ```
-  Golden 100 cases — split like this:
-    - 40% standard cases (simple cases the agent should auto-complete)
-    - 30% HITL cases (where escalation is the correct outcome)
-    - 15% abnormal inputs (missing fields / ambiguous reference)
-    - 15% counterexamples (out-of-scope / injection / adversarial)
+  Golden 100 cases — recommended mix:
+    - 40% standard cases (simple cases the agent can complete autonomously)
+    - 30% cases that should be escalated to HITL
+    - 15% abnormal inputs (missing fields / ambiguous referents)
+    - 15% counter-examples (privilege-escalation / injection / adversarial)
 ```
 
 ---
@@ -274,7 +274,7 @@ def evaluate_agent(case, trace):
   "id": "intent-001",
   "category": "core_intents",
   "input": {
-    "user_message": "My car was in an accident — what do I do?"
+    "user_message": "I just had a car accident, what should I do?"
   },
   "expected": {
     "intent": "claim_intake",
@@ -286,7 +286,7 @@ def evaluate_agent(case, trace):
 }
 ```
 
-### Metrics
+### Evaluation metrics
 
 ```python
 # Multi-class classification
@@ -298,17 +298,17 @@ y_pred = [run_classifier(c['input']) for c in cases]
 print(classification_report(y_true, y_pred))
 print(confusion_matrix(y_true, y_pred))
 
-# CI thresholds: macro F1 ≥ 0.85, per-class recall ≥ 0.80
+# CI threshold: macro F1 >= 0.85, per-class recall >= 0.80
 ```
 
 ### Key sampling
 
 ```
-  - At least 30 cases per intent (upsample if imbalanced)
-  - Confusion classes with asymmetric business cost get tagged separately
-    e.g. claim_intake misclassified as general_query → poor customer experience
+  - At least 30 cases per intent (oversample when imbalanced)
+  - Confusion classes with "asymmetric business cost" must be labeled separately
+    e.g. claim_intake misclassified as general_query → bad customer experience
          general_query misclassified as claim_intake → wasted human effort
-         The first is more costly; test it heavily.
+         the former costs more, so it must be tested explicitly
 ```
 
 ---
@@ -328,7 +328,7 @@ print(confusion_matrix(y_true, y_pred))
   "expected": {
     "invoice_no": "INV-2026-0312",
     "total_amount": 1280.50,
-    "currency": "CNY",
+    "currency": "USD",
     "issue_date": "2026-03-12",
     "vendor": {
       "name": "ABC Trading Co., Ltd.",
@@ -356,34 +356,34 @@ def field_level_eval(case, output):
         elif isinstance(e, (int, float)):
             score[field] = abs(e - a) / max(abs(e), 1) < 0.001
         elif isinstance(e, dict):
-            # nested, recurse
+            # Nested, recurse
             ...
     return score
 
-# Total = weighted average across critical fields
+# Total score = weighted average of key fields
 weights = {
     'invoice_no': 1.0,
-    'total_amount': 1.0,    # critical — numbers must be exact
+    'total_amount': 1.0,    # critical, must be numerically exact
     'currency': 0.5,
     'issue_date': 0.8,
     'vendor.name': 0.6,
-    'vendor.tax_id': 1.0    # compliance-critical
+    'vendor.tax_id': 1.0    # compliance requirement
 }
 ```
 
 ---
 
-## C.6 A Full Eval Project Layout
+## C.6 A Complete Eval Project Layout
 
 ```
 project/
 ├── eval/
 │   ├── datasets/
 │   │   ├── seed.jsonl              (10 cases, version-locked)
-│   │   ├── golden_v1.jsonl         (200 cases, SME-labeled)
-│   │   ├── golden_v2.jsonl         (250 cases, follow-on additions)
+│   │   ├── golden_v1.jsonl         (200 cases, expert-labeled)
+│   │   ├── golden_v2.jsonl         (250 cases, later additions)
 │   │   ├── adversarial.jsonl       (50 cases)
-│   │   └── prod_sampled_2026w20.jsonl  (weekly re-injection)
+│   │   └── prod_sampled_2026w20.jsonl  (weekly back-feed)
 │   ├── runners/
 │   │   ├── run_rag.py
 │   │   ├── run_agent.py
@@ -401,56 +401,56 @@ project/
 
 ---
 
-## C.7 Annotation Workflow — Getting Customer SMEs to Work Efficiently
+## C.7 Labeling Workflow — Make Customer Experts Productive
 
 ```
         Step 1: FDE prepares 100 seed questions
                (drawn from customer docs / historical tickets / support logs)
 
-        Step 2: SMEs annotate in Streamlit / Excel
-               (UI shows the question + your draft answer + their revisions)
+        Step 2: Business expert labels in Streamlit / Excel
+               (UI shows the question + your draft answer + the expected revision)
 
         Step 3: Two-person review
-               (one SME labels + a second one re-checks 20%)
+               (one expert labels + another samples 20% to double-check)
 
-        Step 4: Commit + version-lock (golden_v1)
+        Step 4: Lock and version (golden_v1)
 
-        Step 5: Monthly increments
-               (production cases that went wrong → adversarial set)
+        Step 5: Monthly increment
+               (problematic prod cases → adversarial set)
 ```
 
-**Key**: SMEs are not writing answers. They are **proofreading answers and codifying the judgment criteria**.
+**Key insight**: business experts don't write answers — they **review answers and define the acceptance criteria**.
 
 ---
 
 ## C.8 Eval Set Lifecycle Management
 
 ```
-  An Eval set is not "build once and shelve it" — it's alive.
+  An eval set is not "build once and shelve" — it is a living artifact.
 
   Rules:
-    - Add 20-50 new cases per month (from prod / bugs / new requirements)
-    - Quarterly audit (any stale cases / wrong answers?)
-    - Never delete the seed (unless that line of business is retired)
-    - Major version upgrade → new set, keep old one as the baseline
+    - Add 20-50 cases per month (from prod / bugs / new requirements)
+    - Audit quarterly (any stale cases / wrong answers?)
+    - Never delete seed cases (unless that business is decommissioned)
+    - Major version bump → new collection; archive the old one as a baseline
 ```
 
 ---
 
 ## C.9 An Eval Checklist
 
-Pre-release, must-check:
+Pre-release verification:
 
 ```
   □ Every seed case passes
-  □ Golden set headline metric ≥ threshold
-  □ Adversarial counterexamples refused at ≥ 90%
-  □ Cost metric ≤ budget
-  □ Latency metric ≤ SLO
-  □ Slices (returning / new / high-value / low-value customers) all pass
-  □ Compared to previous version → no regressions
+  □ Golden set primary metrics ≥ thresholds
+  □ Adversarial counter-examples are rejected at least 90% of the time
+  □ Cost metrics ≤ budget
+  □ Latency metrics ≤ SLO
+  □ All slices (senior / junior / high-value / low-value customers) pass
+  □ No regressions vs the previous release
 ```
 
 ---
 
-[← Previous Appendix: Comparison Matrix](appendix-b.md) · [Next Appendix: Customer Kickoff Pack →](appendix-d.md)
+[← Previous appendix: Comparison Matrix](appendix-b.md) · [Next appendix: Customer Onboarding Pack →](appendix-d.md)

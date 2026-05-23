@@ -1,7 +1,6 @@
 ---
-title: "en/glossary.md"
-nav_exclude: true
-search_exclude: false
+title: "Glossary"
+nav_order: 90
 ---
 
 # Glossary
@@ -12,7 +11,7 @@ search_exclude: false
 
 ## A
 
-**A. Lawrence** — Author of *Forward Deployed Engineer Rule Book* (Oct 2025), the only standalone English book on FDE.
+**A. Lawrence** — Author of *Forward Deployed Engineer Rule Book* (2025-10), the only standalone English-language book on FDE to date.
 
 **Agent (AI Agent)** — An LLM application that plans, calls tools, and iterates autonomously. Subject of Part VI.
 
@@ -20,7 +19,7 @@ search_exclude: false
 
 **Anthropic** — Maker of Claude.
 
-**AWS GenAI Innovation Center** — Amazon's FDE-equivalent organization. Officially uses "Forward deployment engineering"; published 45-day / 73% case figures.
+**AWS GenAI Innovation Center** — Amazon's FDE-equivalent organization. Officially uses the term "Forward deployment engineering"; published the 45-day / 73% figures.
 
 ## B
 
@@ -30,7 +29,7 @@ search_exclude: false
 
 **Conikeec** — Substack author of *The FDE Playbook: A Practitioner's Field Manual*.
 
-**Confluence** — Atlassian's enterprise wiki. Almost always present in customer documentation; unavoidable in the Discovery phase.
+**Confluence** — Atlassian's enterprise wiki. A common form of the customer's documentation library; unavoidable in the Discovery phase.
 
 ## D
 
@@ -68,7 +67,7 @@ search_exclude: false
 
 ## I
 
-**Immersion Before Judgment** — Lawrence's principle: live in the customer workflow before designing.
+**Immersion Before Judgment** — Lawrence's principle: live in the customer workflow before making judgments.
 
 ## J
 
@@ -76,7 +75,7 @@ search_exclude: false
 
 ## L
 
-**LLM (Large Language Model)** — Assumed to be familiar; the book assumes you can call APIs.
+**LLM (Large Language Model)** — The book assumes you can already call APIs.
 
 ## M
 
@@ -86,11 +85,11 @@ search_exclude: false
 
 ## N
 
-**Nabeel Qureshi** — Early Palantir; the most influential English-language interpreter of FDE.
+**Nabeel Qureshi** — Early Palantir; the most influential English-language interpreter of the FDE model.
 
 ## O
 
-**Ontology** ⭐ — Formal modeling of customer business concepts (entities, properties, relationships, actions). Palantir's core abstraction; primary battlefield of the field-delivery FDE track. Topic of Ch 9.
+**Ontology** ⭐ — Formal modeling of customer business concepts (entities, properties, relationships, actions). Palantir's core abstraction; primary battlefield of the FDE data track. Topic of Ch 9.
 
 **Outcome (in "Sell the outcome")** — The customer's business result (revenue, cost, risk), as opposed to a feature, tool, or demo.
 
@@ -130,9 +129,9 @@ search_exclude: false
 
 ## Other
 
-**Anti-pattern** — A common but harmful practice. End-of-chapter checklist in this book.
+**Anti-pattern** — A common but harmful practice. End-of-chapter checklist throughout this book.
 
-**Action Checklist** — Copy-do items for the week. End-of-chapter checklist in this book.
+**Action Checklist** — Engineering moves you can copy-do this week. Standing end-of-chapter section throughout this book.
 
 ---
 

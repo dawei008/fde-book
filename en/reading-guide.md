@@ -1,7 +1,6 @@
 ---
-title: "en/reading-guide.md"
-nav_exclude: true
-search_exclude: false
+title: "Reading Guide"
+nav_order: 2
 ---
 
 # Reading Guide
@@ -18,7 +17,7 @@ search_exclude: false
 
 **Path**: Part I → Part II → **Part III** → Part V → **Part VI** → Part VII.
 
-**Highlights**: Ch 6 stack matrix, Ch 7 RAG/FT/Agent decision tree, Ch 8 eval-driven development, Ch 14 agent deployment, Ch 15 MCP.
+**Highlights**: Ch 6 stack quick-decision matrix, Ch 7 RAG/FT/Agent decision tree, Ch 8 eval-driven, Ch 14 agent deployment, Ch 15 MCP.
 
 **Time**: ~5 hours.
 
@@ -26,7 +25,7 @@ search_exclude: false
 
 ### Track B: Field-Delivery FDE (Palantir style)
 
-**Best for**: FDEs at Palantir, AWS GenAI Innovation Center, AI consultancies — delivering data + software in customer environments.
+**Best for**: FDEs at Palantir, enterprise AI consultancies, or cloud-vendor solutions teams — delivering customer-site data + software in customer environments.
 
 **Path**: Part I → Part II → **Part IV** → Part V → Part VII.
 
@@ -36,9 +35,9 @@ search_exclude: false
 
 ---
 
-### Track C: Full Read (FDE leads, staff/principal cross-track)
+### Track C: Full Read (FDE leads, cross-track)
 
-**Best for**: FDE team leads, anyone doing internal training, FDEs who span both tracks.
+**Best for**: FDE team leads, staff/principal engineers running internal training, FDEs spanning both kinds of projects.
 
 **Path**: Part I straight through to Part VII.
 
@@ -46,11 +45,11 @@ search_exclude: false
 
 ---
 
-### Track D: Reference
+### Track D: As Reference
 
-**Best for**: A specific question — "how do I size hardware for private deployment?", "how do I write PoC acceptance criteria?"
+**Best for**: A specific question — "the customer wants private deployment, how do I size hardware?", "how do I write PoC acceptance criteria?"
 
-**Use**: Jump to appendices A–D and the relevant chapter.
+**Use**: Jump directly to appendices A–D and the relevant chapter.
 
 | Your question | Where to look |
 |---|---|
@@ -65,8 +64,8 @@ search_exclude: false
 ## Difficulty Markers
 
 ```
-🟢 Direct — copy and apply
-🟡 Reflection — judge against your project
+🟢 Direct — engineers can copy and apply
+🟡 Reflection — judge against your own project
 🔴 Decision — org / commercial / compliance call
 ```
 
@@ -84,15 +83,9 @@ search_exclude: false
 
 ## Chapter Format
 
-```
-Opening — concrete scene or concrete counter-example
-Body — 3-5 sections, each one engineering call
-Key citations — a quote or two from Lawrence / McGrew / Conikeec / AWS
-Action checklist — copy-do items for this week
-Anti-pattern checklist — recurring failures real FDEs hit
-```
+Each chapter opens on a concrete scene — a meeting, an incident, an eval set — then unfolds a few engineering judgments, with reflective passages woven in. Anti-patterns aren't piled at the end as a checklist; they appear alongside the main narrative scenes, so "why this is wrong" stays glued to "the situation in which it gets done."
 
-If you're short on time, **read the action and anti-pattern checklists first**.
+If you're short on time, scan the section headings of each chapter and read the few that match your current project.
 
 ---
 
@@ -107,7 +100,7 @@ Full glossary in [glossary.md](glossary.md). The load-bearing few:
 | **Eval-driven** | Eval set first, code second — Ch 8's spine |
 | **Ontology** | Palantir's core abstraction; Ch 9 gives an engineering view |
 | **Agent Toolset** | The set of tools an agent can call — Ch 14's topic |
-| **MCP** | Model Context Protocol — standard for connecting agents to enterprise tools — Ch 15 |
+| **MCP** | Model Context Protocol — standard for connecting agents to enterprise tools |
 | **PoC Cut-over** | The chasm from PoC to production — Ch 12 |
 | **Handoff** | The departure-day delivery move — Ch 16 |
 
@@ -115,9 +108,9 @@ Full glossary in [glossary.md](glossary.md). The load-bearing few:
 
 ## Companion Resources
 
-- **research/** — All research notes (7 docs, public)
+- **research/** — All research material, openly available (7 docs)
 - **Appendix D** — 12 ready-to-use templates for week one
-- **GitHub Issues** — Counter-examples, real numbers, missing-chapter requests
+- **GitHub Issues** — Counter-examples, real numbers, missing-chapter suggestions
 
 ---
 

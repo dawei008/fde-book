@@ -1,7 +1,6 @@
 ---
-title: "en/preface.md"
-nav_exclude: true
-search_exclude: false
+title: "Preface"
+nav_order: 1
 ---
 
 # Preface
@@ -54,29 +53,28 @@ If you've never been customer-facing or never used an LLM API, do a few small pr
 
 **1. Every judgment call comes with a concrete scenario.**
 
-No "FDEs should value customer interviews." Instead: "In your first week on a project, what to do, what *not* to do, and the 5 questions to ask in the first 3 customer meetings."
+No "FDEs should value customer interviews." Instead: "In your first week on a project, what to do, what *not* to do, and the questions to ask in the first 3 customer meetings."
 
 **2. Every technical choice gives you decision dimensions.**
 
-No "RAG beats fine-tuning" or vice versa. A matrix instead: data volume / update frequency / answer determinism / inference budget / compliance — judge for yourself.
+No "RAG beats fine-tuning" or vice versa. A matrix instead: data volume / update frequency / answer determinism / inference budget / compliance — judge for yourself in your own customer context.
 
-**3. Every chapter ends with an action checklist + an anti-pattern checklist.**
+**3. Anti-patterns come from real failures, not imagination.**
 
-The action checklist is what you can copy-do this week; the anti-pattern checklist is what real FDEs keep getting wrong.
+The recurring "anti-pattern" passages each map to at least one real FDE project where the same mistake has been repeated. The customer cases themselves are synthetic and fictionalized; the failures behind the anti-patterns are real.
 
 ---
 
 ## Core Sources
 
-The book leans heavily on:
+The FDE function was first turned into a formal role at Palantir; OpenAI and Anthropic followed. The methodology in this book leans primarily on the public material from:
 
-- **A. Lawrence**, *Forward Deployed Engineer Rule Book* (Oct 2025)
+- **A. Lawrence**, *Forward Deployed Engineer Rule Book* (2025-10)
 - **Bob McGrew @ Y Combinator** (2025) — "Sell the outcome, not the product"
-- **AWS GenAI Innovation Center** — public 45-day / 73% figures
 - **Conikeec @ Substack**, *The FDE Playbook*
 - **Nabeel Qureshi**, *Reflections on Palantir*
 
-Full list in [bibliography.md](bibliography.md).
+AWS Bedrock appears in this book only as the platform for hands-on demos, not as a methodology source. Full citation list in [bibliography.md](bibliography.md).
 
 ---
 
@@ -90,7 +88,7 @@ After each chapter, ask yourself:
 2. If yes, how did I handle it before?
 3. How does the chapter's approach differ from mine? Which is better?
 
-End-to-end takes 6-7 hours; with a real project alongside, 2-3 weeks is probably more useful.
+End-to-end takes ~6-7 hours; with a real project alongside, 2-3 weeks is probably more useful.
 
 ---
 
@@ -98,11 +96,11 @@ End-to-end takes 6-7 hours; with a real project alongside, 2-3 weeks is probably
 
 GitHub Issues is the fastest channel. What I want most:
 
-- **Counter-examples**: where the book's recipe failed in your context
-- **Real numbers**: your PoC conversion rate, customer NPS, week-one deliverables
+- **Counter-examples**: a scenario where this book's recipe didn't work for you
+- **Real numbers**: your PoC conversion rate, customer NPS, week-one deliverables list
 - **Missing chapters**: critical engineering topics you think this book missed
 
-The next edition will probably absorb the strongest signals.
+The next edition may absorb your feedback.
 
 ---
 

@@ -1,145 +1,159 @@
 ---
-title: "appendix/appendix-b.md"
-nav_exclude: true
-search_exclude: false
+title: "Appendix B: Comparison Matrix"
+parent: "Appendix"
+nav_order: 2
 ---
 
 # Appendix B: Model / Framework / Platform Comparison Matrix
 
-> Appendix A is a "breadth cheat sheet"; this appendix is a "depth comparison." When you need to make a serious decision inside one tool category, look here.
+> Appendix A is a "breadth cheat sheet"; this appendix is the "depth comparison". Look here when you need a serious decision inside one tool category.
+>
+> Editorial stance: this book uses AWS as the demo platform. Non-AWS tools below are referenced for "integrating with the customer's existing stack" only — not as horizontal vendor-vs-vendor commercial comparisons.
 
 ---
 
-## B.1 Mainstream LLMs — 9-Dimension Comparison
+## B.1 Mainstream Foundation Models — 9 Dimensions (2026-05)
 
-| Dimension | Claude 3.5 Sonnet | Claude 3 Opus | Claude 3 Haiku | GPT-4o | GPT-4o-mini | Llama 3.1 70B | Qwen 2.5 72B | DeepSeek V3 |
+| Dimension | Claude Opus 4.5 | Claude Sonnet 4.5 | Claude Haiku 4.5 | Nova 2 Lite | Nova 2 Pro | Qwen3-Next | DeepSeek V3.2 | gpt-oss-20B |
 |---|---|---|---|---|---|---|---|---|
-| Context | 200K | 200K | 200K | 128K | 128K | 128K | 128K | 128K |
-| Output tokens | 8K | 4K | 4K | 16K | 16K | 8K | 8K | 8K |
-| Chinese | Strong | Excellent | Average | Strong | Good | Average | Excellent | Excellent |
-| Reasoning | Excellent | Top-tier | Average | Excellent | Good | Good | Good | Excellent |
-| Tool use | Excellent | Excellent | Good | Excellent | Excellent | Good | Good | Good |
-| Multimodal | Vision | Vision | Vision | Vision + audio | Vision | Text | Vision | Text |
-| Price (input / M tok) | $3 | $15 | $0.25 | $5 | $0.15 | Self-hosted | Self-hosted | $0.27 |
-| Price (output / M tok) | $15 | $75 | $1.25 | $15 | $0.6 | Self-hosted | Self-hosted | $1.1 |
-| Bedrock available | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ (available on AWS China) | ❌ |
+| Context | 200K | 200K+ | 200K | 1M | Long | Long | Long | Mid |
+| Chinese | Excellent | Strong | Strong | Mid | Mid | Excellent | Excellent | Average |
+| Reasoning | Top-tier | Excellent | Good | Good | Strong | Strong | Excellent | Good |
+| Tool calling | Excellent (incl. tool-search, effort param) | Excellent | Good | Built-in code interpreter / web grounding | Strong | Good | Good | Good |
+| Multimodal | Vision | Vision | Vision | Text+Vision | Text+Vision | Vision (VL variant) | Text | Text |
+| Available on Bedrock | ✅ | ✅ | ✅ | ✅ (GA) | Preview | ✅ (Project Mantle) | ✅ (Mantle, OpenAI-compat) | ✅ (Mantle) |
+| Reserved tier | ✅ | ✅ | ✅ | — | — | — | — | — |
+| Prompt cache TTL | 5 min / 1 hour | 5 min / 1 hour | 5 min / 1 hour | — | — | — | — | — |
+| Price tier | High | Mid | Low | Low | Mid | Mid-Low | Low | Low |
 
 **FDE decision pattern**:
 
 ```
-  Enterprise default: Claude 3.5 Sonnet (Bedrock) — balanced + AWS-native
-  High QPS:           Claude 3 Haiku or GPT-4o-mini
-  Highest quality:    Claude 3 Opus (judge / critical path)
-  Chinese + private:  Qwen 2.5 72B or DeepSeek V3 self-hosted
-  European compliance: Mistral Large
+  Enterprise default (AWS):    Bedrock Claude Sonnet 4.5 — balanced + AWS-native
+  High QPS / classification:   Claude Haiku 4.5
+  Highest quality / Judge:     Claude Opus 4.5 (use the effort parameter to control cost)
+  Long doc / 1M context:       Nova 2 Lite
+  Chinese + private:           Qwen3-Next / DeepSeek V3.2 (Mantle endpoint + PrivateLink)
+  Existing OpenAI SDK code:    gpt-oss / DeepSeek on Mantle (drop-in compatible)
+  European multilingual:       Mistral Large 3 / Magistral
 ```
+
+**Inference Service Tiers** (since 2025-11):
+
+| Tier | Best For | Notes |
+|---|---|---|
+| Standard | Regular production | Default |
+| Priority | Real-time critical path | Higher price, more stable quota |
+| Flex | Batch / offline eval / summarization | Discounted, latency-tolerant |
+| Reserved | Predictable capacity | 1- or 3-month commitment, overflow falls back to Standard |
 
 ---
 
 ## B.2 RAG Framework Comparison
 
-| Dimension | LangChain RAG | LlamaIndex | Haystack | Bedrock KB | Build your own |
+| Dimension | LangChain RAG | LlamaIndex | Haystack | Bedrock KB | Build-Your-Own |
 |---|---|---|---|---|---|
-| Onboarding speed | Mid | Fast | Mid | Very fast | Slow |
-| Document parsing | Mid | Strong (LlamaParse) | Strong | Mid | Custom |
+| Time to first demo | Mid | Fast | Mid | Very fast | Slow |
+| Document parsing | Mid | Strong (LlamaParse) | Strong | Mid + Bedrock Data Automation | Custom |
 | Chunking strategies | Many | Many | Many | Default + custom | Custom |
 | Retrieval strategies | Many | Very many | Many | Hybrid (OS) | Custom |
-| Rerank | External (Cohere/etc.) | Built-in + external | Built-in | External (Cohere) | Custom |
-| Incremental updates | DIY | DIY | DIY | Automatic (S3) | Custom |
-| Multi-source fusion | Strong | Very strong | Mid | Mid | Custom |
+| Multimodal | DIY | DIY | DIY | ✅ (GA 2025-11: text/image/audio/video) | Custom |
+| Rerank | Plug Cohere/external | Built-in + external | Built-in | Plug Cohere | Custom |
+| Incremental updates | Roll your own | Roll your own | Roll your own | Auto (S3) | Custom |
+| Multi-source fusion | Strong | Excellent | Mid | Mid | Custom |
 | Production maturity | Mid | Mid | High | High | Depends on team |
 | Lock-in risk | Low | Low | Low | High (AWS) | None |
 
-**Rules of thumb**:
+**Field experience**:
 - PoC: LlamaIndex ships demos fastest
-- Production + AWS: Bedrock KB (saves half the engineering across 4 weeks)
-- Long-term complex RAG: build your own (use Bedrock for the retrieval layer, control orchestration yourself)
+- Production + AWS: Bedrock KB (saves about half the engineering over 4 weeks; multimodal goes native)
+- Long-term complex RAG: build-your-own (Bedrock as the retrieval layer, with your own orchestration)
 
 ---
 
 ## B.3 Agent Framework Comparison
 
-| Dimension | LangGraph | Bedrock Agents | AutoGen | CrewAI | OpenAI Assistants | Native SDK + state machine |
+| Dimension | Strands Agents | AgentCore | LangGraph | AutoGen | CrewAI | Native SDK + state machine |
 |---|---|---|---|---|---|---|
-| Programming model | State graph (DAG) | Configuration-based | Multi-agent dialogue | Role-play | API + state service | Fully custom |
-| Tool integration | Free-form | Action Group | Free-form | Free-form | Built-in + Function | Free-form |
-| Long tasks | LangGraph Cloud | Pair with Step Functions | Weak | Weak | Built-in threads | Custom |
-| HITL | Built-in interrupt | Weak engineering | Mid | Weak | Weak | Custom |
-| Observability | LangSmith | CloudWatch + Trace | Custom | Custom | OpenAI dashboard | Custom |
-| Lock-in risk | Mid | High (AWS) | Low | Low | High (OpenAI) | None |
-| Best scale | Small to large | Mid + AWS customers | Research / experiments | Content generation | Personal assistants | High complexity |
+| Programming model | Lightweight SDK (Py / TS 1.0) | Managed Runtime + Gateway | State graph (DAG) | Multi-agent dialogue | Role-play | Fully custom |
+| Tool integration | Free + MCP | MCP / Action / Gateway | Free | Free | Free | Free |
+| Long tasks | Self-managed | Built-in 8h execution window | LangGraph Cloud | Weak | Weak | Custom |
+| HITL | DIY | Stateful MCP (2026-03) + Cedar policy | Built-in interrupt | Mid | Weak | Custom |
+| Observability | OTEL → CloudWatch | CloudWatch GenAI Observability + Evaluations | LangSmith | Custom | Custom | Custom |
+| Evaluation | Plug Bedrock Eval | Built-in 13 evaluators + Performance Loop (2026-05) | LangSmith | Custom | Custom | Custom |
+| Lock-in risk | Low (open source) | High (AWS) | Mid | Low | Low | None |
+| Best scale | Small to large | Mid-Large + AWS customers | Small to large | Research / experimentation | Content generation | High complexity |
 
-**Rules of thumb**:
-- Customer on AWS + simple business flow → Bedrock Agents
-- Customer multi-cloud + complex business flow → LangGraph
-- Critical path + rigorous → native SDK + state machine
+**Field experience**:
+- Customer on AWS + wants "out-of-the-box" production line → AgentCore (Runtime + Gateway + Identity + Observability + Evaluations)
+- Customer wants a lightweight SDK while keeping AWS integration → Strands (incl. TS 1.0, frontend teams can adopt)
+- Multi-cloud + complex business flow → LangGraph
+- Critical path + maximum rigor → native SDK + state machine
 
 ---
 
-## B.4 Vector Store Comparison — 6 Production Dimensions
+## B.4 Vector Stores Compared — 6 Production Dimensions
 
-| Dimension | Pinecone | Weaviate | Milvus | OpenSearch | pgvector | Chroma |
+| Dimension | OpenSearch (AWS) | Aurora pgvector | Pinecone | Weaviate | Milvus | Chroma |
 |---|---|---|---|---|---|---|
-| Deployment | SaaS | SaaS + OSS | OSS (K8s) | AWS / OSS | PG extension | OSS / local |
-| Single-DB scale | 1B+ | 1B+ | 10B+ | 1B+ | 100M | 10M |
-| Hybrid search | Supported | Supported | Supported | Excellent | Weak (needs extension) | Weak |
-| Metadata filtering | Strong | Strong | Strong | Excellent | Excellent (SQL) | Mid |
-| Multimodal | Mid | Strong | Mid | Mid | Weak | Weak |
-| Incremental / updates | Easy | Easy | Easy | Easy | Trivial (UPDATE) | Easy |
-| In-VPC deployment | Private edition | Self-hosted | Self-hosted | Self-hosted / Serverless | RDS / Aurora | Self-hosted |
-| Cost | High | Mid | Mid (ops cost) | Mid | Very low (PG already there) | Very low |
-| Customer already has it | Usually no | Usually no | Usually no | Some AWS customers | **Many customers already have PG** | Usually no |
+| Deployment | AWS managed / Serverless | AWS Aurora / RDS | SaaS | SaaS + OSS | OSS (K8s) | OSS / local |
+| Single-store scale | 1B+ | 100M | 1B+ | 1B+ | 10B+ | Tens of millions |
+| Hybrid retrieval | Excellent | Weak (extension required) | Supported | Supported | Supported | Weak |
+| Metadata filtering | Excellent | Excellent (SQL) | Strong | Strong | Strong | Mid |
+| Multi-modal | Mid | Weak | Mid | Strong | Mid | Weak |
+| Incremental / updates | Easy | Trivial (UPDATE) | Easy | Easy | Easy | Easy |
+| Deploy inside VPC | Serverless / self-hosted | RDS / Aurora | Private edition | Self-hosted | Self-hosted | Self-hosted |
+| Customer already has it | Some AWS customers | **Many customers already run PG** | Usually not | Usually not | Usually not | Usually not |
 
-**FDE empirical decision**:
-
-```
-  Customer already has PG / Aurora → pgvector (zero extra tools)
-  Customer on AWS + mid-scale     → OpenSearch Serverless
-  Scale > 500M                     → Milvus or Pinecone
-  PoC / small project              → Chroma
-  Lowest ops effort / budget OK    → Pinecone
-```
-
----
-
-## B.5 Eval Tool Comparison
-
-| Dimension | Bedrock Evaluations | LangFuse | Phoenix | DeepEval | Promptfoo | Ragas |
-|---|---|---|---|---|---|---|
-| Form | AWS managed | OSS + Cloud | OSS | Python lib | YAML CLI | OSS |
-| Eval scope | Model / KB / Agent | Full LLM stack | Full LLM stack | Embedded unit test | Prompt comparison | RAG-specific |
-| LLM-as-judge | Built-in | Supported | Supported | Supported | Supported | Supported |
-| Auto metrics | BLEU / ROUGE / accuracy | Custom | Custom | Many built-in | Custom | 6 RAG metrics |
-| Dataset management | S3 jsonl | UI + API | UI | Code | YAML | Code |
-| Online trace | No (static) | Strong | Strong | No | No | No |
-| CI-friendly | Mid | Mid | Mid | Strong | Excellent | Mid |
-| Cost | Per token + judge | OSS free / Cloud paid | OSS free | OSS free | OSS free | OSS free |
-
-**Typical combination**:
+**FDE field decision**:
 
 ```
-  LangFuse (trace + online) + Promptfoo (CI) + Bedrock Evaluations (compliance acceptance)
+  Customer already runs PG / Aurora  → pgvector (zero extra tooling)
+  Customer on AWS + mid scale        → OpenSearch Serverless
+  Scale > 500M                        → Milvus or Pinecone
+  PoC / small project                 → Chroma
 ```
 
 ---
 
-## B.6 Deployment Platform Comparison — From an LLM-app Lens
+## B.5 Eval Tools Compared
 
-| Dimension | Lambda | ECS Fargate | EKS | SageMaker Endpoint | Step Functions |
-|---|---|---|---|---|---|
-| Startup latency | Cold start 100ms-3s | Container startup in seconds | Pod startup in seconds | Startup in seconds | Orchestration overhead |
-| Max single run | 15 min | None | None | None | 1 year |
-| Concurrency model | Automatic | Self-managed | Self-managed | Self-managed | N/A |
-| Best for | Single LLM call / simple Agent | Long-running server / MCP | Complex clusters | Self-hosted models | Long flows / HITL |
-| Cost shape | Pay-per-use | Per container | Per node | Per endpoint | Per state transition |
-| State | Stateless | Stateless / EFS | StatefulSet | Stateless | State held in SF |
-| Image size | 250MB / 10G (image) | Large | Large | Large | N/A |
+| Dimension | Bedrock Evaluations | AgentCore Evaluations | LangFuse | Phoenix | DeepEval | Promptfoo | Ragas |
+|---|---|---|---|---|---|---|---|
+| Form | AWS managed | AWS managed | OSS + Cloud | OSS | Python lib | YAML CLI | OSS |
+| Eval scope | Model / KB / RAG / Agent | Agent + 13 built-in evaluators | Full LLM stack | Full LLM stack | Embedded in unit tests | Prompt comparison | RAG-specific |
+| LLM-as-judge | Built-in | Custom model-based | Supported | Supported | Supported | Supported | Supported |
+| Online trace | Mostly static | Connected to CloudWatch | Strong | Strong | No | No | No |
+| CI-friendly | Mid | Mid | Mid | Mid | Strong | Excellent | Mid |
+| Cost | Per token + judge | Per invocation | OSS / Cloud | OSS | OSS | OSS | OSS |
 
-**Rules of thumb**:
+**Typical combo (AWS customer)**:
+
+```
+  AgentCore Evaluations + CloudWatch GenAI Observability  → online + dashboard
+  Bedrock Evaluations                                     → compliance acceptance
+  Promptfoo                                               → CI prompt comparisons
+  AgentCore Performance Loop                              → eval → optimize closed loop
+```
+
+---
+
+## B.6 Deployment Platforms — LLM Application Dimensions
+
+| Dimension | Lambda | ECS Fargate | EKS | AgentCore Runtime | SageMaker Endpoint | Step Functions |
+|---|---|---|---|---|---|---|
+| Startup latency | Cold start 100ms-3s | Container start in seconds | Pod in seconds | microVM in seconds | Endpoint in seconds | Orchestration overhead |
+| Max single run | 15 min | None | None | 8 h | None | 1 year |
+| Concurrency model | Auto | Self-managed | Self-managed | Managed | Self-managed | N/A |
+| Best for | Single LLM call / simple Agent | Long-running server / MCP | Complex clusters | Agent + MCP + VPC | Self-hosted models | Long flows / HITL |
+| State | Stateless | Stateless / EFS | StatefulSet | Session microVM (incl. stateful MCP) | Stateless | State held in SF |
+| Private network | VPC | VPC | VPC | VPC + PrivateLink | VPC | — |
+
+**Field experience**:
 - Simple RAG / API → Lambda
-- MCP server / Agent service → ECS Fargate
-- Long flow + HITL → Step Functions + Lambda
-- Self-hosting 70B+ models → SageMaker / EKS + GPU
+- MCP server / Agent service → ECS Fargate or AgentCore Runtime (the latter is the recommendation: zero maintenance, built-in 8h long task)
+- Long flow + HITL → AgentCore + stateful MCP, or Step Functions + Lambda
+- Self-hosted 70B+ models → SageMaker JumpStart optimized deployment / HyperPod / EKS + GPU
 
 ---
 
@@ -147,56 +161,57 @@ search_exclude: false
 
 | Dimension | Python | TypeScript | Go | Rust |
 |---|---|---|---|---|
-| LLM SDK maturity | Top-tier | Good | Good | Early |
+| LLM SDK maturity | Top-tier | Good (Strands TS 1.0 covers AWS Agents too) | Good | Early stage |
 | Data processing | Excellent | Mid | Strong | Strong |
-| Async concurrency | asyncio (mid) | Native, strong | goroutines, strong | tokio, strong |
+| Async concurrency | asyncio (mid) | Native strong | goroutine strong | tokio strong |
 | Deployment size | Large | Mid | Tiny (single binary) | Tiny |
-| Hiring | Very easy | Easy | Mid | Hard |
-| FDE recommended use | Data / Eval / PoC | Frontend / Lambda | API / high-concurrency | Critical path / embedded |
+| Hiring | Easiest | Easy | Mid | Hard |
+| FDE recommended scenarios | Data / Eval / PoC | Frontend / Lambda / Agent | API / high concurrency | Critical path / embedded |
 
-**FDE default**: Python + TypeScript dual stack covers the vast majority of scenarios.
+**FDE default**: Python + TypeScript dual stack covers the vast majority of scenarios. With Strands TS 1.0, frontend teams can own Agent code independently.
 
 ---
 
-## B.8 Decision Synthesis Table
+## B.8 Combined Decision Table
 
 ```
         Customer scenario → recommended stack
         ─────────────────────────────────────────────────
 
-  AWS mid-size insurer + document RAG
-    Model:    Bedrock Claude 3.5 Sonnet
-    Framework: Bedrock Knowledge Bases + custom Lambda
+  Mid-size US insurer on AWS + document RAG
+    Model:    Bedrock Claude Sonnet 4.5 (Reserved tier)
+    Framework: Bedrock Knowledge Bases + Lambda
     Vector:   OpenSearch Serverless
-    Eval:     LangFuse Cloud + Promptfoo CI
+    Eval:     Bedrock Evaluations + Promptfoo CI
     Deploy:   Lambda + API Gateway
     IaC:      AWS CDK
-    Monitor:  CloudWatch + X-Ray
-    Security: IAM Identity Center + Bedrock Guardrails
+    Monitor:  CloudWatch GenAI Observability + X-Ray
+    Security: IAM Identity Center + Bedrock Guardrails (incl. cross-account)
 
   ─────────────────────────────────────────────────
 
-  Existing PG database + Chinese finance + intranet
-    Model:    DeepSeek V3 / Qwen 2.5 72B self-hosted (vLLM)
-    Framework: Native SDK + state machine
+  On-prem PG database + Chinese finance + intranet
+    Model:    DeepSeek V3.2 / Qwen3-Next (Bedrock Mantle + PrivateLink),
+              or self-hosted (vLLM)
+    Framework: Native SDK + state machine, or Strands
     Vector:   pgvector
     Eval:     Phoenix (self-hosted) + custom judge
-    Deploy:   K8s
+    Deploy:   K8s / EKS
     IaC:      Terraform
     Monitor:  Prometheus + Grafana
     Security: Internal LDAP + custom audit
 
   ─────────────────────────────────────────────────
 
-  Multinational retail + multi-SaaS integration + Agent
-    Model:    Claude 3.5 Sonnet
-    Framework: LangGraph + MCP servers
-    Vector:   Pinecone
-    Eval:     LangFuse + DeepEval
-    Deploy:   ECS Fargate
-    IaC:      Pulumi (multi-cloud)
-    Monitor:  Datadog
-    Security: Okta + per-call OAuth
+  Cross-border retailer + multi-SaaS integration + Agent
+    Model:    Claude Sonnet 4.5 (primary) + Haiku 4.5 (routing / classification)
+    Framework: Strands + AgentCore (Gateway + Identity)
+    Vector:   OpenSearch Serverless
+    Eval:     AgentCore Evaluations + Performance Loop
+    Deploy:   AgentCore Runtime
+    IaC:      CDK
+    Monitor:  CloudWatch GenAI Observability
+    Security: IAM Identity Center + AgentCore Policy (Cedar) + Guardrails
 ```
 
 ---
