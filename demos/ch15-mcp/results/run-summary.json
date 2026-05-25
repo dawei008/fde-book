@@ -1,0 +1,20 @@
+{
+  "session_a_sid": "3c374289e6c3469d8cd1218949b35946",
+  "session_b_sid": "3e74d5933bed4272bf7fae18d6431763",
+  "session_a_list_count": 1,
+  "session_b_list_count": 1,
+  "session_a_doc_id": "d4fbb551b",
+  "session_b_doc_id": "d4fbb551b",
+  "session_a_attach": {
+    "ok": true,
+    "data": {
+      "ticket_no": "T-2025-Q4-0142",
+      "doc_id": "d4fbb551b",
+      "doc_count": 1
+    }
+  },
+  "session_b_summary": "Ticket T-2025-Q4-0142: 1 attached doc(s) (kinds: manual). Latest URL: s3://fde-book-hesheng-manuals/T-2025-Q4-0142/manual-v2.pdf. Updated: 1779708250.",
+  "different_session_ids": true,
+  "same_doc_visible_across_sessions": true,
+  "ticket_no": "T-2025-Q4-0142"
+}
