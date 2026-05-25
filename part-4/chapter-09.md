@@ -248,6 +248,79 @@ PII 处理我们做了三件事：
 
 ---
 
+## 9.7 实测：从脏数据到 agent 端到端
+
+上面 9.1-9.6 是叙述。这一节给一个**可在你 AWS 账号上复现**的端到端 demo——把整章的判断变成可跑的代码。完整代码在仓库 `demos/ch9-data/`，跑完即拆，单次成本 < $1。
+
+合成数据按合昇风格生成：200 台设备、500 条工单、300 条派工记录，**故意带表面和语义两层脏**——时间戳格式三种混用（67% iso8601 / 22% 中文格式 / 11% Unix epoch）、priority 字段 9 种命名（P1/high/1 / P2/medium/2 / P3/low/3）、team 字段 6 种命名（机械组/Mech/M-team / 电气组/Elec/E-team）、part_id 两种前缀（P-101 / PART-101）、36 条工单引用了不存在的设备 ID（broken FK）。
+
+跑完整流程：
+
+```
+01-generate-data.py    →  3 个 CSV 写到本地
+02-setup-aws.py        →  S3 + Glue Crawler + Glue DB
+                          (crawler 第一次跑识别 tickets/work_orders 失败,
+                           因为 CSV 里中文 fault_desc 含逗号)
+04-explicit-schema.py  →  显式注册 OpenCSVSerde schema 修复
+                          (这是真实的 FDE 第一周坑)
+05-explore-athena.py   →  6 个 Athena 查询暴露所有脏数据形态
+06-build-ontology.py   →  4 个 SQL view 把脏数据归并成 ontology
+                          (ticket_clean / equipment_clean /
+                           work_order_clean / ticket_resolution)
+07-create-kb.py        →  5 份维修手册上传 (但本期不上 KB,
+                          换成 prompt-stuff: < 30 份小手册不值得 KB)
+08-agent-with-athena-tool.py
+                       →  Claude Haiku 4.5 + 一个 SQL 工具,
+                          回答 4 个合昇风格的业务问题
+09-teardown.py         →  全部拆掉
+```
+
+跑出来的真实数字（2026-05-25 在 us-east-1 实测）：
+
+**Athena 探索阶段**——6 个查询，scanned 数据量都在 < 0.1 MB（数据量小），平均 engine time 600ms。Athena 单价 $5/TB scanned，整次探索成本 < $0.01。
+
+**Ontology 视图构建**——4 个 view，最复杂的 `ticket_resolution` 含 LEFT JOIN + 子查询，建立 858ms。每次查询时按需重新执行，不预物化（适合 Hesheng 这种数据量级；上 TB 时考虑物化）。
+
+**Agent 实测对话**（节选第一个问题）：
+
+```
+USER: 过去 90 天里 Singapore 站点 P1 工单的平均解决时间是多少?
+
+  TOOL CALL: query_tickets(
+    SELECT AVG(total_hours), COUNT(*) ... INTERVAL '90' day ...)
+  TOOL RESULT: ERROR — Trino doesn't support INTERVAL syntax this way
+  TOOL CALL: query_tickets(
+    SELECT ... ts_utc >= date_add('day', -90, current_date) ...)
+  TOOL RESULT: avg_resolution_time_hours=5.26, p1_ticket_count=9
+
+AGENT: 过去 90 天内 Singapore 站点共有 9 张 P1 工单, 平均解决时间为
+       5.26 小时。在 SLA 规定的 4 小时上门时间基础上, 仅额外需 1.26
+       小时现场处理, 说明现场工程师应急响应和故障排查效率较高。
+```
+
+注意第一次 SQL 失败、agent 自己 self-correct 重写。这是 agent 接 SQL 工具时**真实会发生**的容错过程——Trino 方言、字段类型、视图未刷新等问题都会在 tool call 失败里出现。生产里你会想给工具加更精确的 schema 描述帮模型一次写对，但这个能力本身（agent 接住错误自己修）是 LLM 应用的核心价值之一。
+
+**完整 4 个问题的 agent 回答**（详见仓库 `demos/ch9-data/`）：
+
+| 问题 | Agent 答案 |
+|---|---|
+| Singapore P1 平均解决时间 | 5.26 小时（9 张工单），加 SLA 解读 |
+| ALM 4501 站点分布 | 胡志明 19 / Bangkok 14 / Jakarta 13 / Singapore 11 / KL 10 / 数据缺失 6，加业务推断 |
+| 多少工单引用不存在的设备 | 36 条 = 7.2%，加治理建议 |
+| Jakarta 本月超 SLA 工单 | 诚实说"本月暂无数据"，反问澄清时间窗口 |
+
+**这一节最值钱的 takeaway**：从 200 行脏数据到 agent 能用业务语言回答业务问题，全栈用 AWS 数据服务串起来用了 8 个脚本，单次成本 < $1，团队工程师 30 分钟内能从零跑完。**这就是数据工程"准备好让 LLM 用"的形态**——不是上 OpenSearch、不是 ETL 大改造，是 Athena view + 一个 SQL 工具。
+
+什么时候要升级到 KB / AgentCore Runtime / Gateway？三个信号：
+
+1. **手册超过 30 份或每周更新** → 上 Bedrock Knowledge Base（这一期 5 份 prompt-stuff 够用）
+2. **Agent 需要跨 session 状态或长任务** → 上 AgentCore Runtime（这一期 30 秒一次问答，Lambda 够用）
+3. **多个 BU 团队接入同一个 agent** → 上 AgentCore Gateway（这一期单团队，直接 Converse tool use 够用）
+
+合昇一期三个信号都不满足。第 14、15 章会展开二期升级到 AgentCore 的判断和路径。
+
+---
+
 ## 收尾
 
 数据工程不是 FDE 项目里最炫的部分——会议室里讲 RAG、Agent、模型对比，业务方会眼睛发亮；讲 Ontology、dbt test、PII 标记，业务方会想刷手机。但**80% 的 Agent 上线事故根因在数据层**——你解决不了 Ontology 的不一致，再好的模型也只是把混乱的数据自信地说错。

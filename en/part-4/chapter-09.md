@@ -251,6 +251,84 @@ Back to Hesheng's ticket Agent. From week 3 to week 5, the actual data-engineeri
 
 The whole data-engineering effort consumed three weeks. If we had built the spare-parts inventory in real-time in phase one, that would have added at least two weeks by my experience — and the business didn't actually need it.
 
+## 9.7 End-to-end demo: from dirty data to an agent
+
+9.1-9.6 above were narrative. This section gives an end-to-end demo **you can reproduce in your own AWS account** — turning the chapter's judgment calls into runnable code. Full code lives in the repo under `demos/ch9-data/`, tear it down right after, single-run cost < $1.
+
+The synthetic data is generated in Hesheng's style: 200 pieces of equipment, 500 tickets, 300 dispatch records, **deliberately dirty at both the surface and the semantic layer** — three timestamp formats mixed (67% iso8601 / 22% Chinese format / 11% Unix epoch), 9 different namings for the priority field (P1/high/1 / P2/medium/2 / P3/low/3), 6 different namings for the team field (机械组/Mech/M-team / 电气组/Elec/E-team), two prefixes for part_id (P-101 / PART-101), and 36 tickets referencing equipment IDs that don't exist (broken FKs).
+
+Running the full pipeline:
+
+```
+01-generate-data.py    →  3 CSVs written locally
+02-setup-aws.py        →  S3 + Glue Crawler + Glue DB
+                          (the crawler fails on tickets/work_orders the
+                           first time because Chinese fault_desc in the
+                           CSV contains commas)
+04-explicit-schema.py  →  fix by explicitly registering an OpenCSVSerde
+                          schema (this is a real first-week FDE pothole)
+05-explore-athena.py   →  6 Athena queries that expose every shape of
+                          dirty data
+06-build-ontology.py   →  4 SQL views that fold the dirty data into an
+                          ontology (ticket_clean / equipment_clean /
+                           work_order_clean / ticket_resolution)
+07-create-kb.py        →  uploads 5 repair manuals (but this phase does
+                          not put them in a KB; we use prompt-stuffing
+                          instead — < 30 small manuals don't justify a KB)
+08-agent-with-athena-tool.py
+                       →  Claude Haiku 4.5 + a single SQL tool, answers
+                          4 Hesheng-style business questions
+09-teardown.py         →  tears everything down
+```
+
+Real numbers from the run (measured 2026-05-25 in us-east-1):
+
+**Athena exploration phase** — 6 queries, scanned data volume < 0.1 MB each (the dataset is small), average engine time 600ms. Athena prices at $5/TB scanned, so the entire exploration phase costs < $0.01.
+
+**Ontology view construction** — 4 views; the most complex one, `ticket_resolution`, contains a LEFT JOIN plus a subquery and takes 858ms to create. Each query re-executes on demand without pre-materialization (appropriate for Hesheng's data scale; consider materializing once you reach TB scale).
+
+**Agent live conversation** (excerpt from the first question):
+
+```
+USER: 过去 90 天里 Singapore 站点 P1 工单的平均解决时间是多少?
+      (What's the average resolution time for P1 tickets at the Singapore
+       site over the past 90 days?)
+
+  TOOL CALL: query_tickets(
+    SELECT AVG(total_hours), COUNT(*) ... INTERVAL '90' day ...)
+  TOOL RESULT: ERROR — Trino doesn't support INTERVAL syntax this way
+  TOOL CALL: query_tickets(
+    SELECT ... ts_utc >= date_add('day', -90, current_date) ...)
+  TOOL RESULT: avg_resolution_time_hours=5.26, p1_ticket_count=9
+
+AGENT: Over the past 90 days the Singapore site had 9 P1 tickets, with
+       an average resolution time of 5.26 hours. On top of the SLA's
+       4-hour on-site arrival window, only 1.26 extra hours were spent
+       on field troubleshooting — meaning the field engineers' emergency
+       response and diagnosis efficiency is high.
+```
+
+Note the first SQL fails and the agent self-corrects on retry. This is the **kind of fault tolerance you really do see** when an agent is wired to a SQL tool — Trino dialect quirks, field-type mismatches, stale views all surface as tool-call failures. In production you'll want to give the tool a more precise schema description so the model gets it right on the first try, but this very capability (the agent catching its own mistakes and fixing them) is one of the core values of LLM applications.
+
+**Full agent answers across the 4 questions** (see the repo `demos/ch9-data/` for details):
+
+| Question | Agent answer |
+|---|---|
+| Singapore P1 average resolution time | 5.26 hours (9 tickets), with SLA interpretation |
+| ALM 4501 site distribution | Ho Chi Minh 19 / Bangkok 14 / Jakarta 13 / Singapore 11 / KL 10 / data missing 6, plus a business inference |
+| How many tickets reference non-existent equipment | 36 tickets = 7.2%, plus a governance recommendation |
+| Jakarta tickets exceeding SLA this month | Honestly says "no data for this month" and asks back to clarify the time window |
+
+**The most valuable takeaway from this section**: going from 200 rows of dirty data to an agent that can answer business questions in business language, end-to-end on AWS data services, took 8 scripts, single-run cost < $1, and a team engineer can run it from scratch in 30 minutes. **This is what data engineering "ready for an LLM to use" looks like** — not putting up OpenSearch, not a major ETL overhaul, but Athena views plus a single SQL tool.
+
+When do you upgrade to KB / AgentCore Runtime / Gateway? Three signals:
+
+1. **More than 30 manuals or weekly updates** → move to Bedrock Knowledge Base (this phase, 5 prompt-stuffed manuals are enough)
+2. **Agent needs cross-session state or long-running tasks** → move to AgentCore Runtime (this phase is 30-second Q&A turns, Lambda is enough)
+3. **Multiple BU teams plug into the same agent** → move to AgentCore Gateway (this phase is a single team, plain Converse tool use is enough)
+
+None of the three signals applies to Hesheng's phase one. Chapters 14 and 15 will lay out the judgment and path for upgrading to AgentCore in phase two.
+
 ---
 
 ## Wrapping Up
