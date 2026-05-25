@@ -1,0 +1,34 @@
+{
+  "$schema": "https://schema.agentcore.aws.dev/v1/agentcore.json",
+  "name": "ch14hesheng",
+  "version": 1,
+  "managedBy": "CDK",
+  "tags": {
+    "agentcore:created-by": "agentcore-cli",
+    "agentcore:project-name": "ch14hesheng"
+  },
+  "runtimes": [
+    {
+      "name": "ch14_hesheng_agent",
+      "build": "CodeZip",
+      "entrypoint": "main.py",
+      "codeLocation": "app/ch14_hesheng_agent/",
+      "runtimeVersion": "PYTHON_3_12",
+      "networkMode": "PUBLIC",
+      "protocol": "HTTP",
+      "envVars": [
+        {"name": "LAMBDA_ARN", "value": "arn:aws:lambda:us-east-1:118176377046:function:fde-book-ch14-alarm-tool"}
+      ]
+    }
+  ],
+  "memories": [],
+  "credentials": [],
+  "evaluators": [],
+  "onlineEvalConfigs": [],
+  "agentCoreGateways": [],
+  "policyEngines": [],
+  "harnesses": [],
+  "configBundles": [],
+  "abTests": [],
+  "httpGateways": []
+}

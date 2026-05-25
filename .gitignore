@@ -22,3 +22,9 @@ demos/**/cost-snapshots/
 demos/**/data/raw/
 demos/**/data/stack-outputs.json
 demos/**/.pytest_cache/
+
+# AgentCore CLI runtime artifacts (logs, deployed state)
+demos/**/.cli/
+demos/**/.cache/
+demos/**/cdk.context.json
+demos/**/.venv/

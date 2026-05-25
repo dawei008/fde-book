@@ -1,0 +1,10 @@
+{
+  "region": "us-east-1",
+  "account": "118176377046",
+  "raw_bucket": "fde-book-hesheng-118176377046-raw",
+  "athena_bucket": "fde-book-hesheng-118176377046-athena",
+  "manuals_bucket": "fde-book-hesheng-118176377046-manuals",
+  "database": "fde_book_hesheng",
+  "crawler": "fde-book-hesheng-crawler",
+  "role": "fde-book-hesheng-glue-role"
+}
