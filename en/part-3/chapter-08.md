@@ -150,21 +150,47 @@ The two together are the **regression gate.** It turns "evaluation" from "weeken
 
 ---
 
-## 8.5  Running Evals on Bedrock
+## 8.5  Running Evals on AWS: how the two services divide the work
 
-Bedrock provides three evaluation job types: Model Evaluation (single model), Knowledge Base Evaluation (RAG), Agent Evaluation (multi-step reasoning).
+If your project runs on AWS, the platform offers **two** official evaluation services — they're easy to confuse, and an FDE has to know the difference.
 
-The console version is best for PoC — running a baseline in 10 minutes without code. Flow:
+**Bedrock Evaluations** scores the quality of "a single call." Three job types:
 
-1. Upload jsonl Eval set to S3
-2. Bedrock console → Inference and Assessment → Evaluations → Create job
-3. Pick evaluation type (model / KB / agent)
-4. Pick evaluator: built-in (keyword, similarity) / LLM-as-judge / human
-5. Review the report — overall, dimensional scores, failed-sample CSV, trace links
+- **Model Evaluation** — pure model output (no RAG / Agent)
+- **Knowledge Base Evaluation** — Context Relevance + Answer Faithfulness for a RAG system
+- **Agent Evaluation** — whether the agent's multi-step reasoning path is right or wrong
 
-The console version's limitation is that it doesn't wire into CI. After Scaffolding moves into formal development, switch to the code version — frameworks like deepeval, promptfoo, running in GitHub Actions or the customer's CI.
+Best fit: model selection, comparing RAG chunking strategies, building a baseline in PoC. Console runs in 10 minutes, no code required.
 
-Specific APIs and console entries change with product iteration; check docs.aws.amazon.com.
+**AgentCore Evaluations** scores the quality of "agent behavior." Its input isn't a pre-prepared jsonl — it's the **OpenTelemetry / OpenInference traces** the agent emits while running. Bedrock Eval is "grading an exam paper"; AgentCore Eval is "scoring a recording of someone working."
+
+A few key facts about AgentCore Evaluations — places where FDEs new to it tend to misread:
+
+**5 evaluation modes** — pick by trigger style:
+
+- **Online**: real-time scoring on production, every trace evaluated automatically, scores pushed to CloudWatch
+- **On-demand**: manually triggered, runs over historical traces
+- **Batch**: bulk run over many traces
+- **Dataset**: runs on a fixed dataset (closest to how Bedrock Eval is used)
+- **Simulation**: simulates user dialogues (for testing multi-turn)
+
+**3 evaluator forms** — pick by what you're scoring:
+
+- **Built-in**: AWS-provided general-purpose evaluators (e.g., Helpfulness), with ARNs like `arn:aws:bedrock-agentcore:::evaluator/Builtin.Helpfulness`, publicly available
+- **Custom LLM-as-Judge**: you write the prompt + rating scale, the model judges
+- **Custom code-based**: a Lambda function judges (deterministic logic — schema validation, PII checks, numeric precision — code is more accurate than an LLM here)
+
+**3 evaluation granularities** — `SESSION`, `TRACE`, `TOOL_CALL`. Score the whole session, a single request-response, or a single tool call. Pick as needed.
+
+Back to Hesheng — how to pick:
+
+Phase one is single-agent + single-tool (triage). Use **Bedrock Agent Evaluation** during Scaffolding to build a baseline; that's enough — you don't need AgentCore Evaluations' extra complexity. This is the default when none of Chapter 6's signals A/B/C are met.
+
+Phase two upgrades to a multi-tool agent (parts ordering + cross-site coordination), and that's when **AgentCore Evaluations** comes in: online mode for continuous scoring, code-based evaluators for tool-call schema validation, LLM-judge evaluators for whether the workflow is compliant. This corresponds to Chapter 6's "signals B + C both hold, time to upgrade to Level 2 orchestration."
+
+**A common pitfall**: many FDEs see AgentCore Eval for the first time and want to wholesale replace Bedrock Eval. Don't. Run both — Bedrock Eval in CI (every PR must pass), AgentCore Eval in production (real-time continuous scoring). The former is "development constraint"; the latter is "production observation."
+
+Specific APIs and console entries change with product iteration; check docs.aws.amazon.com. Full docs entry point: `docs.aws.amazon.com/bedrock-agentcore/latest/devguide/evaluations.html`.
 
 ---
 
@@ -179,6 +205,16 @@ Three things must happen:
 **Two: weekly LLM-judge sampling.** Randomly sample 100 production traffic items per week, have a strong model judge response quality. Generate a "weekly production quality score." If this drops — meaning the real input distribution is shifting (customer business changed, upstream data has issues, users are asking new questions) — go do shadowing as in Chapter 4 to understand what's happening.
 
 **Three: the alert truth isn't the production score itself, it's the trend.** If this week's 0.83 is below last week's 0.85 — noise or signal? The answer is in the standard deviation. If your historical standard deviation is 0.02, then 0.85 → 0.83 is 1 sigma — normal. If it's 0.85 → 0.78, 3.5 sigma — alert. Chapter 13 covers monitoring dashboards.
+
+**Four: once the score has dropped, how do you fix it?** This is the hardest thing post-launch. The traditional approach: FDE digs through traces, guesses the cause, edits the prompt, watches for one or two weeks — one iteration cycle is a month at minimum.
+
+In May 2026, AWS pushed **AgentCore Optimization** to preview, aimed exactly at this. The workflow: starting from production traces, **automatically generate** candidate "edit prompt" or "edit tool description" suggestions; validate candidates with batch evaluation (against your eval set); A/B test on live traffic via Gateway; output a statistical-significance report telling you which candidate actually wins.
+
+In short: it automates "FDE iterating prompts on instinct."
+
+But two warnings: first, it's currently **preview**, so by default it doesn't enter the production path on FDE projects — fine to use for exploring directions, but contract sign-off changes require human review. Second, **it can auto-edit prompts but it can't auto-edit business definitions** — if your score is low because the outcome is defined wrong (Chapter 1's first iron rule), the Optimizer can't save you. It solves "how to write the prompt better"; it doesn't solve "what are we actually trying to do."
+
+Announcement: https://aws.amazon.com/blogs/machine-learning/introducing-the-agent-performance-loop-agentcore-optimization-now-in-preview/
 
 ---
 

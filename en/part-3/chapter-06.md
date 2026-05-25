@@ -273,9 +273,25 @@ Two or more must hold → consider Level 2 (AgentCore):
 
 Hesheng meets none. That's the engineering reason for recommending Level 0, not intuition.
 
-If at some point Hesheng meets the criteria — say phase two integrates parts ordering (signal B), and adds sales (signal C) — I'd reassess. AgentCore has done a lot of solid work this past year. Since GA in October 2025 it has shipped direct code deployment, Cedar policy, stateful MCP, the so-called Managed Harness (a name AWS picked up from the FDE community), and the Performance Loop in May (auto prompt optimization plus A/B). These features aren't gimmicks — provided your project's complexity already warrants them.
+If at some point Hesheng meets the criteria — say phase two integrates parts ordering (signal B), and adds sales (signal C) — I'd reassess. AgentCore has done a lot of solid work this past year. As of May 2026 it ships 11 capabilities total (the official list on the FAQ):
 
-If you want to know where the boundary is, see `research/whats-new-2026.md` in the repo where I tracked the key Bedrock + AgentCore updates from November 2025 to May 2026.
+- **Runtime** — serverless deployment of agents / MCP servers, 8-hour long tasks, bi-directional streaming, session isolation, VPC connectivity
+- **Gateway** — convert REST APIs / Lambdas / existing MCP servers into MCP-compatible tools in one click
+- **Memory** — cross-session context storage
+- **Browser** — cloud browser for the agent to operate websites
+- **Code Interpreter** — sandbox running Python / JS / TS
+- **Identity** — integrates Cognito / Okta / Entra ID, manages agent credentials
+- **Observability** — Trace, debug, CloudWatch GenAI dashboard in one
+- **Evaluations** — LLM-judge + code evaluators, 5 evaluation modes (online / on-demand / batch / dataset / simulation). See Ch8
+- **Policy** — Cedar natural-language policy authoring, gates tool-call layer (different from Bedrock Guardrails which gates content)
+- **Agent Registry** (preview) — central catalog inside an enterprise to publish / approve / discover agents / tools / MCP servers. See Ch15
+- **Optimization** (preview) — auto-generate prompt / tool-description improvement candidates from production traces, plus A/B validation. See Ch13
+
+For Hesheng phase two I ended up using 5 of them: Runtime, Gateway, Identity, Observability, Evaluations. Browser / Code Interpreter didn't fit our workflow; Policy wasn't worth it because writing rules by hand for 14 tools was simpler; Registry and Payments are preview, so they don't enter the production path; Memory wasn't needed because our sessions don't require cross-session persistence.
+
+The judgment logic matters — AgentCore's 11 capabilities aren't a checklist where "you must use them all". It's "adopt as needed". Each capability comes with a specific engineering reason. In phase three, when Hesheng's group needs multi-BU coordination, Registry will become mandatory; for a financial customer running workflows that need supervisor approval, Policy will become mandatory. For phase one, Level 0 remains the default starting point.
+
+If you want details on each capability's boundary, `research/whats-new-2026.md` in the repo lists every Bedrock + AgentCore update from November 2025 to May 2026; `research/agentcore-2026-features.md` is the per-item summary of all 11 capabilities.
 
 ---
 

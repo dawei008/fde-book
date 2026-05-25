@@ -239,6 +239,33 @@ Plus the 14 in-house tools, Hesheng's agent now has 32 tools total. But 14.4's a
 
 ---
 
+## 15.7b The Next Step in Tool Scaling — AWS Agent Registry (preview)
+
+I can manage Hesheng's 32 tools in phase two. In phase three, if the rest of the Hesheng group's BUs (sales, finance, IT ops) also start building agents, the tool count climbs to a few hundred fast. Each BU's FDE reinventing the wheel — sales BU writes its own Salesforce MCP, IT BU writes its own Jira MCP — wastes effort, and there's no group-level governance (which servers are safe and trustworthy, which version is the current recommended one, who maintains it).
+
+In 2026 AWS pushed **AWS Agent Registry** to preview, exactly for this scenario. It's a central catalog for publishing, approving, and discovering agents / tools / skills / MCP servers / custom resources. A two-resource model:
+
+- **Registry** — the container; you can have multiple by BU, by environment (prod/QA/dev), or by resource type
+- **Record** — a single resource entry, validated against a protocol schema (MCP servers against the MCP schema, agents against the A2A schema)
+
+Four roles / workflow:
+
+- **Admin** creates the Registry in the group AWS account, configures IAM or JWT authorization (integrating Cognito / Okta / Entra ID)
+- **Publisher** submits a record — e.g., the IT team submits jira-mcp v1.2 to the registry
+- **Curator** approves or rejects — typically a corporate security or platform team role
+- **Consumer** searches and discovers — FDE or agent both can search (the Registry itself exposes an MCP endpoint, so an agent can query it directly to discover tools)
+
+Hesheng phase two doesn't need the Registry yet — a single FDE team can manage 32 tools just fine. I'm covering it here because in phase three or in any group-level multi-BU project the FDE will run into the "how do we govern agents / tools" question — at that point Registry shifts from "good to know about" to "have to use."
+
+**Distinguish it from Gateway**: Gateway is "turn an existing API/Lambda into an MCP tool"; Registry is "discover existing agent/tool resources." The two complement each other — a tool you build with Gateway can be published to the Registry so other teams can find it.
+
+Same preview caveat as Optimization: by default it doesn't enter the production critical path on FDE projects, but it's fine for PoC exploration; wait for GA before formal production.
+
+Docs: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/registry.html
+Announcement: https://aws.amazon.com/blogs/machine-learning/the-future-of-managing-agents-at-scale-aws-agent-registry-now-in-preview/
+
+---
+
 ## 15.8 Pre-Launch Security Check for MCP
 
 Before MCP went to production at Hesheng, Gu Jianguo and I walked the following list together. It's not a textbook list; it's what I assembled after the service-account near-miss in phase two:

@@ -131,6 +131,14 @@ The application-layer keyword check is a patch, not a solution. Anthropic's [Pro
 
 These four times together took the guardrails config file from 30 lines at GA to 120 lines now. Each line corresponds to a real incident. The engineering takeaway is that **guardrails aren't a one-time PoC-stage write; they're added continuously as traffic grows**. Don't try to "think it all through" before GA — you can't. Look at the incident queue every two weeks and decide what to add.
 
+**On the difference between Bedrock Guardrails and AgentCore Policy** — once phase two adds an agent you'll see both names, and an FDE has to know the difference.
+
+Guardrails gate **input / output content at the model layer** — strip PII before it goes into the prompt, filter sensitive words from the response, judge hallucination, refuse out-of-bounds topics. They run on every model invocation and don't care what the agent is doing.
+
+Policy gates **the agent's tool-call behavior at the agent layer** — can this agent call the "parts ordering" tool? can it execute a purchase over ¥50,000 without supervisor approval? can it dispatch across sites? AgentCore Policy uses Cedar syntax (or natural language transpiled to Cedar) to express rules, and the policy engine decides allow/deny on every tool call the agent issues.
+
+The two aren't interchangeable; phase two with an agent typically needs both: Guardrails to stop "the model saying the wrong thing," Policy to stop "the agent doing the wrong thing."
+
 ---
 
 ## 13.4 Token Cost: The Pain Threshold of Arguing Over the Bill
@@ -185,6 +193,22 @@ This pipeline is the "Production" tier of Chapter 8's pyramid landed. By month 3
 Another use of the loop is **showing the customer progress**. Each monthly review I give Zhou Mingyuan one chart — y-axis eval score, x-axis month. Every month it climbs (from 0.87 at GA to 0.93 in month 9). That chart reassures the customer more than any dashboard. "Still getting better after launch" is an uncommon promise in the SaaS era; AI applications that can deliver it have an easier renewal conversation.
 
 Anthropic calls this an "online learning loop" — across the [Engineering at Anthropic](https://www.anthropic.com/engineering) blog series they repeat: "models don't get better on their own; the eval set getting better is what makes the post-launch versions better." OpenAI in [Practices for Governing Agentic AI Systems](https://openai.com/index/practices-for-governing-agentic-ai-systems/) has similar wording — production observability ultimately feeds back into evals and policy.
+
+---
+
+## 13.5b When the Production Score Drops — Where AgentCore Optimization Fits
+
+The sampling loop makes "did the score drop" observable; but **what to change in the prompt once it has dropped** still relies on FDE intuition. Five months after Hesheng's GA I ran an experiment: feed the 60 traces the judge had marked as "actually wrong" over the past two weeks into AgentCore Optimization (still preview at the time), and ask it to generate prompt candidates.
+
+It returned three candidates: A reinforced "if KB returns no information, you must say you don't know" in the system prompt; B trimmed the few-shot examples from 8 to 5 more representative ones; C reworded a tool description. Optimization itself ran a batch evaluation against my eval set to validate all three candidates, then routed 5% of live traffic via Gateway for an A/B and gave me a report with p-values — A improved by 2.3 points (p<0.01), B showed no significant difference, C dropped 1 point.
+
+Doing this by hand would have taken me two weeks; Optimization did it in three days. The preview version doesn't enter the contract sign-off path — for candidate A I had Chen Xue and Master Wang manually review 20 comparison samples before merging it into main. But **as an exploration tool, it shrinks the post-launch FDE iteration cycle from monthly to weekly**.
+
+The point isn't "use Optimization to replace the FDE." It's that Optimization shifts the FDE's energy from "guessing which edit will work" to "judging whether the edit fits the business intent" — the latter is the FDE's real value-add.
+
+Two warnings: first, it's still **preview** as of May 2026, not yet GA. Second, Optimization edits prompt wording and tool descriptions; **it doesn't change the outcome definition or the business logic**. If your score is low because the outcome is defined wrong, or because the eval set itself has issues (the kind of "40% mystery" from Chapter 6's 6.3), it can't save you. It optimizes "how to write the prompt"; it doesn't optimize "what we're trying to do."
+
+Announcement: [Introducing the agent performance loop: AgentCore Optimization now in preview](https://aws.amazon.com/blogs/machine-learning/introducing-the-agent-performance-loop-agentcore-optimization-now-in-preview/)
 
 ---
 

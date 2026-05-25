@@ -121,9 +121,9 @@ nav_order: 2
 | Dimension | Bedrock Evaluations | AgentCore Evaluations | LangFuse | Phoenix | DeepEval | Promptfoo | Ragas |
 |---|---|---|---|---|---|---|---|
 | Form | AWS managed | AWS managed | OSS + Cloud | OSS | Python lib | YAML CLI | OSS |
-| Eval scope | Model / KB / RAG / Agent | Agent + 13 built-in evaluators | Full LLM stack | Full LLM stack | Embedded in unit tests | Prompt comparison | RAG-specific |
-| LLM-as-judge | Built-in | Custom model-based | Supported | Supported | Supported | Supported | Supported |
-| Online trace | Mostly static | Connected to CloudWatch | Strong | Strong | No | No | No |
+| Eval scope | Single call (Model / KB / Agent job) | Trace-based agent behavior; 3 evaluator forms (built-in / LLM-judge / code via Lambda) | Full LLM stack | Full LLM stack | Embedded in unit tests | Prompt comparison | RAG-specific |
+| LLM-as-judge | Built-in | Built-in + custom | Supported | Supported | Supported | Supported | Supported |
+| Online trace | Mostly static | 5 modes (online / on-demand / batch / dataset / simulation); OpenTelemetry ingress | Strong | Strong | No | No | No |
 | CI-friendly | Mid | Mid | Mid | Mid | Strong | Excellent | Mid |
 | Cost | Per token + judge | Per invocation | OSS / Cloud | OSS | OSS | OSS | OSS |
 
@@ -131,9 +131,10 @@ nav_order: 2
 
 ```
   AgentCore Evaluations + CloudWatch GenAI Observability  → online + dashboard
-  Bedrock Evaluations                                     → compliance acceptance
-  Promptfoo                                               → CI prompt comparisons
-  AgentCore Performance Loop                              → eval → optimize closed loop
+  Bedrock Evaluations                                     → CI compliance scoring + acceptance
+  Promptfoo                                               → cross-model prompt comparisons
+  AgentCore Optimization (preview)                        → eval → prompt-edit closed loop
+  AWS Agent Registry (preview)                            → multi-BU shared evals / agents / tools
 ```
 
 ---

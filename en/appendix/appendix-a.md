@@ -56,7 +56,7 @@ nav_order: 1
 | Framework | Strength | Best Stage | Risk |
 |---|---|---|---|
 | Strands Agents (Python / TS 1.0) | Lightweight + AWS first-party SDK | Production Agent | Younger ecosystem |
-| Bedrock AgentCore (GA 2025-10) | Runtime + Gateway + Identity + Observability + Evaluations + Memory | Production Agent + VPC + 8h long tasks | AWS lock-in |
+| Bedrock AgentCore (GA 2025-10) | Runtime / Gateway / Memory / Browser / Code Interpreter / Identity / Observability / Evaluations / Policy / Registry (preview) / Payments (preview) — 11 capabilities, adoptable independently | Production Agent + VPC + 8h long tasks + multi-BU governance | AWS lock-in |
 | LangGraph | State graph + Agent | Production Agent | Learning curve |
 | LangChain | Largest ecosystem | Quick PoC demos | Leaky abstractions |
 | LlamaIndex | RAG specialist | RAG projects | Weak Agent support |
@@ -88,9 +88,10 @@ nav_order: 1
 | Tool | Type | Strength |
 |---|---|---|
 | Bedrock Evaluations | AWS managed | Model / KB / RAG / Agent |
-| AgentCore Evaluations | AWS managed | 13 built-in evaluators + custom model-based scoring (2025-12 preview) |
-| CloudWatch GenAI Observability | AWS managed | Unified dashboard for model invocations + AgentCore (includes evaluations since 2025-12) |
-| AgentCore Performance Loop | AWS managed | Auto-optimize prompts/tool descriptions + Gateway A/B + significance reports (2026-05 preview) |
+| AgentCore Evaluations | AWS managed | OpenTelemetry-trace-based evaluation of agent behavior; 3 evaluator forms (built-in / LLM-judge / code via Lambda); 5 modes (online / on-demand / batch / dataset / simulation); 3 granularities (SESSION / TRACE / TOOL_CALL) |
+| CloudWatch GenAI Observability | AWS managed | Unified dashboard for model invocations + AgentCore, with evaluations integration |
+| AgentCore Optimization (preview) | AWS managed | Auto-generate prompt / tool-description improvements from production traces; batch eval + Gateway A/B validation; statistical-significance reports |
+| AWS Agent Registry (preview) | AWS managed | Enterprise-grade discovery + approval + governance catalog for agents / tools / MCP servers; hybrid search; MCP-native endpoint |
 | Bedrock Advanced Prompt Optimization | AWS managed | Cross-model migration + multimodal + built-in eval (2026-05) |
 | LangFuse | OSS + Cloud | One-stop LLM trace + eval |
 | LangSmith | LangChain official | LangChain projects |
