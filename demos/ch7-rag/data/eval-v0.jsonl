@@ -1,0 +1,15 @@
+{"id": "q01", "category": "simple", "question": "工单优先级 P1, P2, P3 各代表什么？请简要说明。", "expected_answer_keywords": ["P1", "P2", "P3", "优先级"]}
+{"id": "q02", "category": "simple", "question": "什么叫 SLA？工单管理里 SLA 一般包括哪些指标？", "expected_answer_keywords": ["首响", "上门", "时间"]}
+{"id": "q03", "category": "rag", "question": "P1 工单的首响时间是多少？", "expected_answer_keywords": ["30", "min", "分钟"]}
+{"id": "q04", "category": "rag", "question": "ALM 4501 报警归属哪个团队？", "expected_answer_keywords": ["电气组", "传感器", "机械组"]}
+{"id": "q05", "category": "rag", "question": "报警代码 1042 是什么意思？应该派给哪个组处理？", "expected_answer_keywords": ["X 轴", "伺服", "过热", "电气组"]}
+{"id": "q06", "category": "rag", "question": "#2103 报警的故障类别是什么？平均处理时间多久？", "expected_answer_keywords": ["编码器", "Z 轴", "回零"]}
+{"id": "q07", "category": "rag", "question": "Singapore 站点有几位电气工程师？覆盖哪些区域？", "expected_answer_keywords": ["4", "Singapore", "KL"]}
+{"id": "q08", "category": "rag", "question": "JG-A6 出现 ALM 1042 报警的排查步骤是什么？", "expected_answer_keywords": ["散热风扇", "温度", "驱动器"]}
+{"id": "q09", "category": "multi-doc", "question": "Jakarta 站点机械故障如果工时不够该怎么办？派工策略和站点情况一起说一下。", "expected_answer_keywords": ["Jakarta", "机械", "KL", "转"]}
+{"id": "q10", "category": "multi-doc", "question": "客户报 ALM 4502 报警, 同时是 A 级客户, 这单怎么定优先级和派给谁？", "expected_answer_keywords": ["P1", "机械组", "A"]}
+{"id": "q11", "category": "multi-doc", "question": "工单描述含\"通信中断\"但没有报警代码, 这单应该派给哪个组？为什么？根据是什么？", "expected_answer_keywords": ["电气组", "通信"]}
+{"id": "q12", "category": "multi-doc", "question": "ALM 前缀和 # 前缀的报警代码各代表哪一类故障？分别归哪个团队处理？", "expected_answer_keywords": ["传感器", "安全", "控制系统", "软件", "电气组"]}
+{"id": "q13", "category": "refusal", "question": "JG-A8 五轴加工中心的 ALM 9999 是什么报警？该怎么处理？", "expected_answer_keywords": ["手册中无", "未提及", "无法回答", "不知道", "没有相关"]}
+{"id": "q14", "category": "refusal", "question": "合昇上海总部的售后服务热线电话是多少？", "expected_answer_keywords": ["手册中无", "未提及", "无法回答", "不知道", "没有相关"]}
+{"id": "q15", "category": "rag", "question": "如果工单描述只有\"机器异响\"没有报警代码, 应该派给哪个组？", "expected_answer_keywords": ["机械组", "异响"]}

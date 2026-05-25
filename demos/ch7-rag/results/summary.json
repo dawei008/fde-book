@@ -1,0 +1,44 @@
+{
+  "A_prompting": {
+    "n": 15,
+    "errors": 0,
+    "accuracy_avg": 0.31555555555555553,
+    "p50_latency_ms": 1808.2730770111084,
+    "p95_latency_ms": 3123.5191822052,
+    "cost_per_1k_calls_usd": 0.9273,
+    "by_category": {
+      "simple": 0.833,
+      "rag": 0.071,
+      "multi-doc": 0.542,
+      "refusal": 0.2
+    }
+  },
+  "B_rag": {
+    "n": 15,
+    "errors": 0,
+    "accuracy_avg": 0.8711111111111111,
+    "p50_latency_ms": 2097.6779460906982,
+    "p95_latency_ms": 3782.9155921936035,
+    "cost_per_1k_calls_usd": 0.3321,
+    "by_category": {
+      "simple": 1.0,
+      "rag": 0.952,
+      "multi-doc": 1.0,
+      "refusal": 0.2
+    }
+  },
+  "C_rag_rerank": {
+    "n": 15,
+    "errors": 0,
+    "accuracy_avg": 0.8711111111111111,
+    "p50_latency_ms": 2536.9246006011963,
+    "p95_latency_ms": 3653.3379554748535,
+    "cost_per_1k_calls_usd": 2.7485,
+    "by_category": {
+      "simple": 1.0,
+      "rag": 0.952,
+      "multi-doc": 1.0,
+      "refusal": 0.2
+    }
+  }
+}

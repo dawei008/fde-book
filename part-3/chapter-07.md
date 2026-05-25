@@ -213,6 +213,52 @@ RAG 的评估比纯 prompting 复杂。两个独立维度：
 
 ---
 
+## 7.8 实测：三种接法在合昇手册上的对比
+
+理论判断"先 prompting，不行加 RAG"听起来对，但**不在客户数据上跑过的判断不算判断**。这一节给一个可在你 AWS 账号上复现的端到端 demo——同一组合昇风格的问题，分别走三种接法，看真实的延迟、成本、准确率三角对比。完整代码在仓库 `demos/ch7-rag/`，依赖 `demos/hesheng-core/`（共享基础已 up）。
+
+**Eval 集 v0**：15 条合昇业务问题，分四类：
+- simple（2 条）——基础事实，prompting 能直答
+- rag-specific（7 条）——查具体报警代码、SLA 数字、特定故障，必须查手册
+- multi-doc（4 条）——跨多文档综合，比如"Jakarta 机械故障工时不够该怎么办"
+- refusal（2 条）——故意问手册没有的（如 JG-A8 详细故障表），测幻觉
+
+**实测结果**（2026-05-25 在 us-east-1 实跑，每条问题每种接法各 1 次，共 45 次调用）：
+
+| 接法 | 准确率 | P50 延迟 | P95 延迟 | $/1k 调用 |
+|---|---|---|---|---|
+| **A: Prompting only** | 31.56% | 1808 ms | 3124 ms | $0.93 |
+| **B: RAG (Bedrock KB)** | **87.11%** | 2098 ms | 3783 ms | **$0.33** |
+| **C: RAG + Cohere Rerank** | 87.11% | 2537 ms | 3653 ms | $2.75 |
+
+按类别看准确率：
+
+| 接法 | simple | rag | multi-doc | refusal |
+|---|---|---|---|---|
+| A: Prompting only | 0.83 | 0.07 | 0.54 | 0.20 |
+| B: RAG | 1.00 | 0.95 | 1.00 | 0.20 |
+| C: RAG + Rerank | 1.00 | 0.95 | 1.00 | 0.20 |
+
+**这张表能告诉你三件事**：
+
+第一，**rag-specific 类别从 0.07 跳到 0.95**——查具体故障代码这种事，prompting 完全靠不住，加 RAG 之后准确率打到天花板。这是"先 prompting，不行加 RAG"判断的具体支撑。
+
+第二，**B 比 A 还便宜**（$0.33 vs $0.93/1k）。这反直觉。原因是 RAG 把上下文从"手册全文塞进每个 prompt"变成"按需检索几段相关的"——输出 token 数也短了（agent 答得更聚焦），总成本反而下降。这是 Bedrock 内置 prompt template 的工程效益。
+
+第三，**Reranker 没让 B 变好**——C 准确率和 B 完全一样（87.11%），但延迟多 20%、成本贵 8 倍。**4 文档的小 KB 上 reranker 是负 ROI**。Reranker 的价值在 KB 上百份文档时——前几十条召回里有多条不相关，reranker 才有过滤价值。合昇这种小 KB 场景一定不要默认上 reranker。
+
+**真实工程坑**（demo 跑过程中撞到的，写到章节里供后人避免）：
+
+- **Bedrock RetrieveAndGenerate 默认 prompt 太防御**：第一次 B 的准确率只有 52%。看 trace 发现模型经常答"对不起我无法回答"——根因是 RAG 召回分数 ~0.4 时（中文检索的真实命中分），默认模板会让模型谨慎到拒答。改用自定义 `generationConfiguration.promptTemplate` 后跳到 88%。**任何中文 RAG 项目都需要自定义生成模板**。
+- **Knowledge Base 删除有 race**：默认 `dataDeletionPolicy=DELETE` 时，删 data source 会异步清理向量库；如果你紧接着删 OpenSearch collection，两个动作 race，KB 卡在 `DELETE_UNSUCCESSFUL`。修法是创建时显式 `dataDeletionPolicy="RETAIN"`，反正 collection 删了向量库自然没了。
+- **Cohere Rerank v3.5 的 body schema** 是 `{api_version:2, query, documents, top_n}`，和 Cohere 直连 API 不一样。Bedrock 文档不显眼，第一次调容易踩。
+
+**回到合昇第一期的判断**：上面这张表反而是反向证据——**一旦 prompt 塞得下，先用 prompting**。合昇第一期 200 条报警代码全塞进 system prompt 才 4000 tokens，远未到上限，加上 1 小时 prompt cache 平均一次调用比 RAG 还便宜。RAG 该不该上，**先看 prompt 塞不塞得下，不看 RAG 能不能拿高分**。这个 demo 的小 KB 场景下 RAG 必胜，但"必胜"不等于"必上"——合昇的判断是"用最便宜的够用方案"。
+
+完整代码 + 实测产物：`demos/ch7-rag/`。一次完整运行（up + 15 题 × 3 接法 + down + verify clean）耗时约 10 分钟，总成本约 $0.60（其中 OpenSearch Serverless 1 小时取整收 $0.50，是大头）。OpenSearch 是按小时计费的，跑完务必立刻 `make down`，不要留着过夜。
+
+---
+
 ## 收尾
 
 这一章给的是判断顺序：先 prompting，不行加 RAG，再不行加 agent，最后才考虑 fine-tune。每一步都用客户的实测验证，不达标才往下走。
