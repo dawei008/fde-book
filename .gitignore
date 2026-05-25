@@ -20,3 +20,5 @@ demos/**/.env
 demos/**/*.log
 demos/**/cost-snapshots/
 demos/**/data/raw/
+demos/**/data/stack-outputs.json
+demos/**/.pytest_cache/
