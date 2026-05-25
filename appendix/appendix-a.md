@@ -56,7 +56,7 @@ nav_order: 1
 | 框架 | 强项 | 适合阶段 | 风险 |
 |---|---|---|---|
 | Strands Agents (Python / TS 1.0) | 轻量 + AWS 一方 SDK | 生产 Agent | 生态较新 |
-| Bedrock AgentCore（2025-10 GA） | Runtime + Gateway + Identity + Observability + Evaluations + Memory | 生产 Agent + VPC + 8h 长任务 | 锁定 AWS |
+| Bedrock AgentCore（2025-10 GA） | Runtime / Gateway / Memory / Browser / Code Interpreter / Identity / Observability / Evaluations / Policy / Registry (preview) / Payments (preview) — 11 项可独立选用 | 生产 Agent + VPC + 8h 长任务 + 多 BU 治理 | 锁定 AWS |
 | LangGraph | 状态图 + Agent | 生产 Agent | 学习曲线 |
 | LangChain | 生态最大 | PoC 快出 demo | 抽象漏 |
 | LlamaIndex | RAG 专精 | RAG 项目 | Agent 弱 |
@@ -88,9 +88,10 @@ nav_order: 1
 | 工具 | 类型 | 强项 |
 |---|---|---|
 | Bedrock Evaluations | AWS 托管 | Model / KB / RAG / Agent |
-| AgentCore Evaluations | AWS 托管 | 13 内置 evaluator + 自定 model-based scoring（2025-12 preview） |
-| CloudWatch GenAI Observability | AWS 托管 | 模型调用 + AgentCore 一体面板（2025-12 起含 evaluations） |
-| AgentCore Performance Loop | AWS 托管 | Prompt/工具描述自动优化 + Gateway A/B + 显著性报告（2026-05 preview） |
+| AgentCore Evaluations | AWS 托管 | 基于 OpenTelemetry trace 评估 agent 行为；built-in / LLM-judge / 代码（Lambda）三种 evaluator；五种模式（online/on-demand/batch/dataset/simulation）；SESSION/TRACE/TOOL_CALL 三种粒度 |
+| CloudWatch GenAI Observability | AWS 托管 | 模型调用 + AgentCore 一体面板，含 evaluations 集成 |
+| AgentCore Optimization (preview) | AWS 托管 | 从生产 trace 自动生成 prompt / tool description 改进；batch eval + Gateway A/B 验证；统计显著性报告 |
+| AWS Agent Registry (preview) | AWS 托管 | 企业级 agent / tool / MCP server 发现 + 审批 + 治理目录；hybrid 搜索；MCP-native 端点 |
 | Bedrock Advanced Prompt Optimization | AWS 托管 | 跨模型迁移 + 多模态 + 内置 eval（2026-05） |
 | LangFuse | OSS + Cloud | LLM trace + eval 一站 |
 | LangSmith | LangChain 官方 | LangChain 项目 |

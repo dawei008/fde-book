@@ -121,9 +121,9 @@ nav_order: 2
 | 维度 | Bedrock Evaluations | AgentCore Evaluations | LangFuse | Phoenix | DeepEval | Promptfoo | Ragas |
 |---|---|---|---|---|---|---|---|
 | 形态 | AWS 托管 | AWS 托管 | OSS + Cloud | OSS | Python lib | YAML CLI | OSS |
-| Eval 范围 | Model / KB / RAG / Agent | Agent + 13 内置 evaluator | LLM 全栈 | LLM 全栈 | 单测嵌入 | 提示对比 | RAG 专项 |
-| LLM-as-judge | 内置 | 自定 model-based | 支持 | 支持 | 支持 | 支持 | 支持 |
-| 在线 trace | 静态为主 | 与 CloudWatch 联通 | 强 | 强 | 否 | 否 | 否 |
+| Eval 范围 | 单次调用 (Model / KB / Agent job) | 基于 trace 的 agent 行为；built-in / LLM-judge / 代码 (Lambda) 三种 evaluator | LLM 全栈 | LLM 全栈 | 单测嵌入 | 提示对比 | RAG 专项 |
+| LLM-as-judge | 内置 | 内置 + 自定 | 支持 | 支持 | 支持 | 支持 | 支持 |
+| 在线 trace | 静态为主 | online / on-demand / batch / dataset / simulation 五种模式；OpenTelemetry 入口 | 强 | 强 | 否 | 否 | 否 |
 | CI 友好 | 中 | 中 | 中 | 中 | 强 | 极强 | 中 |
 | 成本 | 按 token + judge | 按 invocation | OSS / Cloud | OSS | OSS | OSS | OSS |
 
@@ -131,9 +131,10 @@ nav_order: 2
 
 ```
   AgentCore Evaluations + CloudWatch GenAI Observability  → 在线 + 仪表盘
-  Bedrock Evaluations                                     → 合规验收
-  Promptfoo                                               → CI 提示对比
-  AgentCore Performance Loop                              → 评估→优化闭环
+  Bedrock Evaluations                                     → CI 合规跑分 + 合规验收
+  Promptfoo                                               → 跨模型提示对比
+  AgentCore Optimization (preview)                        → 评估→改 prompt 闭环
+  AWS Agent Registry (preview)                            → 多 BU 共享评估 / agent / tool
 ```
 
 ---
