@@ -1,0 +1,21 @@
+{
+  "endpoint_id": "vpce-0649bd68a28515259",
+  "lambda_arn": "arn:aws:lambda:us-east-1:118176377046:function:fde-book-ch11-bedrock-caller",
+  "allowed_model": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "denied_model": "us.anthropic.claude-opus-4-7",
+  "test1_label": "SUCCESS",
+  "test1_payload": {
+    "ok": true,
+    "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "response_text": "VPC_OK",
+    "input_tokens": 15,
+    "output_tokens": 7
+  },
+  "test2_label": "EXPECTED_DENIED",
+  "test2_payload": {
+    "ok": false,
+    "model_id": "us.anthropic.claude-opus-4-7",
+    "error_code": "AccessDeniedException",
+    "error_message": "An error occurred (AccessDeniedException) when calling the Converse operation: User: arn:aws:sts::118176377046:assumed-role/fde-book-ch11-lambda-role/fde-book-ch11-bedrock-caller is not authorized to perform: bedrock:InvokeModel on resource: arn:aws:bedrock:us-east-1:118176377046:inference-profile/us.anthropic.claude-opus-4-7 because no VPC endpoint policy allows the bedrock:InvokeModel action"
+  }
+}
