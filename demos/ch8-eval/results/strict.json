@@ -1,0 +1,98 @@
+{
+  "evaluator": "strict_string_match",
+  "n_items": 10,
+  "team_accuracy": 1.0,
+  "fault_accuracy": 0.4,
+  "per_item": [
+    {
+      "id": "T-2025-Q4-0142",
+      "predicted_team": "电气组",
+      "expected_team": "电气组",
+      "team_correct": true,
+      "predicted_fault_type": "伺服系统",
+      "expected_fault_type": "伺服系统",
+      "fault_correct": true
+    },
+    {
+      "id": "T-2025-Q4-0817",
+      "predicted_team": "机械组",
+      "expected_team": "机械组",
+      "team_correct": true,
+      "predicted_fault_type": "主轴",
+      "expected_fault_type": "主轴/传动",
+      "fault_correct": false
+    },
+    {
+      "id": "T-2025-Q4-1503",
+      "predicted_team": "机械组",
+      "expected_team": "机械组",
+      "team_correct": true,
+      "predicted_fault_type": "Z轴",
+      "expected_fault_type": "Z 轴/丝杠",
+      "fault_correct": false
+    },
+    {
+      "id": "T-2025-Q4-2018",
+      "predicted_team": "电气组",
+      "expected_team": "电气组",
+      "team_correct": true,
+      "predicted_fault_type": "传感器",
+      "expected_fault_type": "传感器",
+      "fault_correct": true
+    },
+    {
+      "id": "T-2025-Q4-2455",
+      "predicted_team": "电气组",
+      "expected_team": "电气组",
+      "team_correct": true,
+      "predicted_fault_type": "通信",
+      "expected_fault_type": "PLC/通信",
+      "fault_correct": false
+    },
+    {
+      "id": "T-2025-Q4-3187",
+      "predicted_team": "机械组",
+      "expected_team": "机械组",
+      "team_correct": true,
+      "predicted_fault_type": "液压系统",
+      "expected_fault_type": "液压系统",
+      "fault_correct": true
+    },
+    {
+      "id": "T-2025-Q4-3621",
+      "predicted_team": "电气组",
+      "expected_team": "电气组",
+      "team_correct": true,
+      "predicted_fault_type": "回零",
+      "expected_fault_type": "回零/编码器",
+      "fault_correct": false
+    },
+    {
+      "id": "T-2025-Q4-4044",
+      "predicted_team": "机械组",
+      "expected_team": "机械组",
+      "team_correct": true,
+      "predicted_fault_type": "冷却",
+      "expected_fault_type": "液压/冷却",
+      "fault_correct": false
+    },
+    {
+      "id": "T-2025-Q4-4789",
+      "predicted_team": "电气组",
+      "expected_team": "电气组",
+      "team_correct": true,
+      "predicted_fault_type": "电源系统",
+      "expected_fault_type": "电源系统",
+      "fault_correct": true
+    },
+    {
+      "id": "T-2025-Q4-5123",
+      "predicted_team": "机械组",
+      "expected_team": "机械组",
+      "team_correct": true,
+      "predicted_fault_type": "润滑",
+      "expected_fault_type": "导轨/润滑",
+      "fault_correct": false
+    }
+  ]
+}

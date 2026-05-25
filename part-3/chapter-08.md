@@ -192,6 +192,32 @@ AgentCore Evaluations 的几个关键事实，FDE 第一次接触时容易踩偏
 
 具体 API 和控制台入口随产品迭代，使用前以 docs.aws.amazon.com 为准。完整文档入口在 `docs.aws.amazon.com/bedrock-agentcore/latest/devguide/evaluations.html`。
 
+### 实测：用 AgentCore code-based evaluator 复现 Ch6 那个 40% 之谜
+
+这是 Ch6 6.3 节那个伏笔的真实闭环。仓库 `demos/ch8-eval/` 起一个 Lambda evaluator，注册到 AgentCore Evaluations，在 TRACE 粒度上对 Ch6 同一组工单分诊预测重新评分。两轮对比的实测结果（2026-05-25 在 us-east-1 跑的）：
+
+| evaluator | team accuracy | fault accuracy |
+|---|---|---|
+| Strict string match（Ch6 那个） | 100% | **40%** |
+| Semantic equivalence（Lambda + AgentCore Evaluations） | 100% | **100%** |
+
+**同一组预测，模型一字未改，只换了 evaluator——分数从 40% 跳到 100%**。具体哪几条样本被两种 evaluator 判得不一样：
+
+| 工单 | 模型预测 | 标准答案 | strict | semantic |
+|---|---|---|---|---|
+| T-2025-Q4-0817 | 主轴 | 主轴/传动 | FAIL | PASS |
+| T-2025-Q4-1503 | Z 轴 | Z 轴/丝杠 | FAIL | PASS |
+| T-2025-Q4-2455 | 通信 | PLC/通信 | FAIL | PASS |
+| T-2025-Q4-3621 | 回零 | 回零/编码器 | FAIL | PASS |
+| T-2025-Q4-4044 | 冷却 | 液压/冷却 | FAIL | PASS |
+| T-2025-Q4-5123 | 润滑 | 导轨/润滑 | FAIL | PASS |
+
+模型答的"主轴"和标准答案"主轴/传动"在合昇业务里是同一类——派工流程上没差别。Lambda evaluator 内部维护 10 个等价类的字典（来自和王师傅过的口径），判断 predicted 和 expected 是否落在同一类。
+
+工程上的关键判断：**等价类字典的内容来自业务专家，不来自 FDE 拍脑袋**。我和王师傅过了一个下午确认"哪些故障类型在派工上等价、哪些必须严格区分"——这一份字典是 Ch8 evaluator 的"业务知识"，比 Lambda 代码本身更重要。
+
+完整代码：`demos/ch8-eval/`。一次完整运行 ~70 秒，总成本 < $0.01。注意 AgentCore Evaluations 现在是 GA，但 boto3 接口是 preview 期形态，几个真实坑（OTel trace_id 必须 32-hex、`evaluationReferenceInputs[].context.spanContext` 必填、CreateEvaluator 不支持 upsert）写在了 demo README 里。
+
 ---
 
 ## 8.6 上线后的评估

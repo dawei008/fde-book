@@ -1,0 +1,10 @@
+{"id": "T-2025-Q4-0142", "ticket": "客户报修：JG-A6 五轴加工中心，X 轴定位异常，加工件公差超差 0.08mm，已发现 X 轴伺服电机过热报警 1042。请求工程师上门。", "expected_team": "电气组", "expected_fault_type": "伺服系统", "rationale": "1042 是伺服电机过热代码，归属电气组"}
+{"id": "T-2025-Q4-0817", "ticket": "用户反馈机床主轴启动后有规律的异响，低速运行时明显，转速超 6000 rpm 后消失。开机时无报警。设备型号 JG-A8。", "expected_team": "机械组", "expected_fault_type": "主轴/传动", "rationale": "无报警 + 异响指向机械问题，多为主轴轴承"}
+{"id": "T-2025-Q4-1503", "ticket": "客户：工件原点设置后，第一次自动加工正常，第二次开始 Z 轴下刀深度逐渐变浅，每次约 0.02mm。换刀也没改善。", "expected_team": "机械组", "expected_fault_type": "Z 轴/丝杠", "rationale": "渐进性误差典型为丝杠预紧或导轨间隙问题"}
+{"id": "T-2025-Q4-2018", "ticket": "新来的徒弟操作：他说屏幕上显示 ALM 4501 报警动不了。我看了一下是冷却液液位低。我让他加了冷却液还是报警。是不是传感器坏了？", "expected_team": "电气组", "expected_fault_type": "传感器", "rationale": "ALM 4501 是冷却液液位传感器代码,加液后不复位多为传感器或线路"}
+{"id": "T-2025-Q4-2455", "ticket": "数控机床 PLC 与上位机通信中断，工厂内网正常，机床端 ping 不通车间交换机。重启机床 PLC 后短暂恢复 5 分钟后再次中断。", "expected_team": "电气组", "expected_fault_type": "PLC/通信", "rationale": "PLC 通信问题归电气，但需检查交换机端口"}
+{"id": "T-2025-Q4-3187", "ticket": "客户使用 5 年，从未保养换油。最近发现液压站噪音大。希望尽快上门保养。", "expected_team": "机械组", "expected_fault_type": "液压系统", "rationale": "保养类工单走机械组"}
+{"id": "T-2025-Q4-3621", "ticket": "Z 轴急停后无法回零,屏幕显示 #2103 错误,手动模式可以走但回零异常。", "expected_team": "电气组", "expected_fault_type": "回零/编码器", "rationale": "#2103 是回零参考点丢失,多为编码器或限位开关问题"}
+{"id": "T-2025-Q4-4044", "ticket": "客户反馈一台老机床(8 年机龄)切削液泵不出液,清理过滤器后还是没流量,是否需要更换泵?", "expected_team": "机械组", "expected_fault_type": "液压/冷却", "rationale": "无报警的流量问题归机械"}
+{"id": "T-2025-Q4-4789", "ticket": "三相电源切换后机床无法启动,主电柜内 24V 电源指示灯亮但 5V 电源无指示。请处理。", "expected_team": "电气组", "expected_fault_type": "电源系统", "rationale": "电源问题归电气组"}
+{"id": "T-2025-Q4-5123", "ticket": "Y 轴运行有规律性卡顿,2 秒卡一下,卡顿时无报警。X/Z 轴正常。客户问是不是要加润滑。", "expected_team": "机械组", "expected_fault_type": "导轨/润滑", "rationale": "无报警的轴运动卡顿多为润滑或导轨问题"}

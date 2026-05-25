@@ -1,0 +1,10 @@
+{"id": "T-2025-Q4-0142", "expected_team": "电气组", "expected_fault_type": "伺服系统", "predicted_team": "电气组", "predicted_fault_type": "伺服系统", "elapsed_ms": 1515.562692657113, "input_tokens": 251, "output_tokens": 28}
+{"id": "T-2025-Q4-0817", "expected_team": "机械组", "expected_fault_type": "主轴/传动", "predicted_team": "机械组", "predicted_fault_type": "主轴", "elapsed_ms": 880.433002486825, "input_tokens": 240, "output_tokens": 26}
+{"id": "T-2025-Q4-1503", "expected_team": "机械组", "expected_fault_type": "Z 轴/丝杠", "predicted_team": "机械组", "predicted_fault_type": "Z轴", "elapsed_ms": 920.310833491385, "input_tokens": 242, "output_tokens": 26}
+{"id": "T-2025-Q4-2018", "expected_team": "电气组", "expected_fault_type": "传感器", "predicted_team": "电气组", "predicted_fault_type": "传感器", "elapsed_ms": 1136.4866886287928, "input_tokens": 251, "output_tokens": 26}
+{"id": "T-2025-Q4-2455", "expected_team": "电气组", "expected_fault_type": "PLC/通信", "predicted_team": "电气组", "predicted_fault_type": "通信", "elapsed_ms": 1327.6086002588272, "input_tokens": 247, "output_tokens": 25}
+{"id": "T-2025-Q4-3187", "expected_team": "机械组", "expected_fault_type": "液压系统", "predicted_team": "机械组", "predicted_fault_type": "液压系统", "elapsed_ms": 895.6174096092582, "input_tokens": 219, "output_tokens": 27}
+{"id": "T-2025-Q4-3621", "expected_team": "电气组", "expected_fault_type": "回零/编码器", "predicted_team": "电气组", "predicted_fault_type": "回零", "elapsed_ms": 1239.1100050881505, "input_tokens": 220, "output_tokens": 25}
+{"id": "T-2025-Q4-4044", "expected_team": "机械组", "expected_fault_type": "液压/冷却", "predicted_team": "机械组", "predicted_fault_type": "冷却", "elapsed_ms": 1080.6396277621388, "input_tokens": 230, "output_tokens": 26}
+{"id": "T-2025-Q4-4789", "expected_team": "电气组", "expected_fault_type": "电源系统", "predicted_team": "电气组", "predicted_fault_type": "电源系统", "elapsed_ms": 1044.7846315801144, "input_tokens": 227, "output_tokens": 27}
+{"id": "T-2025-Q4-5123", "expected_team": "机械组", "expected_fault_type": "导轨/润滑", "predicted_team": "机械组", "predicted_fault_type": "润滑", "elapsed_ms": 1041.9054301455617, "input_tokens": 235, "output_tokens": 26}

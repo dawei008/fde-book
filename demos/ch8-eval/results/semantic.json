@@ -1,0 +1,152 @@
+{
+  "evaluator": "semantic_equivalence_lambda",
+  "mode": "agentcore",
+  "evaluator_arn": "arn:aws:bedrock-agentcore:us-east-1:118176377046:evaluator/hesheng_fault_type_v1-IQLIBlGxXV",
+  "lambda_name": "fde-book-ch8-fault-equivalence",
+  "n_items": 10,
+  "team_accuracy": 1.0,
+  "fault_accuracy": 1.0,
+  "errors": 0,
+  "per_item": [
+    {
+      "id": "T-2025-Q4-0142",
+      "predicted_team": "电气组",
+      "expected_team": "电气组",
+      "team_correct": true,
+      "predicted_fault_type": "伺服系统",
+      "expected_fault_type": "伺服系统",
+      "fault_correct": true,
+      "lambda_response": {
+        "label": "PASS",
+        "value": 1.0,
+        "explanation": "semantic match (canonical='伺服系统'; predicted='伺服系统', expected='伺服系统')"
+      }
+    },
+    {
+      "id": "T-2025-Q4-0817",
+      "predicted_team": "机械组",
+      "expected_team": "机械组",
+      "team_correct": true,
+      "predicted_fault_type": "主轴",
+      "expected_fault_type": "主轴/传动",
+      "fault_correct": true,
+      "lambda_response": {
+        "label": "PASS",
+        "value": 1.0,
+        "explanation": "semantic match (canonical='主轴/传动'; predicted='主轴', expected='主轴/传动')"
+      }
+    },
+    {
+      "id": "T-2025-Q4-1503",
+      "predicted_team": "机械组",
+      "expected_team": "机械组",
+      "team_correct": true,
+      "predicted_fault_type": "Z轴",
+      "expected_fault_type": "Z 轴/丝杠",
+      "fault_correct": true,
+      "lambda_response": {
+        "label": "PASS",
+        "value": 1.0,
+        "explanation": "semantic match (canonical='Z 轴/丝杠'; predicted='Z轴', expected='Z 轴/丝杠')"
+      }
+    },
+    {
+      "id": "T-2025-Q4-2018",
+      "predicted_team": "电气组",
+      "expected_team": "电气组",
+      "team_correct": true,
+      "predicted_fault_type": "传感器",
+      "expected_fault_type": "传感器",
+      "fault_correct": true,
+      "lambda_response": {
+        "label": "PASS",
+        "value": 1.0,
+        "explanation": "semantic match (canonical='传感器'; predicted='传感器', expected='传感器')"
+      }
+    },
+    {
+      "id": "T-2025-Q4-2455",
+      "predicted_team": "电气组",
+      "expected_team": "电气组",
+      "team_correct": true,
+      "predicted_fault_type": "通信",
+      "expected_fault_type": "PLC/通信",
+      "fault_correct": true,
+      "lambda_response": {
+        "label": "PASS",
+        "value": 1.0,
+        "explanation": "semantic match (canonical='PLC/通信'; predicted='通信', expected='PLC/通信')"
+      }
+    },
+    {
+      "id": "T-2025-Q4-3187",
+      "predicted_team": "机械组",
+      "expected_team": "机械组",
+      "team_correct": true,
+      "predicted_fault_type": "液压系统",
+      "expected_fault_type": "液压系统",
+      "fault_correct": true,
+      "lambda_response": {
+        "label": "PASS",
+        "value": 1.0,
+        "explanation": "semantic match (canonical='液压系统'; predicted='液压系统', expected='液压系统')"
+      }
+    },
+    {
+      "id": "T-2025-Q4-3621",
+      "predicted_team": "电气组",
+      "expected_team": "电气组",
+      "team_correct": true,
+      "predicted_fault_type": "回零",
+      "expected_fault_type": "回零/编码器",
+      "fault_correct": true,
+      "lambda_response": {
+        "label": "PASS",
+        "value": 1.0,
+        "explanation": "semantic match (canonical='回零/编码器'; predicted='回零', expected='回零/编码器')"
+      }
+    },
+    {
+      "id": "T-2025-Q4-4044",
+      "predicted_team": "机械组",
+      "expected_team": "机械组",
+      "team_correct": true,
+      "predicted_fault_type": "冷却",
+      "expected_fault_type": "液压/冷却",
+      "fault_correct": true,
+      "lambda_response": {
+        "label": "PASS",
+        "value": 1.0,
+        "explanation": "semantic match (canonical='液压/冷却'; predicted='冷却', expected='液压/冷却')"
+      }
+    },
+    {
+      "id": "T-2025-Q4-4789",
+      "predicted_team": "电气组",
+      "expected_team": "电气组",
+      "team_correct": true,
+      "predicted_fault_type": "电源系统",
+      "expected_fault_type": "电源系统",
+      "fault_correct": true,
+      "lambda_response": {
+        "label": "PASS",
+        "value": 1.0,
+        "explanation": "semantic match (canonical='电源系统'; predicted='电源系统', expected='电源系统')"
+      }
+    },
+    {
+      "id": "T-2025-Q4-5123",
+      "predicted_team": "机械组",
+      "expected_team": "机械组",
+      "team_correct": true,
+      "predicted_fault_type": "润滑",
+      "expected_fault_type": "导轨/润滑",
+      "fault_correct": true,
+      "lambda_response": {
+        "label": "PASS",
+        "value": 1.0,
+        "explanation": "semantic match (canonical='导轨/润滑'; predicted='润滑', expected='导轨/润滑')"
+      }
+    }
+  ]
+}
