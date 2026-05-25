@@ -270,9 +270,25 @@ D2 锁定。
 
 合昇三条都不满足。这是我建议 Level 0 的工程依据，不是凭直觉。
 
-如果有一天合昇满足了——比如二期接入了备件下单流程（出现 B 信号），又把销售也接进来（出现 C 信号）——那我会重新评估。AgentCore 这一年做了很多扎实的工作，2025 年 10 月 GA 之后陆续上了直接代码部署、Cedar policy、stateful MCP、所谓的 Managed Harness（这个名字 AWS 也是从 FDE 圈子里听来的）、还有 5 月新出的 Performance Loop（自动 prompt 优化加 A/B）。这些功能不是噱头，前提是你的项目复杂度已经到了需要它们的程度。
+如果有一天合昇满足了——比如二期接入了备件下单流程（出现 B 信号），又把销售也接进来（出现 C 信号）——那我会重新评估。AgentCore 这一年做了很多扎实的工作，截至 2026 年 5 月一共 11 个能力（FAQ 上的官方清单）：
 
-如果你想知道边界在哪，去仓库 `research/whats-new-2026.md` 我整理了从 2025-11 到 2026-05 的 Bedrock + AgentCore 关键更新。
+- **Runtime**——serverless 部署 agent / MCP server，8 小时长任务、bi-directional streaming、session 隔离、VPC 接入
+- **Gateway**——REST API / Lambda / 现有 MCP server 一键转成 MCP-compatible tool
+- **Memory**——跨 session 上下文存储
+- **Browser**——云端浏览器，agent 操作网站
+- **Code Interpreter**——沙箱跑 Python/JS/TS
+- **Identity**——接 Cognito / Okta / Entra ID，agent 凭证管理
+- **Observability**——Trace、debug、CloudWatch GenAI dashboard 一体
+- **Evaluations**——LLM-judge + 代码 evaluator、五种评估模式（online/on-demand/batch/dataset/simulation）。Ch8 展开
+- **Policy**——Cedar 自然语言 policy authoring、tool 调用层守门（不同于 Bedrock Guardrails 的内容守门）
+- **Agent Registry**（preview）——企业内部发布 / 审批 / 发现 agent / tool / MCP server 的中心目录。Ch15 展开
+- **Optimization**（preview）——从生产 trace 自动生成 prompt / tool description 改进建议 + A/B 验证。Ch13 展开
+
+合昇二期我用上了其中 5 项：Runtime、Gateway、Identity、Observability、Evaluations。Browser/Code Interpreter 用不上（没那种工作流），Policy 因为 14 个工具自己写规则就够了，Registry 和 Payments 是 preview 不进生产路径，Memory 因为我们的会话不需要跨 session 持久化。
+
+判断逻辑很重要——AgentCore 11 项不是清单式"全部都要用"，而是"按需采用"。每一项的引入都对应一个具体的工程理由。三期合昇集团多 BU 协同时 Registry 才会变成必选项；金融客户做需要主管审批的工作流时 Policy 才会变成必选项。第一期 Level 0 的判断仍然是默认起点。
+
+如果你想知道每一项的细节边界，仓库 `research/whats-new-2026.md` 整理了 2025-11 到 2026-05 的所有更新；`research/agentcore-2026-features.md` 是 11 项能力的逐项要点。
 
 ---
 

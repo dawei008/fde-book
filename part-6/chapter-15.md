@@ -239,6 +239,33 @@ async def update_opportunity_stage(
 
 ---
 
+## 15.7b 工具规模化的下一步——AWS Agent Registry（preview）
+
+合昇二期 32 个工具我能管，三期如果合昇集团其他 BU（销售线、财务线、IT 运维线）也要做 agent，工具会很快涨到几百个。每个 BU 的 FDE 各自重复造轮子——销售 BU 自己写一个 Salesforce MCP、IT BU 自己写一个 Jira MCP——浪费工作量、也没法做集团级的统一治理（哪些 server 安全可信、哪个版本是当前推荐、谁在维护）。
+
+AWS 在 2026 年把 **AWS Agent Registry** 推成 preview，正是为这个场景。它是一个中心目录，发布、审批、发现 agent / tool / skill / MCP server / 自定义资源。两层资源模型：
+
+- **Registry**——容器，可按 BU、按环境（prod/QA/dev）、按资源类型分多个
+- **Record**——单个资源条目，按协议 schema 校验（MCP server 按 MCP schema、agent 按 A2A schema）
+
+四个角色 / 工作流：
+
+- **Admin** 在集团 AWS 账号建 Registry，配 IAM 或 JWT 授权（接 Cognito / Okta / Entra ID）
+- **Publisher** 提交 record——比如 IT 团队把 jira-mcp v1.2 提交到注册表
+- **Curator** 审批通过或拒绝——一般是企业级安全或平台团队角色
+- **Consumer** 搜索发现——FDE 或 agent 都能搜（Registry 自己就提供 MCP endpoint，agent 能直接查它来发现工具）
+
+合昇的二期还没用上 Registry——32 个工具自己一个 FDE 团队就管得住。我把它放在这里讲，是因为 FDE 在三期或者集团多 BU 项目时一定会撞上"agent / tool 怎么治理"这个问题——届时 Registry 会从"知道有这个东西"变成"必须用上"。
+
+**和 Gateway 的区别要分清**：Gateway 是"把现有 API/Lambda 转成 MCP 工具"，Registry 是"发现已经存在的 agent/tool 资源"。两者互补——你用 Gateway 做的工具，可以发布到 Registry 让别的团队搜到。
+
+Preview 注意事项和 Optimization 一样：FDE 项目默认不进生产关键路径，可以做 PoC 探索，正式生产前等 GA。
+
+文档：https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/registry.html
+公告：https://aws.amazon.com/blogs/machine-learning/the-future-of-managing-agents-at-scale-aws-agent-registry-now-in-preview/
+
+---
+
 ## 15.8 MCP 上线前的安全检查
 
 合昇 MCP 上生产前我让顾建国和我一起跑过一遍下面这张清单。它不是教科书清单，是二期那次差点出事的 service account 教训之后我自己整理的：

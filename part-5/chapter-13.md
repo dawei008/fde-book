@@ -131,6 +131,14 @@ contextual_grounding:
 
 这四次加起来，guardrails 配置文件从 GA 时的 30 行涨到现在的 120 行。每一行都对应一个真实发生过的 incident。这件事的工程含义是——**guardrails 不是 PoC 阶段写一次就 done 的，是上线之后随着流量增长持续加的**。不要在 GA 前试图"想全"——想不全。每两周看一遍 incident 队列，决定加哪条。
 
+**关于 Bedrock Guardrails 和 AgentCore Policy 的区别**——二期上 agent 之后会同时遇到这两个名字，FDE 必须知道差别。
+
+Guardrails 守的是**模型层面的 input / output 内容**——PII 进 prompt 之前脱敏、response 出来过滤敏感词、判断幻觉、拒绝越界话题。它跑在每一次模型调用上，不关心 agent 在做什么动作。
+
+Policy 守的是 **agent 层面的工具调用行为**——这个 agent 能不能调"备件下单"工具？能不能在没有主管批准时执行金额超过 5 万的采购？能不能跨站点调度？AgentCore Policy 用 Cedar 语法（或自然语言转 Cedar）写规则，agent 每次发起 tool call 时 Policy engine 决定放行或拦截。
+
+两者不可互替，二期上 agent 时通常都需要：Guardrails 防"模型说错话"，Policy 防"agent 做错事"。
+
 ---
 
 ## 13.4 Token 成本：账单出来吵架的痛阈
@@ -185,6 +193,22 @@ L1 是"开始注意"，L2 是"今天就得搞清楚为什么"，L3 是"宁可错
 回流这件事的另一个用途是**给客户看进步**。每月 review 我给周明远一张图——纵轴 eval 分数，横轴月份。每个月都在涨（从 GA 时的 0.87 涨到第 9 个月的 0.93）。这张图比任何 dashboard 都让客户安心。"上线之后还在变好"是 SaaS 时代少见的承诺，AI 应用如果能做到，客户的续约谈判会容易很多。
 
 Anthropic 把这种做法叫 "online learning loop"，他们在 [Engineering at Anthropic](https://www.anthropic.com/engineering) 系列博客里反复讲——"模型不会自己变好，是评估集变好让上线之后的版本变好"。OpenAI 在 [Practices for Governing Agentic AI Systems](https://openai.com/index/practices-for-governing-agentic-ai-systems/) 里也有类似表述——production observability 的最终目的是反哺评估和策略。
+
+---
+
+## 13.5b 当线上分数掉了——AgentCore Optimization 的位置
+
+回流流水线把"分数掉没掉"这件事变成可观察的；但**分数掉了之后该怎么改 prompt** 这件事仍然靠 FDE 凭直觉。合昇上线后第 5 个月，我做过一次实验：把过去两周 judge 标"真错"的 60 条 trace 喂给 AgentCore Optimization（当时还是 preview），让它生成 prompt 候选。
+
+它给了三个候选：A 在 system prompt 里强化"如果 KB 没召回到信息，必须说不知道"；B 把 few-shot 例子从 8 条改成 5 条更有代表性的；C 改了一段工具描述措辞。Optimization 自己用我的评估集跑 batch evaluation 验证三个候选，再通过 Gateway 切 5% 线上流量做 A/B，给我一份带 p-value 的报告——A 提升 2.3 个点（p<0.01）、B 没显著差异、C 反而掉 1 个点。
+
+这件事我自己手工做要两周，Optimization 给我用了三天。Preview 版本不进合同 sign-off 路径——A 候选最后我让陈雪和王师傅看了 20 条对比样本人工 review 后才合并进 main。但**作为探索工具，它把 FDE 上线后的迭代周期从月降到周**。
+
+要点不是"用 Optimization 替代 FDE"，是它让 FDE 的精力从"猜哪个改法管用"转到"判断改法符不符合业务预期"——后者是 FDE 真正的价值。
+
+要警告两件事：第一，它现在仍是 **preview**，2026-05 还没 GA；第二，Optimization 改的是 prompt 措辞和 tool description，**不会改 outcome 定义、不会改业务逻辑**。如果你的分数低是因为 outcome 定义错了或者评估集本身有问题（第 6 章 6.3 那种 40% 之谜），它救不了你。它能优化"怎么写 prompt"，不能优化"我们到底要做什么"。
+
+公告：[Introducing the agent performance loop: AgentCore Optimization now in preview](https://aws.amazon.com/blogs/machine-learning/introducing-the-agent-performance-loop-agentcore-optimization-now-in-preview/)
 
 ---
 
