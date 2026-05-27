@@ -129,13 +129,73 @@ def write_csv(rows: list[dict], path: Path) -> None:
         w.writerows(rows)
 
 
+# Signature tickets — these 10 are the Ch6 eval-v0 samples. They're
+# injected as real rows so demos referencing T-2025-Q4-0142 etc. can
+# actually find them in the ticket_resolution view.
+SIGNATURE_TICKETS = [
+    {"ticket_no": "T-2025-Q4-0142", "equipment_id": "EQ-00007",
+     "fault_desc": "客户报修：JG-A6 五轴加工中心,X 轴定位异常,加工件公差超差 0.08mm,已发现 X 轴伺服电机过热报警 1042",
+     "alarm_code": "1042", "team": "电气组"},
+    {"ticket_no": "T-2025-Q4-0817", "equipment_id": "EQ-00012",
+     "fault_desc": "用户反馈机床主轴启动后有规律的异响,低速运行时明显,转速超 6000 rpm 后消失。设备型号 JG-A8",
+     "alarm_code": "", "team": "机械组"},
+    {"ticket_no": "T-2025-Q4-1503", "equipment_id": "EQ-00031",
+     "fault_desc": "客户:工件原点设置后,第一次自动加工正常,第二次开始 Z 轴下刀深度逐渐变浅,每次约 0.02mm",
+     "alarm_code": "", "team": "机械组"},
+    {"ticket_no": "T-2025-Q4-2018", "equipment_id": "EQ-00042",
+     "fault_desc": "新来的徒弟操作:他说屏幕上显示 ALM 4501 报警动不了。我看了一下是冷却液液位低",
+     "alarm_code": "ALM 4501", "team": "电气组"},
+    {"ticket_no": "T-2025-Q4-2455", "equipment_id": "EQ-00067",
+     "fault_desc": "数控机床 PLC 与上位机通信中断,工厂内网正常,机床端 ping 不通车间交换机",
+     "alarm_code": "", "team": "电气组"},
+    {"ticket_no": "T-2025-Q4-3187", "equipment_id": "EQ-00085",
+     "fault_desc": "客户使用 5 年,从未保养换油。最近发现液压站噪音大",
+     "alarm_code": "", "team": "机械组"},
+    {"ticket_no": "T-2025-Q4-3621", "equipment_id": "EQ-00099",
+     "fault_desc": "Z 轴急停后无法回零,屏幕显示 #2103 错误,手动模式可以走但回零异常",
+     "alarm_code": "#2103", "team": "电气组"},
+    {"ticket_no": "T-2025-Q4-4044", "equipment_id": "EQ-00121",
+     "fault_desc": "客户反馈一台老机床(8 年机龄)切削液泵不出液,清理过滤器后还是没流量",
+     "alarm_code": "", "team": "机械组"},
+    {"ticket_no": "T-2025-Q4-4789", "equipment_id": "EQ-00148",
+     "fault_desc": "三相电源切换后机床无法启动,主电柜内 24V 电源指示灯亮但 5V 电源无指示",
+     "alarm_code": "", "team": "电气组"},
+    {"ticket_no": "T-2025-Q4-5123", "equipment_id": "EQ-00177",
+     "fault_desc": "Y 轴运行有规律性卡顿,2 秒卡一下,卡顿时无报警。X/Z 轴正常",
+     "alarm_code": "", "team": "机械组"},
+]
+
+
+def inject_signatures(tickets: list[dict]) -> list[dict]:
+    """Inject Ch6 eval-v0's 10 signature tickets at fixed positions.
+
+    These have known ids that Ch14/Ch15 demos hardcode (e.g., T-2025-Q4-0142).
+    By embedding them in the synthetic ticket table we make the
+    "agent looks up the canonical demo ticket" path actually work.
+    """
+    base_ts = "2025-12-15T08:00:00+00:00"
+    for sig in SIGNATURE_TICKETS:
+        tickets.append({
+            "ticket_no": sig["ticket_no"],
+            "ts": base_ts,
+            "equipment_id": sig["equipment_id"],
+            "fault_desc": sig["fault_desc"],
+            "alarm_code": sig["alarm_code"],
+            "priority": "P1" if sig["alarm_code"] else "P2",
+            "reporter_phone": "+65-87654321",
+            "team": sig["team"],
+        })
+    return tickets
+
+
 def main() -> None:
     eq = gen_equipment()
     write_csv(eq, OUT / "equipment.csv")
     print(f"  equipment.csv: {len(eq)} rows")
     tk = gen_tickets(500, [r["equipment_id"] for r in eq])
+    tk = inject_signatures(tk)
     write_csv(tk, OUT / "tickets.csv")
-    print(f"  tickets.csv: {len(tk)} rows")
+    print(f"  tickets.csv: {len(tk)} rows ({len(SIGNATURE_TICKETS)} are Ch6 signature ids)")
     wo = gen_work_orders(300, [r["ticket_no"] for r in tk])
     write_csv(wo, OUT / "work_orders.csv")
     print(f"  work_orders.csv: {len(wo)} rows")

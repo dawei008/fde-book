@@ -1,8 +1,14 @@
-# Ch9 demo — Data engineering end-to-end with AgentCore
+# Ch9 demo — Data engineering end-to-end (standalone walkthrough)
 
 This demo materializes Ch9 of the FDE book on the Hesheng Precision Heavy
 Industries case. It walks the full path from raw dirty CSVs to an agent that
 queries a clean ontology view through AgentCore Runtime + Gateway.
+
+> ⚠️ **关于 hesheng-core**: 本 demo 是早期独立版本，自己合成数据 + 自己建
+> S3/Glue。**hesheng-core 是它的精炼版**——后建的 Ch7/8/11/13/14/15 demo
+> 都改成了 `from hesheng_core import ...` 复用基础。本 demo 保留为 Ch9 章节
+> 的独立完整 walkthrough（"从零到端到端"），新章节 demo 请用 hesheng-core
+> 的共享基础。
 
 ## What gets built
 
@@ -25,8 +31,8 @@ this scale.
 
 ## Run
 
-See `scripts/01-generate-data.py` through `scripts/09-teardown.sh`.
+See `scripts/01-generate-data.py` through `scripts/09-teardown.py`.
 
 ## Teardown
 
-`bash scripts/09-teardown.sh` removes everything. Run it.
+`python3 scripts/09-teardown.py` removes everything. Run it.

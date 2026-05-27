@@ -30,6 +30,18 @@ This is the shared code library that chapter demos build on. It owns:
 Each chapter demo `import`s from `hesheng_core` instead of re-creating
 synthetic data or re-writing the ontology.
 
+## Region note: 为什么 demo 跑 us-east-1，正文写 ap-southeast-1
+
+合昇案例的叙事 region 是 **ap-southeast-1（新加坡）**——海外服务部
+就在那里，章节里反复强调"客户数据不出 ap-southeast-1"。但所有 demo
+实际跑在 **us-east-1**，因为 Claude 4.5 系列 + Bedrock Knowledge
+Bases + AgentCore 在 us-east-1 可用性最完整、跨区 inference profile
+免配置。Ch6 §6.3 节脚注里有详细解释。
+
+落地客户项目时把所有 region 配置改成 `apac.*` 前缀的 inference
+profile + ap-southeast-1 endpoint，工程逻辑完全相同，只换 SDK
+参数。这就是 FDE 的"先选模型可用性再选 region 合规"判断顺序。
+
 ## Bring it up
 
 ```bash

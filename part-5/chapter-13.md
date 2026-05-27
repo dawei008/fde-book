@@ -131,6 +131,8 @@ contextual_grounding:
 
 这四次加起来，guardrails 配置文件从 GA 时的 30 行涨到现在的 120 行。每一行都对应一个真实发生过的 incident。这件事的工程含义是——**guardrails 不是 PoC 阶段写一次就 done 的，是上线之后随着流量增长持续加的**。不要在 GA 前试图"想全"——想不全。每两周看一遍 incident 队列，决定加哪条。
 
+四类拦截的实操可以在仓库 `demos/ch13-guardrails/` 跑一遍——4 条样本（PII 脱敏 / denied topic / prompt injection / 正常工单）实测，约 30 秒、< $0.01。一个值得注意的发现：**PII ANONYMIZE 实际触发在 output 不在 input**——模型仍然看到原始 PII（需要它来理解上下文），guardrail 在生成响应时把 PII 替换成 `{NAME}` / `{PHONE}`。这意味着 input 日志里会有 PII，output 日志里没有；如果客户合规要求"模型不能看到 PII"，需要走更严格的 BLOCK 而不是 ANONYMIZE，或者上层应用做 PII 脱敏后再送入。
+
 **关于 Bedrock Guardrails 和 AgentCore Policy 的区别**——二期上 agent 之后会同时遇到这两个名字，FDE 必须知道差别。
 
 Guardrails 守的是**模型层面的 input / output 内容**——PII 进 prompt 之前脱敏、response 出来过滤敏感词、判断幻觉、拒绝越界话题。它跑在每一次模型调用上，不关心 agent 在做什么动作。

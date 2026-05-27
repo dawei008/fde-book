@@ -28,6 +28,13 @@ Harness (Ch11):    VPC + interface endpoint + endpoint policy + Lambda
                    in private subnet -> AccessDenied with endpoint-cited reason
 ```
 
+> ⚠️ **Region note**: Hesheng 案例叙事 region 是 ap-southeast-1，但
+> 这个 demo 实跑在 us-east-1（和其他章节 demo 一致）—— Bedrock 模型
+> 在 us-east-1 可用性最完整。生产落地时把 endpoint policy ARN 从
+> `us.anthropic.claude-haiku-4-5-...` 改成 `apac.anthropic.claude-haiku-
+> 4-5-...`，VPC 创建在 ap-southeast-1，工程逻辑完全相同。详见
+> `demos/hesheng-core/README.md` 的 Region note。
+
 ## Scope
 
 | In demo | Out of demo (discussed in the chapter) |

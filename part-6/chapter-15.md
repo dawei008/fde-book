@@ -119,6 +119,8 @@ AWS 在 2026 年 3 月把 AgentCore 的 stateful MCP 能力 GA 了（[AWS What's
 
 合昇自有 14 个工具继续走 Lambda action group——它们和 MCP 没关系。新加的三个 SaaS 走 MCP server，部署在 AgentCore 上。两条路并存。
 
+stateful MCP 的"跨 session 状态持久化"在仓库 `demos/ch15-mcp/` 可复现——一个最小 MCP server（FastMCP + DynamoDB 共享后端），先在 Session A attach 一份文档到工单 `T-2025-Q4-0142`，然后**用一个完全不同的 Mcp-Session-Id**（Session B）调 list_attached_docs——能看到 Session A 那条 doc。两个不同 sid 看到同一个 doc_id 是 stateful MCP 的硬证据。整次跑约 2 分钟、<$0.01（DynamoDB 按需计费）。Demo 选了"本地 Python + 真 DynamoDB"路径而非 AgentCore Runtime，因为协议层结论一样、可复现性更高；生产部署到 Runtime 工程逻辑不变。
+
 ---
 
 ## 15.5 写一个企业 MCP server — Salesforce 那个例子
