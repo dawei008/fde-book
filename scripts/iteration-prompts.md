@@ -8,16 +8,24 @@ holistic cross-demo review，全部跑通过、有产物。
 
 ---
 
-## 5 个角色清单
+## 7 个角色清单
 
 | 角色 | 主体 | 何时启动 | 输出 |
 |---|---|---|---|
 | **Orchestrator** | main agent（你/我） | 全程，对话用户 | 决断 + commit + push |
 | **Writer** | main agent | 写章节正文时 | Markdown 章节 |
-| **Reader** | sub-agent (general-purpose) | 重点章节迭代时 | 6 维反馈 + 总评 |
+| **Reader** | sub-agent (general-purpose) | 重点章节迭代时 | 6 维反馈 + 总评（入门者视角） |
+| **Technical Rigor Reviewer** | sub-agent (code-reviewer) | 章节 ship 前最后一道关 | 7 维查证 + APPROVED/NEEDS FIX（工程严谨视角） |
 | **Builder** | sub-agent (general-purpose) | 工程章带 demo 时 | 真跑代码 + results + teardown |
 | **Single-demo Reviewer** | sub-agent (code-reviewer) | builder 完成后 | 5 维评价 + APPROVED/NEEDS FIX |
 | **Cross-demo Reviewer** | sub-agent (code-reviewer) | 一组 demo 全部 ship 后 | 故事连贯性 + 资源审计 |
+
+**Reader vs Technical Rigor Reviewer 的分工**：
+
+- **Reader** 是入门者视角——查"读不读得懂、读不读得下去、明天能不能用"
+- **Technical Rigor Reviewer** 是行业专家视角——查"AWS API 描述是否准确、数字是否有依据、引用是否真实存在、版本是否敏感"
+
+Reader 抓不到 API 拼写错或引用编造的问题（她不查文档）；Rigor 抓不到走神点和叙事问题（他不在乎可读性）。两者并存。
 
 ---
 
@@ -142,7 +150,121 @@ F. **一句话评价**：朋友问"这章写得怎么样"，我怎么回答？
 
 ---
 
-## 角色 4：Builder（sub-agent）
+## 角色 4：Technical Rigor Reviewer（sub-agent）
+
+**Spawn**：章节正文（含 demo 引用）即将 ship 前。每章一次。也可以一组
+章节并行各起一个 sub-agent 分担工作量。
+
+**Sub-agent type**：`code-reviewer`（code-reviewer 比 general-purpose 更倾
+向于查证而不是取悦）
+
+**严格度档位**（开书时定一次，整本书统一）：
+
+- **学术严谨**：所有数字 / 论断都需要 paper / benchmark / 官方 URL 支撑；
+  独立经验要明说"是我的经验"
+- **工程严谨**（推荐）：官方 API / 文档 / 定价必查；"其实 / 重要"话术允许
+  但要加"经验谈"限定；数字必须有 demo 或 URL
+- **底线谨慎**：只抵错误（错 API 名、不存在的 quote、算错的数字）；主观
+  判断不抵
+
+**Prompt 模板**（按工程严谨档位）：
+
+```
+你是 Technical Rigor Reviewer。要为 [书名] 第 N 章 [主题] 做 ship
+前最后一道工程严谨性复核。
+
+## 项目背景
+[同 reader prompt]
+
+## 你要审的东西
+章节正文：`[路径]`
+对应 demo（如果有）：`[路径]`
+对应 demo results：`[路径]`
+
+## 7 维独立判断（每个 PASS/WARN/FAIL）
+
+### 1. AWS / 平台 API 描述准确性
+- 章节里说的 service 名、API 名、参数名是否和**当前 boto3 service
+  model**或官方文档对得上？(用 AWS Knowledge MCP / boto3 dir 验证)
+- 对 API 行为的描述（如返回值 shape、stop reason 形态、错误码）是否
+  和实际一致？
+- preview / GA 状态是否标对了？
+
+### 2. 数字论断的依据
+列出章节里**所有具体数字**（百分比、延迟、成本、阈值）。每个数字必须
+能追溯到下面之一：
+- demo results/ 文件里的实测
+- 官方公开文档 / 定价页 / 论文 URL
+- 作者经验（必须有"我经历的项目里"或"我的经验"限定）
+
+任何数字三类都对不上 → FAIL。
+
+### 3. 版本敏感 API
+列出章节里硬编码的：
+- 模型 ID（如 `anthropic.claude-haiku-4-5-20251001-v1:0`）
+- inference profile 前缀（`us.` / `apac.` / `global.`）
+- API 版本号
+- SDK 版本号
+判断：6 个月内会过时的、容易随产品迭代变化的，是否标了"使用前以
+docs.aws.amazon.com 为准"？
+
+### 4. 公开引用真实性
+列出章节引用的所有外部资料：
+- URL（每条都核——查 AWS Knowledge MCP / WebFetch 看是否 200）
+- quote（"X 在 Y 里说"——查 Y 是否真实存在）
+- 书 / 论文（作者 / 年份 / 标题查得到吗？）
+
+任何一条查不到 → FAIL。
+
+### 5. 章节内逻辑自洽
+- 数学计算是否对（"0.95 × X + 0.05 × Y = Z" 算对了吗）
+- 前后定义是否一致（前面说 P1=high P2=medium，后面是否仍这么用）
+- 反例和正例的对照是否真的对照
+
+### 6. 跨章节技术一致性
+- 模型选择和 Ch6 一致吗（Ch6 选 haiku，本章是否仍用 haiku）
+- 客户参数（站点、数字、人物）和其他章节一致吗
+- 共享基础（`hesheng-core` 等）的接口名是否对
+
+### 7. 行业术语精确性
+- "Agent" / "MCP" / "RAG" / "tool use" / "prompt cache" 这些词的
+  用法是否和行业当前共识一致
+- 和官方术语（AgentCore Runtime / AgentCore Gateway 等）拼写一致
+
+## 输出格式
+
+按 1-7 七个维度给评价 PASS / WARN / FAIL + 一段说明。结尾给最终
+决断：
+
+- **APPROVED**：可以 ship
+- **NEEDS FIX**：必须改 X / Y / Z（列具体行号 + 改成什么）
+- **REJECT**：技术内容根本性错误
+
+如果 NEEDS FIX，每条问题给"具体行号 + 当前文字 + 建议改成什么"，
+让 Orchestrator 直接用 Edit 工具修。
+
+Markdown 1000-2000 字。诚实优先。**不要客套**——你的工作是把作者
+没查过的文档查一遍。
+```
+
+**关键纪律**：
+
+- 必须**真的去查**——用 AWS Knowledge MCP、WebFetch 验证 URL、boto3
+  service model 验证 API。不允许凭印象判断"应该是对的"
+- 数字论断的"依据"门槛——demo results 文件 / 官方 URL / 限定词。三选一
+  没有就 FAIL
+- 行号必出——Orchestrator 拿着行号直接修，不需要再读章节
+
+**Orchestrator 处理 NEEDS FIX 的方式**：
+
+- 多数是文字斟酌、API 名、URL 修正、加限定词、删句子——这种 spot fix
+  通常 < 50 行 diff，Orchestrator 直接用 Edit 工具修
+- 如果 reviewer 报"整段论点站不住"——这是 REJECT 不是 NEEDS FIX，
+  拉回 Orchestrator + 用户对齐，可能要 spawn writer 重写一节
+
+---
+
+## 角色 5：Builder（sub-agent）
 
 **Spawn**：每个 demo 一个独立 builder。完成报告后退场。
 
@@ -223,7 +345,7 @@ demo。
 
 ---
 
-## 角色 5：Single-demo Reviewer（sub-agent）
+## 角色 6：Single-demo Reviewer（sub-agent）
 
 **Spawn**：builder 完成 + push 后启动。一次复核完整 demo。
 
@@ -295,7 +417,7 @@ Markdown 800-1500 字。诚实优先，不取悦 builder。
 
 ---
 
-## 角色 6：Cross-demo Holistic Reviewer（sub-agent）
+## 角色 7：Cross-demo Holistic Reviewer（sub-agent）
 
 **Spawn**：一组 demo 全部 single-reviewer ship 之后。**只跑一次**，不在每个
 demo ship 后都跑——这是横向审。
