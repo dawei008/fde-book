@@ -274,3 +274,7 @@ RAG 的评估比纯 prompting 复杂。两个独立维度：
 - Anthropic / OpenAI 工程博客 — 关于 prompting 优先、再 RAG、再 fine-tune 的方法论排序
 - Lewis et al., *Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks* (2020) — RAG 的原始定义
 - AWS Bedrock 文档 — Knowledge Bases、AgentCore、Custom Models 的产品说明
+
+---
+
+[← 上一章：第一周的技术选型](../chapter-06/) · [下一章：评估先于代码 →](../chapter-08/)

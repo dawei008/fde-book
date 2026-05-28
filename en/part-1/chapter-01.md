@@ -162,3 +162,7 @@ The next chapter unpacks those three iron rules. After reading it, come back and
 - Nabeel Qureshi, *Reflections on Palantir* — an internal view of Palantir's FDE working model
 
 Full bibliography and links in the *References* at the end of the book.
+
+---
+
+[← Part I Intro](../intro/) · [Next: The Three Iron Rules →](../chapter-02/)

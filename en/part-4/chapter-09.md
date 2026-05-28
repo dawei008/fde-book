@@ -349,4 +349,4 @@ These days, the first week on every customer site I make sure to: draw the 5-lay
 - OpenLineage / Marquez project documentation
 - Indonesia PP 71/2019, Vietnam Cybersecurity Law (public data localization compliance materials)
 
-[← Part IV intro](../intro/) · [Next: Working in the customer's VPC →](../chapter-10/)
+[← Part IV Intro](../intro/) · [Previous: Eval Before Code](../../part-3/chapter-08/) · [Next: Scaffolding and the Development Loop →](../chapter-10/)

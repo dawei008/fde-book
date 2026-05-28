@@ -312,4 +312,8 @@ Discovery is the most undervalued, highest-ROI phase of FDE work. The next chapt
 ## Public references for this chapter
 
 - A. Lawrence, *Forward Deployed Engineer Rule Book* (2025) — the FDE-context articulation of *stated preference vs. revealed preference*
-- Conikeec, *The FDE Playbook: A Practitioner's Field Manual* (2025, Substack) — practical observations on not coding during Discovery
+- Conikeec, *The Forward Deployed Engineer Playbook: A Practitioner's Field Manual (Early Draft)* (Substack) — practical observations on not coding during Discovery
+
+---
+
+[← Part II Intro](../intro/) · [Next: From Requirements to SOW and Eval Set →](../chapter-05/)

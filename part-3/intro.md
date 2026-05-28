@@ -23,3 +23,7 @@ Part III 给第三条路：把"技术栈"拆成五个独立维度，按先后顺
 ---
 
 Part III 的输入是 Part II 的评估集和 SOW，输出是一套能跑分、能演示、能继续迭代的最小闭环。Part V 的生产化、Part VI 的 Agent 都建立在这套闭环之上。
+
+---
+
+[← Part II 完](../../part-2/chapter-05/) · [下一章：第一周的技术选型 →](../chapter-06/)

@@ -21,3 +21,7 @@ Chapter 17 is on the FDE's own next step. After finishing a project, the FDE's c
 ---
 
 Part VII's prerequisite is the entire output of every prior Part — handoff quality is the final aggregate of every phase's quality. Once you're done reading, the FDE moves into the next project, and the cycle repeats.
+
+---
+
+[← End of Part VI](../../part-6/chapter-15/) · [Next: Project Handoff →](../chapter-16/)

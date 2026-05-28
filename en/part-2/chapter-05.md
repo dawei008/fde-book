@@ -399,4 +399,8 @@ Part III begins Scaffolding. The first question: what tech stack? Facing a real 
 ## Public references for this chapter
 
 - A. Lawrence, *Forward Deployed Engineer Rule Book* (2025) — argument for locked scope and change processes
-- Conikeec, *The FDE Playbook: A Practitioner's Field Manual* (2025, Substack) — source of "if you can't write the Eval set, you don't really understand the problem yet"
+- Conikeec, *The Forward Deployed Engineer Playbook: A Practitioner's Field Manual (Early Draft)* (Substack) — source of "if you can't write the Eval set, you don't really understand the problem yet"
+
+---
+
+[← Previous: Week One on the Customer's Site](../chapter-04/) · [Next Part: Tech Stack Selection →](../../part-3/intro/)

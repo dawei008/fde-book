@@ -254,4 +254,4 @@ But this chapter isn't the endpoint. The next chapter is on the things **no one 
 - Bob McGrew @ Y Combinator (2025) — "sell outcomes, not products" reflected in the three-tier contract structure
 - Nabeel Qureshi, *Reflections on Palantir* — prototype "embedded consultant + platform fee" model behind the three-tier pricing
 
-[← Part V intro](../intro/) · [Next: Monitoring and Guardrails →](../chapter-13/)
+[← Part V Intro](../intro/) · [Previous: VPC, SSO, Compliance](../../part-4/chapter-11/) · [Next: Monitoring and Guardrails →](../chapter-13/)

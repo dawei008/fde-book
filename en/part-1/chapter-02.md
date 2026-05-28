@@ -287,3 +287,7 @@ The next chapter pulls the camera back one more step — the same FDE role, doin
 - Anthropic / OpenAI engineering blogs — public material on evaluation-driven LLM application development
 
 Full bibliography and links in the *References* at the end of the book.
+
+---
+
+[← Previous: The Real FDE Workflow](../chapter-01/) · [Next: Two FDE Modes →](../chapter-03/)

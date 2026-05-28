@@ -228,3 +228,7 @@ The next chapter handles the last D5 question — evaluation and observability. 
 - Anthropic / OpenAI engineering blogs — prompting-first, then RAG, then fine-tune ordering methodology
 - Lewis et al., *Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks* (2020) — the original RAG definition
 - AWS Bedrock docs — product specs for Knowledge Bases, AgentCore, Custom Models
+
+---
+
+[← Previous: Week-One Tech Stack Selection](../chapter-06/) · [Next: Eval Before Code →](../chapter-08/)

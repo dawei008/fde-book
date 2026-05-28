@@ -21,3 +21,7 @@ PoC 跑通和上生产之间的距离，比 PoC 本身还长。
 ---
 
 Part V 的前置是 Part III 的 Eval-driven 闭环和 Part IV 的数据 / 集成基础——这两个 Part 的产物是过线条件的硬输入。Part VI 的 Agent 在生产环境上加一层新的运营复杂度；Part VII 的交接，则要把这套运营骨架交到客户手里能继续跑。
+
+---
+
+[← Part IV 完](../../part-4/chapter-11/) · [下一章：PoC 到生产 →](../chapter-12/)

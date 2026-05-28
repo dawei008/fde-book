@@ -23,3 +23,7 @@ Chapter 8 covers D5 — evaluation and observability. The hard part of evaluatio
 ---
 
 Part III's input is Part II's Eval set and SOW. Its output is a minimum closed loop that can score, demo, and continue iterating. Part V's productionization and Part VI's Agent work both build on this loop.
+
+---
+
+[← End of Part II](../../part-2/chapter-05/) · [Next: Week-One Tech Stack Selection →](../chapter-06/)

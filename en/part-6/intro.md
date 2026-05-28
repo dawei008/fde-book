@@ -21,3 +21,7 @@ Chapter 15 is on MCP (Model Context Protocol) and enterprise integration. MCP ha
 ---
 
 Part VI's prerequisites are everything Part III (Eval) + Part IV (data / integration) + Part V (productionization) produced — Agents can't go live without an eval set, are just demos without the data foundation, and won't hold up without the operating skeleton. Part VII covers how to hand all of this off to the customer.
+
+---
+
+[← End of Part V](../../part-5/chapter-13/) · [Next: Agent Toolset Design →](../chapter-14/)

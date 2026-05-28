@@ -348,4 +348,4 @@ D3 is unresolved: RAG, Tool use, Agent, fine-tune — which?
 
 Hesheng has 5,000 PDFs (product manuals + historical ticket archive + maintenance knowledge base), and Zhou Mingyuan's instinct is "let's start with RAG." Is that right? That's the next chapter.
 
-[← Part III Intro](../intro/) · [Next: RAG / Fine-tune / Agent decision tree →](../chapter-07/)
+[← Part III Intro](../intro/) · [Previous: From Requirements to SOW and Eval Set](../../part-2/chapter-05/) · [Next: RAG / Fine-tune / Agent decision tree →](../chapter-07/)

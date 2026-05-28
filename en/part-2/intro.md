@@ -23,3 +23,7 @@ Chapter 5 covers how to translate the conclusions from Discovery into engineerab
 ---
 
 The artifacts coming out of Part II (Eval set + acceptance criteria + SOW) are the inputs for every engineering action in Parts III–VII. If Discovery doesn't meet bar, every line of code that follows is wasted. So neither chapter is skippable.
+
+---
+
+[← End of Part I](../../part-1/chapter-03/) · [Next: Week One on the Customer's Site →](../chapter-04/)

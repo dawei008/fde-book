@@ -343,4 +343,4 @@ D3 还没解决：RAG、Tool use、Agent、微调，哪个？
 
 合昇有 5000 份 PDF（产品手册 + 历史工单库 + 维修知识库），周明远的直觉是"先做个 RAG"。这是不是对的？这就是下一章。
 
-[← Part III Intro](../intro/) · [下一章：RAG / Fine-tune / Agent 决策树 →](../chapter-07/)
+[← Part III 导读](../intro/) · [上一章：从需求到 SOW 与评估集](../../part-2/chapter-05/) · [下一章：RAG / Fine-tune / Agent 决策树 →](../chapter-07/)

@@ -185,3 +185,7 @@ Part I, three chapters, gives the complete FDE engineering coordinate system:
 After reading these three chapters, you should be able to answer: which of the four phases is my current project in, which iron rule am I most at risk of breaking, which mode am I in. As the answers to these three change, your work focus should change with them.
 
 Part II enters the first concrete action — Discovery. From the moment you take on a new project, what do you ask, what do you watch, what do you write in the first week? It's the most undervalued and highest-ROI phase of FDE work.
+
+---
+
+[← Previous: The Three Iron Rules](../chapter-02/) · [Next Part: Customer Discovery →](../../part-2/intro/)

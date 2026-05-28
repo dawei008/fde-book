@@ -23,3 +23,7 @@ Chapter 11 is cross-system integration and compliance — SSO / SCIM / audit / V
 ---
 
 Part IV's prerequisite is that Part II's Discovery has surveyed the customer's data reality (otherwise you'll only discover during Scaffolding that the critical data simply can't be exposed). Part IV usually runs in parallel with Part III — tech-stack selection and data integration advance on two parallel tracks. Part V's productionization and Part VI's Agent tool calling both depend on the foundations laid here.
+
+---
+
+[← End of Part III](../../part-3/chapter-08/) · [Next: Data Engineering →](../chapter-09/)

@@ -21,3 +21,7 @@ Chapter 13 is on the core actions of operating in production — monitoring, obs
 ---
 
 Part V's prerequisites are Part III's eval-driven loop and Part IV's data / integration foundations — the outputs of those two Parts are the hard inputs to the pass-line conditions. Part VI's Agents add a new layer of operational complexity on top of production; Part VII's handoff is about putting this operating skeleton into the customer's hands so it keeps running.
+
+---
+
+[← End of Part IV](../../part-4/chapter-11/) · [Next: PoC to Production →](../chapter-12/)

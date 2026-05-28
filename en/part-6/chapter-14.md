@@ -293,4 +293,4 @@ Not running an agent in phase one was an engineering call written on the A4 in 6
 - AWS, [Bedrock Agent Evaluation docs](https://docs.aws.amazon.com/bedrock/latest/userguide/evaluation-agent.html) — three-layer evaluation: trajectory / tool selection / task success
 - AWS, Bedrock AgentCore public release materials (October 2025 GA) — public capability list for Cedar policy, stateful MCP, Performance Loop
 
-[← Part VI intro](../intro/) · [Next: MCP and Enterprise Integration →](../chapter-15/)
+[← Part VI Intro](../intro/) · [Previous: Monitoring and Guardrails](../../part-5/chapter-13/) · [Next: MCP and Enterprise Integration →](../chapter-15/)

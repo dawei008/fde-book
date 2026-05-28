@@ -1,0 +1,94 @@
+// OpenBook color scheme — palette extracted from cover.png
+// Cream background + rust/orange primary + teal accent + charcoal text.
+
+$body-background-color: #fafaf8;
+$sidebar-color:         #f4f1ea;   // slightly darker cream so sidebar reads as a panel
+$base-button-color:     #f4f1ea;
+$body-text-color:       #1a1a18;
+$body-heading-color:    #1a1a18;
+$body-blockquote-color: #5c5c5a;
+$nav-child-link-color:  #5c5c5a;
+
+// Primary brand: rust/orange from cover left margin
+$link-color:                    #b8510d;
+$btn-primary-color:             #b8510d;
+$base-button-color:             #f4f1ea;
+$body-heading-color:            #1a1a18;
+
+// Accent (teal) used in cover title
+$body-link-color:   #b8510d;
+$nav-list-link-color:        #1a1a18;
+$nav-list-expander-color:    #b8510d;
+
+// Sidebar active state — rust hover/active
+$nav-list-item-height:           1.6rem;
+
+// Borders / table rules
+$border-color:        #d3d3d1;
+$table-background-color: #fafaf8;
+
+// Code blocks — soft warm gray that complements cream
+$code-background-color: #f1ede4;
+$code-linenumber-color: #8a8578;
+
+// Search highlight
+$search-result-preview-color: #5c5c5a;
+
+// Custom selectors not exposed via vars — append at end
+@mixin _ob-after-vars {
+  // Sidebar active item: rust background
+  .site-nav .nav-list .nav-list-item .nav-list-link.active {
+    background-color: rgba(184, 81, 13, 0.12);
+    border-left: 3px solid #b8510d;
+    padding-left: calc(0.75rem - 3px);
+  }
+
+  // Top-bar / aux-nav buttons subtle hover
+  .site-button:hover {
+    color: #b8510d;
+  }
+
+  // Headings — keep charcoal but introduce teal subhead accent for h2 underline
+  h2 {
+    border-bottom: 1px solid rgba(26, 107, 92, 0.18);
+    padding-bottom: 0.2rem;
+  }
+
+  // Blockquote — left rule in rust
+  blockquote {
+    border-left: 4px solid #b8510d;
+    background: rgba(184, 81, 13, 0.04);
+    padding: 0.6rem 1rem;
+  }
+
+  // Buttons — primary CTA matches cover rust
+  .btn-primary {
+    background-image: none;
+    background-color: #b8510d;
+    color: #fafaf8;
+  }
+  .btn-primary:hover {
+    background-color: #9a4309;
+  }
+
+  // Hero title (.fs-9) on home page — slightly heavier weight, charcoal
+  h1.fs-9 {
+    color: #1a1a18;
+    letter-spacing: -0.01em;
+  }
+
+  // Inline code — rust on cream
+  code.language-plaintext.highlighter-rouge,
+  code:not(.language-plaintext) {
+    color: #b8510d;
+    background: rgba(184, 81, 13, 0.06);
+  }
+
+  // Table header — cream stripe
+  thead th {
+    background: #f4f1ea;
+    color: #1a1a18;
+  }
+}
+
+@include _ob-after-vars;

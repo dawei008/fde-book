@@ -25,3 +25,7 @@ Chapter 3 covers the two FDE modes — data-driven (closer to Palantir-style fie
 After reading Part I, you won't have written a single line of code, but you should be able to make three judgments more confidently: how to allocate today's time, what phase your current project is in, and which class of FDE work you're facing.
 
 The remaining six Parts all build on top of those three judgments.
+
+---
+
+[← Preface](../../preface/) · [Next: The Real FDE Workflow →](../chapter-01/)

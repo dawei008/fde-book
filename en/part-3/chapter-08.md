@@ -272,3 +272,7 @@ Part IV enters the rest of Scaffolding (about 70%): data engineering (how do you
 - Anthropic engineering blog — *Evaluating LLM-based Applications* series
 - Bedrock docs — product specs for Model / Knowledge Base / Agent Evaluation
 - DeepEval, Promptfoo and other open-source eval-framework design docs
+
+---
+
+[← Previous: RAG / Fine-tune / Agent Decision Tree](../chapter-07/) · [Next Part: Engineering for the Real Customer Environment →](../../part-4/intro/)
