@@ -6,7 +6,7 @@ nav_order: 2
 
 # Chapter 7  RAG / Fine-tune / Agent Decision Tree
 
-Chapter 6 nailed down "whose model" (Hesheng case picked Claude Haiku 4.5 + Opus 4.7 fallback). But **the model is just the engine** — you still have to decide how to connect the customer's knowledge and workflow to it. That's what this chapter is about.
+Chapter 6 nailed down "whose model" (Hesheng case picked Claude Haiku 4.5 + Opus 4.6 fallback). But **the model is just the engine** — you still have to decide how to connect the customer's knowledge and workflow to it. That's what this chapter is about.
 
 Four mainstream connectors:
 

@@ -136,7 +136,7 @@ This is something a veteran FDE should anticipate; I've added it to my own mista
 
 - **Data ownership** — does Hesheng's ticket data go into Bedrock training? No ([Bedrock's data protection docs](https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html) are clear — customer prompts and completions are not used by AWS to train foundation models). I lifted that line straight into the contract with the URL attached.
 - **Error liability boundaries** — if the Agent misroutes and causes loss, who covers it? We landed on "direct costs from Agent errors (re-dispatch travel, second part shipping) covered by us; indirect losses (customer downtime, reputation) negotiated bilaterally." We went 5 rounds with Hesheng's legal on this.
-- **Data residency** — does cross-region inference (us-east-1 for the 4.7 model) take customer ticket data out of Singapore? Yes. I can't change that. What I can do is write it plainly and let customer legal decide "accept" or "reject." Hesheng legal accepted — on condition that Bedrock invocation logs land in the Singapore region and are queryable.
+- **Data residency** — does cross-region inference (us-east-1 for the 4.6 model) take customer ticket data out of Singapore? Yes. I can't change that. What I can do is write it plainly and let customer legal decide "accept" or "reject." Hesheng legal accepted — on condition that Bedrock invocation logs land in the Singapore region and are queryable.
 
 The biggest lesson legal review gave me — **don't try to "skirt around" or "be vague about" any question the customer can ask**. What legal is most allergic to is vagueness; a clean "we can't do X" is far better than hedging.
 

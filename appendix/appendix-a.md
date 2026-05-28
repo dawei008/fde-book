@@ -16,16 +16,15 @@ nav_order: 1
 
 | 模型 | 强项 | 适合场景 | 价格档 |
 |---|---|---|---|
-| Claude Opus 4.5 | 顶级推理 + tool-search + effort 参数 | 复杂 Agent / Judge / 关键路径 | 高 |
+| Claude Opus 4.5 / 4.6 | 顶级推理 + tool-search + effort 参数 | 复杂 Agent / Judge / 关键路径 | 高 |
 | Claude Sonnet 4.5 / 4.6 | 平衡 + 长上下文 + 工具调用 | 通用 RAG / Agent 默认 | 中 |
 | Claude Haiku 4.5 | 快 + 便宜 | 高 QPS / 简单分类 | 低 |
-| Claude 4.7 系列 | 最新一代 | 选用主区域可用版本 | 中-高 |
 | Nova 2 Lite | 1M token + code interpreter + web grounding | 长文档 / 成本敏感 | 低 |
 | Nova 2 Pro | AWS 一方旗舰 | AWS 一站式重场景 | 中 |
 | Qwen3-Next / Qwen3 Coder Next | 中文 + 代码 | 中文场景 / 代码任务 | 中-低 |
 | DeepSeek V3.2 | 推理 + 中文 | 中文 + 推理 | 低 |
 | Mistral Large 3 / Magistral | 多语言 / 推理 | 欧洲 / 多语 | 中 |
-| GLM 4.7 / Kimi K2.5 / MiniMax M2.1 | 中文开源 | 中文场景备选 | 低 |
+| GLM-4 / Kimi K2 / MiniMax | 中文开源 | 中文场景备选 | 低 |
 | gpt-oss / gpt-oss-safeguard | OpenAI API 兼容 | 已有 OpenAI SDK 代码迁移 | 低 |
 
 **说明**：2025-12 与 2026-02 的两批扩展（共 24 个开源权重模型）让 Bedrock 不再等于 Claude；其中 Project Mantle 提供 OpenAI 兼容端点 + PrivateLink，可在 14 个区域跑。
@@ -88,7 +87,7 @@ nav_order: 1
 | 工具 | 类型 | 强项 |
 |---|---|---|
 | Bedrock Evaluations | AWS 托管 | Model / KB / RAG / Agent |
-| AgentCore Evaluations | AWS 托管 | 基于 OpenTelemetry trace 评估 agent 行为；built-in / LLM-judge / 代码（Lambda）三种 evaluator；五种模式（online/on-demand/batch/dataset/simulation）；SESSION/TRACE/TOOL_CALL 三种粒度 |
+| AgentCore Evaluations (preview, 2025-12+) | AWS 托管 | 基于 OpenTelemetry trace 评估 agent 行为；built-in / LLM-judge / 代码（Lambda）三种 evaluator；五种模式（online/on-demand/batch/dataset/simulation）；SESSION/TRACE/TOOL_CALL 三种粒度 |
 | CloudWatch GenAI Observability | AWS 托管 | 模型调用 + AgentCore 一体面板，含 evaluations 集成 |
 | AgentCore Optimization (preview) | AWS 托管 | 从生产 trace 自动生成 prompt / tool description 改进；batch eval + Gateway A/B 验证；统计显著性报告 |
 | AWS Agent Registry (preview) | AWS 托管 | 企业级 agent / tool / MCP server 发现 + 审批 + 治理目录；hybrid 搜索；MCP-native 端点 |

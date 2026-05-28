@@ -208,7 +208,7 @@ The point isn't "use Optimization to replace the FDE." It's that Optimization sh
 
 Two warnings: first, it's still **preview** as of May 2026, not yet GA. Second, Optimization edits prompt wording and tool descriptions; **it doesn't change the outcome definition or the business logic**. If your score is low because the outcome is defined wrong, or because the eval set itself has issues (the kind of "40% mystery" from Chapter 6's 6.3), it can't save you. It optimizes "how to write the prompt"; it doesn't optimize "what we're trying to do."
 
-Announcement: [Introducing the agent performance loop: AgentCore Optimization now in preview](https://aws.amazon.com/blogs/machine-learning/introducing-the-agent-performance-loop-agentcore-optimization-now-in-preview/)
+Announcement: [Introducing agent quality optimization in AgentCore (preview)](https://aws.amazon.com/blogs/machine-learning/introducing-agent-quality-optimization-in-agentcore-now-in-preview/)
 
 ---
 

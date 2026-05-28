@@ -74,7 +74,7 @@ D1 in week one isn't "Bedrock vs. SageMaker." It's making the customer's existin
 
 Three concrete things:
 
-**One: open Bedrock model access.** Bedrock is off by default per account, and each model needs a separate request. In Singapore, Anthropic's Claude 4.5 series approves quickly. The 4.6/4.7 series requires going through a cross-region inference profile (cross-region into us-west-2 or us-east-1), which needs the customer to approve "is this traffic allowed cross-region." Gu Jianguo ran a 30-minute internal process and approved it.
+**One: open Bedrock model access.** Bedrock is off by default per account, and each model needs a separate request. In Singapore, Anthropic's Claude 4.5 series approves quickly. The 4.6 series requires going through a cross-region inference profile (cross-region into us-west-2 or us-east-1), which needs the customer to approve "is this traffic allowed cross-region." Gu Jianguo ran a 30-minute internal process and approved it.
 
 **Two: set up Bedrock VPC endpoint.** ECS runs in private subnets — either go through NAT to call Bedrock's public endpoint, or configure a VPC endpoint. Gu Jianguo insisted on the endpoint, on the basis that traffic stays inside the VPC and an endpoint policy can constrain modelId. I supported it because it sets up the first safety guardrail along the way.
 
@@ -123,32 +123,32 @@ Full ten in repo `demos/ch6-stack/data/eval-v0.jsonl`.
 
 ## 6.3  Run a benchmark on the customer's data
 
-Day seven I ran a baseline. Four candidates on Bedrock: claude-haiku-4-5, claude-sonnet-4-6, claude-opus-4-7, amazon nova-pro. Three calls per ticket per model.
+Day seven I ran a baseline. Four candidates on Bedrock: claude-haiku-4-5, claude-sonnet-4-6, claude-opus-4-6, amazon nova-pro. Three calls per ticket per model.
 
 Hit two potholes worth recording.
 
 **Pothole one:** Anthropic's models on Bedrock can't be invoked with on-demand model IDs. First run, every Claude returned:
 
 ```
-ValidationException: Invocation of model ID anthropic.claude-opus-4-7
+ValidationException: Invocation of model ID anthropic.claude-opus-4-6
 with on-demand throughput isn't supported. Retry your request with the
 ID or ARN of an inference profile that contains this model.
 ```
 
-This is a hard requirement after Bedrock pushed cross-region inference. Claude models must use an inference profile ID like `us.anthropic.claude-opus-4-7`. Nova works either way, but I went with profiles for consistency.
+This is a hard requirement after Bedrock pushed cross-region inference. Claude models must use an inference profile ID like `us.anthropic.claude-opus-4-6`. Nova works either way, but I went with profiles for consistency.
 
 ```python
 MODELS = {
     "claude-haiku-4-5":  "us.anthropic.claude-haiku-4-5-20251001-v1:0",
     "claude-sonnet-4-6": "us.anthropic.claude-sonnet-4-6",
-    "claude-opus-4-7":   "us.anthropic.claude-opus-4-7",
+    "claude-opus-4-6":   "us.anthropic.claude-opus-4-6",
     "nova-pro":          "us.amazon.nova-pro-v1:0",
 }
 ```
 
 Hesheng's primary region is Singapore, but I ran this benchmark in us-east-1 because all four candidates are directly available there. The Singapore region didn't have everything open at the time — would've required cross-region inference profiles. The point of this step is to confirm "which model is good enough" — region availability is a secondary fit check at landing time. I explained it to the customer the same way.
 
-**Pothole two:** Claude 4.6 and 4.7 no longer accept `temperature` on the Converse API:
+**Pothole two:** Claude 4.6 series no longer accepts `temperature` on the Converse API:
 
 ```
 ValidationException: `temperature` is deprecated for this model.
@@ -159,7 +159,7 @@ The old script wrote `inferenceConfig={"temperature": 0.0}` and immediately brok
 ```python
 def inference_config(model_id):
     cfg = {"maxTokens": 200}
-    if "claude-opus-4-7" not in model_id and "claude-sonnet-4-6" not in model_id:
+    if "4-6" not in model_id:
         cfg["temperature"] = 0.0
     return cfg
 ```
@@ -195,7 +195,7 @@ The numbers (2026-05-23, us-east-1, 30 calls per model):
 | ----------------- | ----------------- | ------------------- | ----------- | ----------- | ------------ |
 | claude-haiku-4-5  | 100%              | 40%                 | 784ms       | 918ms       | $0.37        |
 | claude-sonnet-4-6 | 93%               | 40%                 | 1340ms      | 1997ms      | $1.10        |
-| claude-opus-4-7   | 100%              | 40%                 | 966ms       | 2383ms      | $5.63        |
+| claude-opus-4-6   | 100%              | 40%                 | 966ms       | 2383ms      | $5.63        |
 | nova-pro          | 90%               | 40%                 | 498ms       | 536ms       | $0.27        |
 
 Total run cost ~$0.50.
@@ -208,14 +208,14 @@ On dispatch accuracy, haiku at 100% looks best, but within ten samples' ±10% er
 
 What actually drives the call is latency and cost:
 
-- nova-pro P90 is 0.5s, opus-4-7 is 2.4s. 5x. Dispatcher experience changes from "instant" to "wait a moment."
-- Unit price nova-pro $0.27 vs opus-4-7 $5.63. At 230 tickets/day annualized, $25 vs $516.
+- nova-pro P90 is 0.5s, opus-4-6 is 2.4s. 5x. Dispatcher experience changes from "instant" to "wait a moment."
+- Unit price nova-pro $0.27 vs opus-4-6 $5.63. At 230 tickets/day annualized, $25 vs $516.
 
 Hesheng's tickets are 95% simple triage. I don't need opus on every one. Final recommendation: primary + fallback.
 
 ```
 primary:   claude-haiku-4-5  (95% simple tickets)
-fallback:  claude-opus-4-7   (5% complex tickets)
+fallback:  claude-opus-4-6   (5% complex tickets)
 
 Upgrade conditions: ticket length > 200 chars OR contains alarm code OR customer tier = A
 
@@ -227,7 +227,7 @@ This is 9x cheaper than all-in opus, 70% more expensive than all-in haiku, but t
 
 > Six months ago you'd have written a routing layer for this primary+fallback yourself. In May 2026 Bedrock launched the Advanced Prompt Optimization and Migration Tool, which auto-runs cross-model A/B and outputs latency and cost comparisons. If you're doing exactly the experiment in 6.3, you can save some manual work. But for teaching, I still recommend writing your own bench.py — you need to know what every line does. Tooling comes later.
 
-Back in the conference room. I read the table to Zhou Mingyuan. He nodded: "I can sell this to the board." Chen Xue: "5% complex tickets to opus — what stops the upgrade condition from misfiring and routing simple ones to opus too?" Me: "We'll walk through the upgrade router after I write Ch7." Gu Jianguo: "This cross-region inference profile thing — can we pull it back to Singapore?" Me: "Yes. Bedrock's Singapore region has the entire Claude 4.5 series open now; 4.6/4.7 go cross-region. We'll do another regional fit check before landing — the difference is mainly latency, doesn't affect the selection logic."
+Back in the conference room. I read the table to Zhou Mingyuan. He nodded: "I can sell this to the board." Chen Xue: "5% complex tickets to opus — what stops the upgrade condition from misfiring and routing simple ones to opus too?" Me: "We'll walk through the upgrade router after I write Ch7." Gu Jianguo: "This cross-region inference profile thing — can we pull it back to Singapore?" Me: "Yes. Bedrock's Singapore region has the entire Claude 4.5 series open now; 4.6 go cross-region. We'll do another regional fit check before landing — the difference is mainly latency, doesn't affect the selection logic."
 
 D2 locked.
 
@@ -305,10 +305,10 @@ Hesheng Precision Heavy Industries · Overseas Ticketing Agent v1 selection
 
 D1 Hosting:    AWS ap-southeast-1 (existing account)
                Bedrock VPC endpoint + Identity Center ready
-               Claude 4.5 series native; 4.6/4.7 via cross-region inference
+               Claude 4.5 series native; 4.6 via cross-region inference
 
 D2 Models:     primary  claude-haiku-4-5
-               fallback claude-opus-4-7  (length>200 / has alarm code / A-tier)
+               fallback claude-opus-4-6  (length>200 / has alarm code / A-tier)
                Estimate $0.63/1k tickets, P50 1s, dispatch accuracy ≥ 95%
 
 D3 Pattern:    RAG + tool use, no agent                     (Ch 7)

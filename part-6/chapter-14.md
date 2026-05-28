@@ -162,7 +162,7 @@ Bedrock Agents 的 [session attributes](https://docs.aws.amazon.com/bedrock/late
 客户通知      ─── 3 个工具 (read template + write email + write sms)
 ```
 
-每个 action group 模型一次只看一组。Bedrock Agents 在调用时，根据 user 的 input 先做一次 action group 路由（这一步是 agent runtime 自动做的），然后只把对应组的工具传给模型。模型每一步推理时面对的是 3-4 个工具，不是 14 个——14.1 那个 58% → 89% 的曲线在这里再次起作用。
+每个 action group 模型一次只看一组。我们在 Strands agent 这一层做 action group 选择——根据 user 的 input 先决定这次走分诊 / 备件 / 调度 / 通知 哪组，然后只把那组的 3-4 个工具暴露给 Claude。模型每一步推理时面对的是 3-4 个工具，不是 14 个——14.1 那个 58% → 89% 的曲线在这里再次起作用。Bedrock Agents 原生的 Action Group 是另一种封装方式（按 OpenAPI schema 把多组 Lambda 注册到同一个 agent），思想一致，只是包装层不同。
 
 这个设计在 Anthropic 的 Building Effective Agents 里叫 "tool partitioning"——把 tool space 按任务自然边界切分。它不是为了节约 token（虽然顺带能省），是为了**把模型的选择空间压到决策能稳定的范围**。
 

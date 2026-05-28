@@ -88,7 +88,7 @@ streamable HTTP   走 HTTP 长连接, 服务端推送结果
 
 二期我们没用 AgentCore——6.4 节那张 A4 写得清楚，单 agent 单一团队，Level 0 直写。但 MCP server 要让 Bedrock Agent 调用，又要保持 session 状态、要有标准的鉴权 + observability，这些事自己搭一套不划算。
 
-AWS 在 2026 年 3 月把 AgentCore 的 stateful MCP 能力 GA 了（[AWS What's New, 2026-03](https://aws.amazon.com/about-aws/whats-new/) 上的发布；公开资料清单在章末）。简单说，AgentCore Runtime 现在能直接 host MCP server，给你三件事免费：
+AWS 在 2026 年 3 月把 AgentCore Runtime 的 stateful MCP server 能力 GA 了（[AgentCore Runtime supports stateful MCP server features (2026-03)](https://aws.amazon.com/about-aws/whats-new/2026/03/amazon-bedrock-agentcore-runtime-stateful-mcp/)；公开资料清单在章末）。简单说，AgentCore Runtime 现在能直接 host MCP server，给你三件事免费：
 
 第一，**session 持久化**。MCP 协议本身有 session 概念（client 连上后维护一个上下文），stateful MCP 把 session 状态存在 AgentCore 托管的存储里，server pod 重启不丢、横向扩展不串。我们二期自己写 Lambda 时为了无状态绕了不少弯路，这一层省了。
 
@@ -178,20 +178,21 @@ async def update_opportunity_stage(
 
 二期 14.3 节那个判断——"工具调下游必须用 user context，不能用 service account"——在 MCP 这里只会更严格。MCP server 通常一处部署多 agent 共用，如果它用一个 service account 调 Salesforce，那任何能连上 MCP server 的 client 都能读全公司销售数据。
 
-合昇的做法是用 OAuth on behalf of：
+合昇的做法是用 OAuth on-behalf-of（AgentCore Identity 把这个流程托管掉）：
 
 ```
-工程师 Web 端登录 ─── Cognito
+工程师 Web 端登录 ─── 客户 IdP (Okta / Cognito)
                        │
                        ▼
-              拿到 Salesforce OAuth token
-              (Salesforce 那边的 SSO 接 Cognito)
+              AgentCore Identity workload identity:
+              用工程师的 IdP 身份, 通过 Salesforce
+              OAuth (authorization_code grant or
+              token-exchange) 换取 user-scoped token,
+              token 由 AgentCore Identity 托管缓存
                        │
                        ▼
-              session attribute 带到 Bedrock Agent
-                       │
-                       ▼
-              Agent 调 MCP server, HTTP header 带 token
+              Bedrock Agent 调 MCP server, HTTP header
+              带 user-scoped Salesforce token
                        │
                        ▼
               MCP server 用这个 token 调 Salesforce
@@ -201,7 +202,7 @@ async def update_opportunity_stage(
               Salesforce 自己的 profile / sharing rule 决定
 ```
 
-这套模式 AWS 称之为 [inbound auth + outbound auth](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html) 的组合——inbound 是 client 怎么证明自己是哪个用户，outbound 是 server 怎么用这个用户身份调下游。两端都不能用 service account 一刀切。
+这套模式 AWS 文档里叫 **inbound auth + outbound auth** 的组合（AgentCore Identity 把它做成了平台原语，参见 [AgentCore Identity 文档](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/identity.html)）——inbound 是 client 怎么证明自己是哪个用户（IdP token 验证），outbound 是 server 怎么用这个用户身份调下游（OAuth on-behalf-of 换 user-scoped token）。两端都不能用 service account 一刀切。
 
 我见过的事故 #1 就是 MCP server 图省事用 service account——演示阶段没事，上生产某个用户问 agent "帮我看一下王总最近的商机"，service account 是销售总监级别的，agent 把全公司销售数据都读出来了。客户那次没出公关事故纯属运气。**MCP server 在企业上生产前，鉴权链路必须走过一次完整的 pen test**。
 
@@ -304,7 +305,7 @@ Preview 注意事项和 Optimization 一样：FDE 项目默认不进生产关键
 - Anthropic, [Model Context Protocol 官网](https://modelcontextprotocol.io) — 协议规范、SDK、社区 server 清单
 - Anthropic, [MCP 发布博客 (2024-11)](https://www.anthropic.com/news/model-context-protocol) — MCP 的设计动机和 N×M → N+M 论述
 - Anthropic, [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) — 工具描述质量、tool partitioning
-- AWS, [Bedrock AgentCore — Stateful MCP Runtime GA 公告 (2026-03)](https://aws.amazon.com/about-aws/whats-new/) — AgentCore 托管 MCP server 的能力清单
+- AWS, [Bedrock AgentCore Runtime supports stateful MCP server features (2026-03)](https://aws.amazon.com/about-aws/whats-new/2026/03/amazon-bedrock-agentcore-runtime-stateful-mcp/) — AgentCore 托管 MCP server 的能力清单
 - AWS, [Bedrock Agents — Session attributes 文档](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html) — inbound / outbound auth 透传机制
 - modelcontextprotocol.io, [Servers 目录](https://modelcontextprotocol.io/servers) — 社区维护的 MCP server 清单, 接入前先 review 这一页
 

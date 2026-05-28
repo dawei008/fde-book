@@ -13,7 +13,7 @@ nav_order: 90
 
 **AgentCore** ⭐ — Amazon Bedrock 旗下的 agent 托管平台（2024 年底推出，2025 年快速迭代）。本书使用其中 Runtime / Gateway / Memory / Identity / Observability / Evaluations / Policy 等能力，覆盖 agent 的 serverless 部署、MCP 工具网关、跨 session 上下文、Cedar policy 守门、OTel trace 评估等。Ch 6 / 8 / 14 / 15 主线。
 
-**A. Lawrence** — 《Forward Deployed Engineer Rule Book》(2025-10) 作者，目前唯一英文 FDE 专著。
+**A. Lawrence** — 《Forward Deployed Engineer Rule Book》(2025-10) 作者，目前唯一以 ISBN 出版的英文 FDE 专著（其他 FDE 文献以 playbook / blog 形式发表）。
 
 **Agent (AI Agent)** — 能自主规划、调用工具、迭代执行的 LLM 应用。本书 Part VI 重点。
 
@@ -75,7 +75,7 @@ nav_order: 90
 
 **Immersion Before Judgment** — Lawrence 工法：动手前先沉浸到客户工作流。
 
-**Inference Profile** — Bedrock 的跨区推理配置，model ID 形如 `us.anthropic.claude-…`、`apac.anthropic.…`、`global.anthropic.…`。Claude 4.6/4.7 在 Bedrock 上必须走 inference profile，不能用 on-demand model ID 直接调。Ch 6 实操坑点之一。
+**Inference Profile** — Bedrock 的跨区推理配置，model ID 形如 `us.anthropic.claude-…`、`apac.anthropic.…`、`global.anthropic.…`。Claude 4.6 系列在 Bedrock 上必须走 inference profile，不能用 on-demand model ID 直接调。Ch 6 实操坑点之一。
 
 ## J
 

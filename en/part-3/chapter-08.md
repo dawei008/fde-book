@@ -214,7 +214,7 @@ In short: it automates "FDE iterating prompts on instinct."
 
 But two warnings: first, it's currently **preview**, so by default it doesn't enter the production path on FDE projects — fine to use for exploring directions, but contract sign-off changes require human review. Second, **it can auto-edit prompts but it can't auto-edit business definitions** — if your score is low because the outcome is defined wrong (Chapter 1's first iron rule), the Optimizer can't save you. It solves "how to write the prompt better"; it doesn't solve "what are we actually trying to do."
 
-Announcement: https://aws.amazon.com/blogs/machine-learning/introducing-the-agent-performance-loop-agentcore-optimization-now-in-preview/
+Announcement: [Introducing agent quality optimization in AgentCore (preview)](https://aws.amazon.com/blogs/machine-learning/introducing-agent-quality-optimization-in-agentcore-now-in-preview/)
 
 ---
 

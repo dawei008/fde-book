@@ -80,7 +80,7 @@ nav_order: 2
 | 长任务 | 自管 | 内置 8h 执行窗口 | LangGraph Cloud | 弱 | 弱 | 自定 |
 | HITL | 自接 | 有状态 MCP（2026-03）+ Cedar 策略 | 内置 interrupt | 中 | 弱 | 自定 |
 | 可观测 | OTEL → CloudWatch | CloudWatch GenAI Observability + Evaluations | LangSmith | 自定 | 自定 | 自定 |
-| 评估 | 接 Bedrock Eval | 内置 13 evaluator + Performance Loop（2026-05） | LangSmith | 自定 | 自定 | 自定 |
+| 评估 | 接 Bedrock Eval | 内置 evaluator 集 + LLM-judge + Lambda 评分 + Performance Loop preview（按 2025-12 What's New 公告） | LangSmith | 自定 | 自定 | 自定 |
 | 锁定风险 | 低（开源） | 高 (AWS) | 中 | 低 | 低 | 无 |
 | 适合规模 | 小到大 | 中-大 + AWS 客户 | 小到大 | 研究 / 实验 | 内容生成 | 高复杂度 |
 

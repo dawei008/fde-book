@@ -16,16 +16,15 @@ nav_order: 1
 
 | Model | Strength | Best For | Price Tier |
 |---|---|---|---|
-| Claude Opus 4.5 | Top-tier reasoning + tool-search + effort parameter | Complex Agent / Judge / critical path | High |
+| Claude Opus 4.5 / 4.6 | Top-tier reasoning + tool-search + effort parameter | Complex Agent / Judge / critical path | High |
 | Claude Sonnet 4.5 / 4.6 | Balanced + long context + tool calling | General RAG / Agent default | Mid |
 | Claude Haiku 4.5 | Fast + cheap | High QPS / simple classification | Low |
-| Claude 4.7 family | Latest generation | Use the version available in your primary region | Mid-High |
 | Nova 2 Lite | 1M token + code interpreter + web grounding | Long documents / cost-sensitive | Low |
 | Nova 2 Pro | AWS first-party flagship | AWS one-stop heavyweight scenarios | Mid |
 | Qwen3-Next / Qwen3 Coder Next | Chinese + code | Chinese scenarios / coding tasks | Mid-Low |
 | DeepSeek V3.2 | Reasoning + Chinese | Chinese + reasoning | Low |
 | Mistral Large 3 / Magistral | Multilingual / reasoning | Europe / multilingual | Mid |
-| GLM 4.7 / Kimi K2.5 / MiniMax M2.1 | Chinese open-source | Backup option for Chinese scenarios | Low |
+| GLM-4 / Kimi K2 / MiniMax | Chinese open-source | Backup option for Chinese scenarios | Low |
 | gpt-oss / gpt-oss-safeguard | OpenAI API-compatible | Migrating existing OpenAI SDK code | Low |
 
 **Note**: The two expansion waves in 2025-12 and 2026-02 (24 open-weight models combined) mean Bedrock is no longer just Claude; among them, Project Mantle provides OpenAI-compatible endpoints + PrivateLink and runs in 14 regions.
@@ -88,7 +87,7 @@ nav_order: 1
 | Tool | Type | Strength |
 |---|---|---|
 | Bedrock Evaluations | AWS managed | Model / KB / RAG / Agent |
-| AgentCore Evaluations | AWS managed | OpenTelemetry-trace-based evaluation of agent behavior; 3 evaluator forms (built-in / LLM-judge / code via Lambda); 5 modes (online / on-demand / batch / dataset / simulation); 3 granularities (SESSION / TRACE / TOOL_CALL) |
+| AgentCore Evaluations (preview, 2025-12+) | AWS managed | OpenTelemetry-trace-based evaluation of agent behavior; 3 evaluator forms (built-in / LLM-judge / code via Lambda); 5 modes (online / on-demand / batch / dataset / simulation); 3 granularities (SESSION / TRACE / TOOL_CALL) |
 | CloudWatch GenAI Observability | AWS managed | Unified dashboard for model invocations + AgentCore, with evaluations integration |
 | AgentCore Optimization (preview) | AWS managed | Auto-generate prompt / tool-description improvements from production traces; batch eval + Gateway A/B validation; statistical-significance reports |
 | AWS Agent Registry (preview) | AWS managed | Enterprise-grade discovery + approval + governance catalog for agents / tools / MCP servers; hybrid search; MCP-native endpoint |

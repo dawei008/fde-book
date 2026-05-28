@@ -73,7 +73,7 @@ D1 决定 D2 的可选范围（区域里有什么模型）。D2 决定 D4 的复
 
 具体做了三件事：
 
-**第一件，开通 Bedrock 模型访问。**Bedrock 默认对每个账号是关的，每个模型要单独申请。新加坡区 Anthropic 的 Claude 4.5 系列一申请就过，4.6/4.7 系列要走 cross-region inference profile（跨区到 us-west-2 或 us-east-1），需要客户审批"流量是否允许跨 region"。顾建国走了一次 30 分钟的内部流程批了。
+**第一件，开通 Bedrock 模型访问。**Bedrock 默认对每个账号是关的，每个模型要单独申请。新加坡区 Anthropic 的 Claude 4.5 系列一申请就过，4.6 系列要走 cross-region inference profile（跨区到 us-west-2 或 us-east-1），需要客户审批"流量是否允许跨 region"。顾建国走了一次 30 分钟的内部流程批了。
 
 **第二件，配 Bedrock VPC endpoint。**ECS 跑在私有子网，要么走 NAT 调 Bedrock 公网端点，要么开 VPC endpoint。顾建国坚持走 endpoint，理由是流量不出 VPC、可以接 endpoint policy 限制 modelId。我支持这个，因为它顺带把第一道安全护栏立了。
 
@@ -81,7 +81,7 @@ D1 决定 D2 的可选范围（区域里有什么模型）。D2 决定 D4 的复
 
 D1 锁定的不是"哪条供应商路线"，是"客户账号里下游所有 D2-D5 工作的网络/IAM/quota 已经准备好"。这一步做完，工单 Agent 才有地基。
 
-> 后面的章节会用到的两个 Bedrock 能力，提前在这里说一句，避免到时候临时学。一个是 2025 年 11 月引入的 Reserved/Priority/Flex 三档服务等级——生产实时调用走 Priority，批量评估走 Flex（半价）。一个是 2026 年 1 月把 prompt cache 从 5 分钟扩到 1 小时——对工单这种"系统 prompt 长、用户输入短"的场景帮助很大。这两个都是上线后慢慢用的，第一周不用现在配。
+> 后面的章节会用到的两个 Bedrock 能力，提前在这里说一句，避免到时候临时学。一个是 2025 年 11 月扩展的服务等级——除默认 Standard 外，新增 Priority（实时优先，价高）、Flex（latency-tolerant，半价）、以及 Reserved（1/3 月承诺包，固定 TPM）。生产实时调用走 Priority，批量评估走 Flex，可预测高 QPS 场景考虑 Reserved。另一个是 2026 年 1 月把 prompt cache 从 5 分钟扩到 1 小时——对工单这种"系统 prompt 长、用户输入短"的场景帮助很大。两个都是上线后慢慢用的，第一周不用现在配。
 
 ---
 
@@ -122,32 +122,32 @@ D1 锁定的不是"哪条供应商路线"，是"客户账号里下游所有 D2-D
 
 ## 6.3  在客户的数据上跑一遍
 
-第七天，我跑了一次基准。Bedrock 上四个候选：claude-haiku-4-5、claude-sonnet-4-6、claude-opus-4-7、amazon nova-pro。每个模型对每条工单调用三次。
+第七天，我跑了一次基准。Bedrock 上四个候选：claude-haiku-4-5、claude-sonnet-4-6、claude-opus-4-6、amazon nova-pro。每个模型对每条工单调用三次。
 
 跑这一次踩了两个坑，值得记下来。
 
 **第一个坑**：Anthropic 的模型在 Bedrock 上不能直接用 on-demand 模型 ID。第一次跑，所有 Claude 都返回：
 
 ```
-ValidationException: Invocation of model ID anthropic.claude-opus-4-7
+ValidationException: Invocation of model ID anthropic.claude-opus-4-6
 with on-demand throughput isn't supported. Retry your request with the
 ID or ARN of an inference profile that contains this model.
 ```
 
-这是 Bedrock 推 cross-region inference 之后的硬要求。Claude 模型必须走 `us.anthropic.claude-opus-4-7` 这种带 region 前缀的 inference profile id。Nova 两条路都行，但为了一致我也走 profile。
+这是 Bedrock 推 cross-region inference 之后的硬要求。Claude 模型必须走 `us.anthropic.claude-opus-4-6` 这种带 region 前缀的 inference profile id。Nova 两条路都行，但为了一致我也走 profile。
 
 ```python
 MODELS = {
     "claude-haiku-4-5":  "us.anthropic.claude-haiku-4-5-20251001-v1:0",
     "claude-sonnet-4-6": "us.anthropic.claude-sonnet-4-6",
-    "claude-opus-4-7":   "us.anthropic.claude-opus-4-7",
+    "claude-opus-4-6":   "us.anthropic.claude-opus-4-6",
     "nova-pro":          "us.amazon.nova-pro-v1:0",
 }
 ```
 
 合昇主 region 是新加坡，但这次基准我跑在 us-east-1，因为四个候选模型在 us-east-1 都直接可用。新加坡区当时还没全部开放，要走跨区 inference profile。这一步的目的是先确认"哪个模型够用"——区域可用性是落地时再做的二次 fit check。客户那边我也是这么解释的。
 
-**第二个坑**：Claude 4.6 和 4.7 在 Converse API 上不再接受 `temperature`：
+**第二个坑**：Claude 4.6 系列在 Converse API 上不再接受 `temperature`：
 
 ```
 ValidationException: `temperature` is deprecated for this model.
@@ -158,7 +158,7 @@ ValidationException: `temperature` is deprecated for this model.
 ```python
 def inference_config(model_id):
     cfg = {"maxTokens": 200}
-    if "claude-opus-4-7" not in model_id and "claude-sonnet-4-6" not in model_id:
+    if "4-6" not in model_id:
         cfg["temperature"] = 0.0
     return cfg
 ```
@@ -194,7 +194,7 @@ def call(model_id, ticket):
 | ----------------- | ---------- | -------------- | -------- | -------- | --------- |
 | claude-haiku-4-5  | 100%       | 40%            | 784ms    | 918ms    | $0.37     |
 | claude-sonnet-4-6 | 93%        | 40%            | 1340ms   | 1997ms   | $1.10     |
-| claude-opus-4-7   | 100%       | 40%            | 966ms    | 2383ms   | $5.63     |
+| claude-opus-4-6   | 100%       | 40%            | 966ms    | 2383ms   | $5.63     |
 | nova-pro          | 90%        | 40%            | 498ms    | 536ms    | $0.27     |
 
 我把这张表打印出来带进会议室。陈雪扫了一眼："为什么故障类型全是 40%？四个模型一样？"
@@ -205,14 +205,14 @@ def call(model_id, ticket):
 
 真正能让我做决策的是延迟和成本：
 
-- nova-pro 的 P90 是 0.5 秒，opus-4-7 是 2.4 秒。差五倍。调度员从"瞬时反应"变成"等一下"，体感差异很大。
-- 单价 nova-pro $0.27 vs opus-4-7 $5.63（每千单）。日均 230 单 × 365 天 ≈ 8.4 万单/年，年化分别是 $23 和 $473。
+- nova-pro 的 P90 是 0.5 秒，opus-4-6 是 2.4 秒。差五倍。调度员从"瞬时反应"变成"等一下"，体感差异很大。
+- 单价 nova-pro $0.27 vs opus-4-6 $5.63（每千单）。日均 230 单 × 365 天 ≈ 8.4 万单/年，年化分别是 $23 和 $473。
 
 合昇的工单 95% 是简单分诊。我没必要为每一条都用 opus。最终方案我推荐 primary + fallback：
 
 ```
 primary:   claude-haiku-4-5  (95% 简单工单)
-fallback:  claude-opus-4-7   (5% 复杂工单)
+fallback:  claude-opus-4-6   (5% 复杂工单)
 
 升级条件: 工单字数 > 200 OR 包含报警代码 OR 客户等级 = A
 
@@ -224,7 +224,7 @@ fallback:  claude-opus-4-7   (5% 复杂工单)
 
 > 6 个月前实现这个 primary+fallback 自己得写一段路由逻辑。Bedrock 在 2026 年 5 月推了 Advanced Prompt Optimization and Migration Tool，能自动跑跨模型 A/B 并出延迟成本对比。如果你做的是和 6.3 节一模一样的实验，可以省掉一些手工活。但教学上我还是建议自己写一遍 bench.py——你需要知道每一行在做什么，工具是后来的事。
 
-回到会议室。我把这张表念给周明远，他点头："这种依据我能给董事会讲。"陈雪问："五个百分点的复杂工单走 opus，会不会加错条件，简单工单也走过去？"我说："Ch7 那个升级路由我写完了我们再过一遍。"顾建国问："这个 inference profile 跨区的事，新加坡能拉回来吗？"我说："能。Bedrock 现在新加坡区的 Claude 4.5 全系都开了，4.6/4.7 走 cross-region。我们落地前再跑一次区域 fit check，区别主要是延迟，不影响选型逻辑。"
+回到会议室。我把这张表念给周明远，他点头："这种依据我能给董事会讲。"陈雪问："五个百分点的复杂工单走 opus，会不会加错条件，简单工单也走过去？"我说："Ch7 那个升级路由我写完了我们再过一遍。"顾建国问："这个 inference profile 跨区的事，新加坡能拉回来吗？"我说："能。Bedrock 现在新加坡区的 Claude 4.5 全系都开了，4.6 走 cross-region。我们落地前再跑一次区域 fit check，区别主要是延迟，不影响选型逻辑。"
 
 D2 锁定。
 
@@ -300,10 +300,10 @@ D2 锁定。
 
 D1 托管:    AWS ap-southeast-1 (现有账号)
             Bedrock VPC endpoint + Identity Center 已就绪
-            Claude 4.5 系列原生; 4.6/4.7 走 cross-region inference
+            Claude 4.5 系列原生; 4.6 走 cross-region inference
 
 D2 模型:    primary  claude-haiku-4-5
-            fallback claude-opus-4-7  (字数>200 / 含报警码 / A 客户)
+            fallback claude-opus-4-6  (字数>200 / 含报警码 / A 客户)
             预估     $0.63/1k 工单, P50 1 秒, 派工准确率 ≥ 95%
 
 D3 模式:    Prompting + 长 system prompt（含报警代码全表），不上 agent (Ch 7)

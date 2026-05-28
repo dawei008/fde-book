@@ -6,7 +6,7 @@ nav_order: 2
 
 # 第 7 章 RAG / 微调 / Agent 决策树
 
-第 6 章把"用谁的模型"定下来了（合昇案例选了 Claude Haiku 4.5 + Opus 4.7 兜底）。但**模型只是引擎**——你还得决定怎么把客户的知识和工作流接上去。这就是这一章的事。
+第 6 章把"用谁的模型"定下来了（合昇案例选了 Claude Haiku 4.5 + Opus 4.6 兜底）。但**模型只是引擎**——你还得决定怎么把客户的知识和工作流接上去。这就是这一章的事。
 
 四种主流接法：
 
@@ -253,7 +253,7 @@ RAG 的评估比纯 prompting 复杂。两个独立维度：
 - **Knowledge Base 删除有 race**：默认 `dataDeletionPolicy=DELETE` 时，删 data source 会异步清理向量库；如果你紧接着删 OpenSearch collection，两个动作 race，KB 卡在 `DELETE_UNSUCCESSFUL`。修法是创建时显式 `dataDeletionPolicy="RETAIN"`，反正 collection 删了向量库自然没了。
 - **Cohere Rerank v3.5 的 body schema** 是 `{api_version:2, query, documents, top_n}`，和 Cohere 直连 API 不一样。Bedrock 文档不显眼，第一次调容易踩。
 
-**回到合昇第一期的判断**：上面这张表反而是反向证据——**一旦 prompt 塞得下，先用 prompting**。合昇第一期 200 条报警代码全塞进 system prompt 才 4000 tokens，远未到上限，加上 1 小时 prompt cache 平均一次调用比 RAG 还便宜。RAG 该不该上，**先看 prompt 塞不塞得下，不看 RAG 能不能拿高分**。这个 demo 的小 KB 场景下 RAG 必胜，但"必胜"不等于"必上"——合昇的判断是"用最便宜的够用方案"。
+**回到合昇第一期的判断**：上面这张表反而是反向证据——**一旦 prompt 塞得下，先用 prompting**。合昇第一期 200 条报警代码全塞进 system prompt 才 4000 tokens，远未到上限；用 Bedrock 1 小时 prompt cache（system prompt 前缀缓存命中），后续工单调用只为短的 user 输入付输入 token 费——平均每次调用的有效成本比这一节 demo 里的 RAG 路径还低。RAG 该不该上，**先看 prompt 塞不塞得下，不看 RAG 能不能拿高分**。这个 demo 的小 KB 场景下 RAG 必胜，但"必胜"不等于"必上"——合昇的判断是"用最便宜的够用方案"。
 
 完整代码 + 实测产物：`demos/ch7-rag/`。OpenSearch Serverless 是按小时计费的（B / C 接法都依赖它），跑完务必立刻 `make down`，不要留着过夜。
 
