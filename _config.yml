@@ -30,7 +30,7 @@ aux_links:
   "GitHub":
     - "https://github.com/dawei008/fde-book"
   "English":
-    - "/fde-book/en/preface/"
+    - "/fde-book/en/README/"
 aux_links_new_tab: true
 
 footer_content: 'Source on <a href="https://github.com/dawei008/fde-book">GitHub</a>. CC-BY-SA 4.0.'
@@ -66,6 +66,14 @@ defaults:
       type: pages
     values:
       layout: default
+  # Hide the entire English mirror from the default Chinese sidebar.
+  # Readers reach the English version via the "English" aux-nav button → en/README,
+  # which has its own complete TOC.
+  - scope:
+      path: "en"
+      type: pages
+    values:
+      nav_exclude: true
 
 # Collections — treat each part as a top-level nav group
 collections_dir: ""

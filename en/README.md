@@ -65,17 +65,46 @@ Every chapter answers questions in this shape.
 
 ## Table of Contents
 
-| Part | Track | What it solves |
-|---|---|---|
-| I Foundations | Both | FDE workflow, three laws, switching between modes |
-| II Discovery | Both | Field discovery, requirements → eval → SOW |
-| III Scaffolding | LLM | Stack selection, decision trees, eval-driven dev |
-| IV Data & Integration | Field-delivery | Ontology, VPC, SSO, audit, legacy systems |
-| V PoC → Production | Both | Cut-over criteria, observability, canary, rollback |
-| VI Agent Era | LLM | Agent deployment, tool sandboxing, MCP |
-| VII Handoff & Mastery | Both | Handoff, pattern extraction, T-shaped growth |
+[Preface](preface/) · [Reading Guide](reading-guide/)
 
-Full chapter list in `SUMMARY.md`.
+**Part I — Role and Mindset**
+- [Chapter 1 — The Real FDE Workflow](part-1/chapter-01/)
+- [Chapter 2 — The Three Iron Rules](part-1/chapter-02/)
+- [Chapter 3 — Two FDE Modes](part-1/chapter-03/)
+
+**Part II — Customer Discovery**
+- [Chapter 4 — Week One on the Customer's Site](part-2/chapter-04/)
+- [Chapter 5 — From Requirements to SOW and Eval Set](part-2/chapter-05/)
+
+**Part III — Tech Stack Selection**
+- [Chapter 6 — Week-One Tech Stack Selection](part-3/chapter-06/)
+- [Chapter 7 — RAG / Fine-tune / Agent Decision Tree](part-3/chapter-07/)
+- [Chapter 8 — Eval Before Code](part-3/chapter-08/)
+
+**Part IV — Engineering for the Real Customer Environment**
+- [Chapter 9 — Data Engineering](part-4/chapter-09/)
+- [Chapter 10 — Scaffolding and the Development Loop](part-4/chapter-10/)
+- [Chapter 11 — VPC, SSO, Compliance](part-4/chapter-11/)
+
+**Part V — Going Live and Operating**
+- [Chapter 12 — PoC to Production](part-5/chapter-12/)
+- [Chapter 13 — Monitoring and Guardrails](part-5/chapter-13/)
+
+**Part VI — Agents and MCP**
+- [Chapter 14 — Agent Toolset Design](part-6/chapter-14/)
+- [Chapter 15 — MCP Integration](part-6/chapter-15/)
+
+**Part VII — Handoff and Continuity**
+- [Chapter 16 — Project Handoff](part-7/chapter-16/)
+- [Chapter 17 — The FDE's Next Step](part-7/chapter-17/)
+
+**Appendices**
+- [A — Toolstack Quick Reference](appendix/appendix-a/)
+- [B — Comparison Matrix](appendix/appendix-b/)
+- [C — Eval Set Templates](appendix/appendix-c/)
+- [D — Customer Onboarding Pack](appendix/appendix-d/)
+
+[Glossary](glossary/) · [Bibliography](bibliography/)
 
 ---
 
