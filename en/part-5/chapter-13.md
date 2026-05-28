@@ -275,4 +275,4 @@ Looking back over 13.1-13.6, none of the six sections was something I could have
 - AWS Bedrock docs — Model invocation logging / Guardrails (PII / Denied Topics / Prompt attack / Contextual grounding) / Batch inference (Flex tier)
 - AWS docs — CloudWatch Metrics for Bedrock / X-Ray AWS SDK instrumentation / Cost Explorer + Cost Allocation Tags
 
-[← Previous: PoC Pass-Line Conditions](chapter-12.md) · [Next Part: Agent Era →](../part-6/intro.md)
+[← Previous: PoC Pass-Line Conditions](../chapter-12/) · [Next Part: Agent Era →](../../part-6/intro/)

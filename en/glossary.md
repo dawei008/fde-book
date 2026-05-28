@@ -5,7 +5,7 @@ nav_order: 90
 
 # Glossary
 
-> Alphabetical order. Source pages in [bibliography.md](bibliography.md).
+> Alphabetical order. Source pages in [bibliography](../bibliography/).
 
 ---
 
@@ -135,4 +135,4 @@ nav_order: 90
 
 ---
 
-[← Back to Contents](README.md)
+[← Back to Contents](../)

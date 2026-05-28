@@ -282,4 +282,4 @@ But FDE as a profession isn't stacking experience project after project — that
 
 Full bibliography and links in the *References* section at the end of the book.
 
-[← Part VII intro](intro.md) · [Next: T-Shape Growth →](chapter-17.md)
+[← Part VII intro](../intro/) · [Next: What's Next for FDEs →](../chapter-17/)

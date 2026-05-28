@@ -74,7 +74,7 @@ FDE 这个职能最早是 Palantir 把它做成正式岗的，OpenAI、Anthropic
 - **Conikeec @ Substack**, *The FDE Playbook*
 - **Nabeel Qureshi**, *Reflections on Palantir*
 
-AWS Bedrock 在书里只作为动手 demo 的平台出现，不作为方法论来源。完整引用清单见 [bibliography.md](bibliography.md)。
+AWS Bedrock 在书里只作为动手 demo 的平台出现，不作为方法论来源。完整引用清单见 [bibliography](../bibliography/)。
 
 ---
 

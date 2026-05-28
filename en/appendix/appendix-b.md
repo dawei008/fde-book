@@ -217,4 +217,4 @@ nav_order: 2
 
 ---
 
-[← Back to Contents](../README.md) · [Next: Eval Set Design Templates →](appendix-c.md)
+[← Back to Contents](../../README/) · [Next appendix: Eval Set Design Templates →](../appendix-c/)

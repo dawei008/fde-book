@@ -80,7 +80,7 @@ Harness 提供能力，Customer 提供约束。这本书写的是怎么把 Harne
 - AWS GenAI Innovation Center 公开案例
 - Bob McGrew @ Y Combinator (2025) — "Sell the outcome, not the product"
 
-完整书目在 [`bibliography.md`](bibliography.md)。
+完整书目在 [bibliography](bibliography/)。
 
 ---
 

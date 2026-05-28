@@ -86,7 +86,7 @@ Full chapter list in `SUMMARY.md`.
 - **Field-delivery FDE only**: Parts I → II → IV → V → VII
 - **Reference**: Appendices A–D as needed
 
-See [reading-guide.md](reading-guide.md).
+See [reading-guide](reading-guide/).
 
 ---
 

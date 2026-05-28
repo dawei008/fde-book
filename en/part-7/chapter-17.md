@@ -251,4 +251,4 @@ Every judgment I made over the year, every anti-pattern I wrote, every hole I st
 
 Full bibliography and links in the *References* section at the end of the book.
 
-[← Previous: Project Handoff](chapter-16.md) · [Back to Contents](../README.md)
+[← Previous: Project Handoff](../chapter-16/) · [Back to Contents](../../README/)

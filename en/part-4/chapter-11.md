@@ -269,4 +269,4 @@ I couldn't answer 3 of the 4 questions that day not because I'd never touched th
 - China MLPS Level 3 public clauses (GB/T 22239-2019)
 - Indonesia PP 71/2019, Vietnam Cybersecurity Law (public data localization compliance materials)
 
-[← Previous: Scaffolding and the Development Loop](chapter-10.md) · [Next Part: PoC → Production →](../part-5/intro.md)
+[← Previous: Scaffolding and the Development Loop](../chapter-10/) · [Next Part: PoC → Production →](../../part-5/intro/)

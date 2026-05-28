@@ -5,11 +5,13 @@ nav_order: 90
 
 # 术语表
 
-> 按字母 / 拼音排序。引用页见 [bibliography.md](bibliography.md)。
+> 按字母 / 拼音排序。引用页见 [bibliography](../bibliography/)。⭐ 标记表示全书高频核心术语。
 
 ---
 
 ## A
+
+**AgentCore** ⭐ — Amazon Bedrock 旗下的 agent 托管平台（2024 年底推出，2025 年快速迭代）。本书使用其中 Runtime / Gateway / Memory / Identity / Observability / Evaluations / Policy 等能力，覆盖 agent 的 serverless 部署、MCP 工具网关、跨 session 上下文、Cedar policy 守门、OTel trace 评估等。Ch 6 / 8 / 14 / 15 主线。
 
 **A. Lawrence** — 《Forward Deployed Engineer Rule Book》(2025-10) 作者，目前唯一英文 FDE 专著。
 
@@ -27,7 +29,9 @@ nav_order: 90
 
 ## C
 
-**Conikeec** — Substack 作者，发表 *The FDE Playbook: A Practitioner's Field Manual*。
+**Cedar** — AWS 开源的 policy 描述语言（自然语言式 ABAC）。AgentCore Policy 用 Cedar 定义"哪个 agent / 哪个 session / 哪个工具"在什么条件下能调。区别于 Bedrock Guardrails 的"内容守门"，Cedar 是"动作守门"。Ch 14 / 15 出现。
+
+**Conikeec** — Substack 作者，发表 *The Forward Deployed Engineer Playbook: A Practitioner's Field Manual (Early Draft)*。
 
 **Confluence** — Atlassian 的企业 wiki。客户文档库的常见落地形态，FDE Discovery 阶段绕不开。
 
@@ -61,6 +65,8 @@ nav_order: 90
 
 **GTM (Go-To-Market)** — 把产品送到客户手上的方式。
 
+**Guardrails (Bedrock Guardrails)** — Bedrock 的内容安全护栏。守 input / output 内容（PII 脱敏、敏感词、prompt injection、幻觉/grounding 检测、denied topic 拒答）。和 AgentCore Policy 是不同维度——Guardrails 守"模型说了什么"，Policy 守"agent 做了什么动作"。Ch 13 主题。
+
 ## H
 
 **Handoff** — FDE 离场时把项目交回客户内部团队的动作。Ch 16 主题。
@@ -69,7 +75,7 @@ nav_order: 90
 
 **Immersion Before Judgment** — Lawrence 工法：动手前先沉浸到客户工作流。
 
-**Ontology** ⭐ — 客户业务概念的形式化建模（实体、属性、关系、动作）。Palantir 核心抽象，FDE 数据线主战场。Ch 9 重点。
+**Inference Profile** — Bedrock 的跨区推理配置，model ID 形如 `us.anthropic.claude-…`、`apac.anthropic.…`、`global.anthropic.…`。Claude 4.6/4.7 在 Bedrock 上必须走 inference profile，不能用 on-demand model ID 直接调。Ch 6 实操坑点之一。
 
 ## J
 
@@ -91,7 +97,7 @@ nav_order: 90
 
 ## O
 
-**Ontology** — 见 "I" 节末尾（中文按拼音排在"I"附近）。
+**Ontology** ⭐ — 客户业务概念的形式化建模（实体、属性、关系、动作）。Palantir 核心抽象，FDE 数据线主战场。Ch 9 重点。
 
 **Outcome (in "Sell the outcome")** — 客户业务结果（收入、成本、风险），区别于功能 / 工具 / 演示。
 
@@ -119,6 +125,8 @@ nav_order: 90
 
 **SSO (Single Sign-On)** — 单点登录。客户合规几乎必查。Ch 11 主题。
 
+**Strands** — AWS 推出的轻量 agent SDK，与 AgentCore 配合使用。本书 Ch 14 demo 的 agent 编排层用 Strands；Strands 在两百行内能写完一个生产级 multi-tool agent，复杂度介于裸 boto3 与 LangGraph 之间。Ch 6 编排 Level 1 / Ch 14 主线。
+
 ## T
 
 **T 字成长 (T-shaped Growth)** — 工程深度 + 行业纵深。Ch 17 主题。
@@ -137,4 +145,4 @@ nav_order: 90
 
 ---
 
-[← 返回目录](README.md)
+[← 返回目录](../)

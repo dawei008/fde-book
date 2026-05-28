@@ -29,7 +29,7 @@ nav_order: 2
 
 **路线**：Part I → Part II → **Part IV** → Part V → Part VII。
 
-**重点章**：Ch 9 Ontology / ETL、Ch 10 VPC 部署、Ch 11 SSO/SCIM/审计、Ch 12 PoC 过线、Ch 16 Handoff。
+**重点章**：Ch 9 Ontology / ETL、Ch 10 Scaffolding 与开发循环、Ch 11 VPC / SSO / 合规、Ch 12 PoC 过线、Ch 16 Handoff。
 
 **用时**：约 4 小时。
 
@@ -91,7 +91,7 @@ nav_order: 2
 
 ## 出场的核心概念
 
-完整术语见 [glossary.md](glossary.md)。最关键的：
+完整术语见 [glossary](../glossary/)。最关键的：
 
 | 概念 | 一句话 |
 |---|---|
@@ -108,10 +108,10 @@ nav_order: 2
 
 ## 配套资源
 
-- **research/** — 本书所有研究素材公开可查（07 篇）
+- **research/** — 本书所有研究素材公开可查（11 篇）
 - **附录 D** — 12 份第一周可用模板
 - **GitHub Issues** — 提反例 / 真实数字 / 缺章建议
 
 ---
 
-下一步：[前言](preface.md) → [Part I 导读](part-1/intro.md)
+下一步：[前言](../preface/) → [Part I 导读](../part-1/intro/)

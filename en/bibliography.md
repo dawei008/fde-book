@@ -102,4 +102,4 @@ Full URLs are not inlined in body text; they live in this file and in `research/
 
 ---
 
-[← Back to Contents](README.md)
+[← Back to Contents](../)

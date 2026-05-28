@@ -248,4 +248,4 @@ Nabeel Qureshi 在 *Reflections on Palantir* 里有一段讲得特别准：Palan
 
 完整书目和链接见全书末尾的 *参考文献*。
 
-[← 上一章: 项目交接](chapter-16.md) · [返回目录](../README.md)
+[← 上一章：项目交接](../chapter-16/) · [返回目录](../../)

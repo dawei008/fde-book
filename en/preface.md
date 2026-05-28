@@ -74,7 +74,7 @@ The FDE function was first turned into a formal role at Palantir; OpenAI and Ant
 - **Conikeec @ Substack**, *The FDE Playbook*
 - **Nabeel Qureshi**, *Reflections on Palantir*
 
-AWS Bedrock appears in this book only as the platform for hands-on demos, not as a methodology source. Full citation list in [bibliography.md](bibliography.md).
+AWS Bedrock appears in this book only as the platform for hands-on demos, not as a methodology source. Full citation list in [bibliography](../bibliography/).
 
 ---
 

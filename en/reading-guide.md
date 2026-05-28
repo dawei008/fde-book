@@ -91,7 +91,7 @@ If you're short on time, scan the section headings of each chapter and read the 
 
 ## Recurring Concepts
 
-Full glossary in [glossary.md](glossary.md). The load-bearing few:
+Full glossary in [glossary](../glossary/). The load-bearing few:
 
 | Concept | One-liner |
 |---|---|
@@ -108,10 +108,10 @@ Full glossary in [glossary.md](glossary.md). The load-bearing few:
 
 ## Companion Resources
 
-- **research/** — All research material, openly available (7 docs)
+- **research/** — All research material, openly available (11 docs)
 - **Appendix D** — 12 ready-to-use templates for week one
 - **GitHub Issues** — Counter-examples, real numbers, missing-chapter suggestions
 
 ---
 
-Next: [Preface](preface.md) → [Part I Intro](part-1/intro.md)
+Next: [Preface](../preface/) → [Part I Intro](../part-1/intro/)

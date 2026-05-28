@@ -13,13 +13,13 @@ AI 应用的落地工程学 — 一本写给"在客户现场把 AI 跑起来"的
 
 [开始阅读](preface){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
 [GitHub 仓库](https://github.com/dawei008/fde-book){: .btn .fs-5 .mb-4 .mb-md-0 }
-[English version](en/preface){: .btn .fs-5 .mb-4 .mb-md-0 }
+[English version](en/README){: .btn .fs-5 .mb-4 .mb-md-0 }
 
 ---
 
 ## 这本书是什么
 
-七章给角色定义和心智模型，十章给可在 AWS 账号里跑通的工程实操，四份附录给可复用的客户启动模板。配套代码在仓库 `demos/`，每章用完即拆，整本书的 demo 总成本控制在三位数美金。
+七章给角色定义和心智模型，十章给可在 AWS 账号里跑通的工程实操，四份附录给可复用的客户启动模板。配套代码在仓库 `demos/`，每章用完即拆。
 
 公式：
 

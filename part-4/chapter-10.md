@@ -248,4 +248,4 @@ scaffolding 完成、inner loop 跑起来之后，下一道关是 staging。stag
 
 完整书目和链接见全书末尾的 *参考文献*。
 
-[← 上一章：客户数据栈](chapter-09.md) · [下一章：与遗留系统对接 →](chapter-11.md)
+[← 上一章：客户数据栈](../chapter-09/) · [下一章：与遗留系统对接 →](../chapter-11/)

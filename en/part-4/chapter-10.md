@@ -248,4 +248,4 @@ When you start week 1 on your next project, you can ask yourself a simple questi
 
 Full bibliography and links in the *References* section at the end of the book.
 
-[← Previous: Customer Data Stack](chapter-09.md) · [Next: Integrating with Legacy Systems →](chapter-11.md)
+[← Previous: Customer Data Stack](../chapter-09/) · [Next: Integrating with Legacy Systems →](../chapter-11/)

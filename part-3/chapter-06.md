@@ -188,7 +188,7 @@ def call(model_id, ticket):
 
 完整代码：仓库 `demos/ch6-stack/scripts/bench.py`。
 
-跑出来的数字（2026-05-23, us-east-1, 每模型 30 次调用）：
+跑出来的数字（每模型 30 次调用）：
 
 | 模型              | 派工准确率 | 故障类型准确率 | P50 延迟 | P90 延迟 | $/1k 工单 |
 | ----------------- | ---------- | -------------- | -------- | -------- | --------- |
@@ -196,8 +196,6 @@ def call(model_id, ticket):
 | claude-sonnet-4-6 | 93%        | 40%            | 1340ms   | 1997ms   | $1.10     |
 | claude-opus-4-7   | 100%       | 40%            | 966ms    | 2383ms   | $5.63     |
 | nova-pro          | 90%        | 40%            | 498ms    | 536ms    | $0.27     |
-
-整次跑成本约 $0.50。
 
 我把这张表打印出来带进会议室。陈雪扫了一眼："为什么故障类型全是 40%？四个模型一样？"
 
@@ -208,7 +206,7 @@ def call(model_id, ticket):
 真正能让我做决策的是延迟和成本：
 
 - nova-pro 的 P90 是 0.5 秒，opus-4-7 是 2.4 秒。差五倍。调度员从"瞬时反应"变成"等一下"，体感差异很大。
-- 单价 nova-pro $0.27 vs opus-4-7 $5.63。日均 230 单年化下来，分别是 $25 和 $516。
+- 单价 nova-pro $0.27 vs opus-4-7 $5.63（每千单）。日均 230 单 × 365 天 ≈ 8.4 万单/年，年化分别是 $23 和 $473。
 
 合昇的工单 95% 是简单分诊。我没必要为每一条都用 opus。最终方案我推荐 primary + fallback：
 
@@ -279,10 +277,10 @@ D2 锁定。
 - **Code Interpreter**——沙箱跑 Python/JS/TS
 - **Identity**——接 Cognito / Okta / Entra ID，agent 凭证管理
 - **Observability**——Trace、debug、CloudWatch GenAI dashboard 一体
-- **Evaluations**——LLM-judge + 代码 evaluator、五种评估模式（online/on-demand/batch/dataset/simulation）。Ch8 展开
+- **Evaluations**——LLM-judge + 代码 evaluator、五种评估模式（online/on-demand/batch/dataset/simulation）。Ch8 展开。子能力 **Optimization (preview)** 从生产 trace 自动生成 prompt / tool description 改进建议 + A/B 验证，Ch13 展开
 - **Policy**——Cedar 自然语言 policy authoring、tool 调用层守门（不同于 Bedrock Guardrails 的内容守门）
 - **Agent Registry**（preview）——企业内部发布 / 审批 / 发现 agent / tool / MCP server 的中心目录。Ch15 展开
-- **Optimization**（preview）——从生产 trace 自动生成 prompt / tool description 改进建议 + A/B 验证。Ch13 展开
+- **Payments**（preview）——x402 协议，agent 付费访问 SaaS / paid APIs / MCP。本书不展开
 
 合昇二期我用上了其中 5 项：Runtime、Gateway、Identity、Observability、Evaluations。Browser/Code Interpreter 用不上（没那种工作流），Policy 因为 14 个工具自己写规则就够了，Registry 和 Payments 是 preview 不进生产路径，Memory 因为我们的会话不需要跨 session 持久化。
 
@@ -308,7 +306,7 @@ D2 模型:    primary  claude-haiku-4-5
             fallback claude-opus-4-7  (字数>200 / 含报警码 / A 客户)
             预估     $0.63/1k 工单, P50 1 秒, 派工准确率 ≥ 95%
 
-D3 模式:    RAG + tool use, 不上 agent                   (Ch 7)
+D3 模式:    Prompting + 长 system prompt（含报警代码全表），不上 agent (Ch 7)
 
 D4 编排:    boto3 + 200 行 dispatcher                    (本章 6.4)
             6 个月后视 A/B/C 信号决定是否升级
@@ -345,4 +343,4 @@ D3 还没解决：RAG、Tool use、Agent、微调，哪个？
 
 合昇有 5000 份 PDF（产品手册 + 历史工单库 + 维修知识库），周明远的直觉是"先做个 RAG"。这是不是对的？这就是下一章。
 
-[← Part III Intro](intro.md) · [下一章：RAG / Fine-tune / Agent 决策树 →](chapter-07.md)
+[← Part III Intro](../intro/) · [下一章：RAG / Fine-tune / Agent 决策树 →](../chapter-07/)

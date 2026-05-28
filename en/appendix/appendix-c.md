@@ -453,4 +453,4 @@ Pre-release verification:
 
 ---
 
-[← Previous appendix: Comparison Matrix](appendix-b.md) · [Next appendix: Customer Onboarding Pack →](appendix-d.md)
+[← Previous appendix: Comparison Matrix](../appendix-b/) · [Next appendix: Customer Onboarding Pack →](../appendix-d/)

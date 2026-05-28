@@ -453,4 +453,4 @@ project/
 
 ---
 
-[← 上一附录: 对比矩阵](appendix-b.md) · [下一附录: 客户启动包 →](appendix-d.md)
+[← 上一附录: 对比矩阵](../appendix-b/) · [下一附录: 客户启动包 →](../appendix-d/)
