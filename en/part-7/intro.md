@@ -14,9 +14,9 @@ The two chapters in Part VII handle this, and pull the lens out from the single 
 
 ---
 
-Chapter 16 is on project handoff. Handoff isn't "push the code to the customer's git, write a README" — it's about getting a specific person or team inside the customer to be able to keep maintaining, change prompts, add new evals, and locate root causes during incidents after the FDE leaves. This chapter walks through the deliverables (runbook, training materials, permissions handover, launch process) and also how to abstract this project's engineering experience into assets the next project can reuse.
+Chapter 17 is on project handoff. Handoff isn't "push the code to the customer's git, write a README" — it's about getting a specific person or team inside the customer to be able to keep maintaining, change prompts, add new evals, and locate root causes during incidents after the FDE leaves. This chapter walks through the deliverables (runbook, training materials, permissions handover, launch process) and also how to abstract this project's engineering experience into assets the next project can reuse.
 
-Chapter 17 is on the FDE's own next step. After finishing a project, the FDE's capability stack shouldn't just be "one more customer case study" — it should grow on both axes of the T-shape: engineering depth (model / system / data) and industry depth (the know-how of one or two verticals). This chapter offers a framework for taking stock of where you are now and planning what's next.
+Chapter 18 is on the FDE's own next step. After finishing a project, the FDE's capability stack shouldn't just be "one more customer case study" — it should grow on both axes of the T-shape: engineering depth (model / system / data) and industry depth (the know-how of one or two verticals). This chapter offers a framework for taking stock of where you are now and planning what's next.
 
 ---
 
@@ -24,4 +24,4 @@ Part VII's prerequisite is the entire output of every prior Part — handoff qua
 
 ---
 
-[← End of Part VI](../../part-6/chapter-15/) · [Next: Project Handoff →](../chapter-16/)
+[← End of Part VI](../../part-6/chapter-16/) · [Next: Project Handoff →](../chapter-17/)

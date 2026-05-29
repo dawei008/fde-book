@@ -309,4 +309,4 @@ Preview 注意事项和 Optimization 一样：FDE 项目默认不进生产关键
 - AWS, [Bedrock Agents — Session attributes 文档](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html) — inbound / outbound auth 透传机制
 - modelcontextprotocol.io, [Servers 目录](https://modelcontextprotocol.io/servers) — 社区维护的 MCP server 清单, 接入前先 review 这一页
 
-[← 上一章：Agent Toolset 设计](../chapter-14/) · [下一 Part：交付与精进 →](../../part-7/intro/)
+[← 上一章：Agent Toolset 设计](../chapter-14/) · [下一章：Skill — 把客户专长打包给 agent →](../chapter-16/)

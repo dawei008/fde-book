@@ -5,7 +5,7 @@ nav_order: 2
 
 # 阅读指南
 
-> 17 章，约 6-7 小时读完。两条主线并存，按你的 FDE 类型选路线。
+> 18 章，约 6-7 小时读完。两条主线并存，按你的 FDE 类型选路线。
 
 ---
 
@@ -17,7 +17,7 @@ nav_order: 2
 
 **路线**：Part I → Part II → **Part III** → Part V → **Part VI** → Part VII。
 
-**重点章**：Ch 6 技术栈速决矩阵、Ch 7 RAG/FT/Agent 决策树、Ch 8 Eval-driven、Ch 14 Agent 部署、Ch 15 MCP。
+**重点章**：Ch 6 技术栈速决矩阵、Ch 7 RAG/FT/Agent 决策树、Ch 8 Eval-driven、Ch 14 Agent 部署、Ch 15 MCP、Ch 16 Skill。
 
 **用时**：约 5 小时。
 
@@ -29,7 +29,7 @@ nav_order: 2
 
 **路线**：Part I → Part II → **Part IV** → Part V → Part VII。
 
-**重点章**：Ch 9 Ontology / ETL、Ch 10 Scaffolding 与开发循环、Ch 11 VPC / SSO / 合规、Ch 12 PoC 过线、Ch 16 Handoff。
+**重点章**：Ch 9 Ontology / ETL、Ch 10 Scaffolding 与开发循环、Ch 11 VPC / SSO / 合规、Ch 12 PoC 过线、Ch 17 Handoff。
 
 **用时**：约 4 小时。
 
@@ -101,8 +101,9 @@ nav_order: 2
 | **Ontology** | Palantir 的核心抽象，本书 Ch 9 给工程师视角 |
 | **Agent Toolset** | 给 Agent 暴露的工具集合，本书 Ch 14 主题 |
 | **MCP** | Model Context Protocol，把 Agent 接到企业工具的标准 |
+| **Skill** | 把"做事章法"打包给 agent 按需加载，本书 Ch 16 主题 |
 | **PoC 过线** | 从概念验证到生产的鸿沟，本书 Ch 12 主题 |
-| **Handoff** | FDE 离场时的交付动作，本书 Ch 16 主题 |
+| **Handoff** | FDE 离场时的交付动作，本书 Ch 17 主题 |
 
 ---
 

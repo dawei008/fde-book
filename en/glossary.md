@@ -63,7 +63,7 @@ nav_order: 90
 
 ## H
 
-**Handoff** — The move at FDE departure: returning the project to the customer's internal team. Topic of Ch 16.
+**Handoff** — The move at FDE departure: returning the project to the customer's internal team. Topic of Ch 17.
 
 ## I
 
@@ -119,7 +119,9 @@ nav_order: 90
 
 ## T
 
-**T-shaped Growth** — Engineering depth + domain depth. Topic of Ch 17.
+**Skill** ⭐ — Anthropic's agent extension shape: a directory containing `SKILL.md` (with `name` / `description` frontmatter) + body + co-located scripts/templates. Loaded on demand by description match across Claude Code / Agent SDK / Claude API; body costs no tokens unless triggered. Sits beside Tool (capability) and MCP (interop) as one of three agent extension shapes. Topic of Ch 16.
+
+**T-shaped Growth** — Engineering depth + domain depth. Topic of Ch 18.
 
 **Trace / Tracing** — Distributed tracing. Topic of Ch 13.
 

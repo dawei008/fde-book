@@ -10,13 +10,15 @@ Across 2025-2026, the meaning of "Agent" inside enterprise projects compressed i
 
 Once that lands in a customer environment, the FDE immediately hits a few new engineering problems: how many tools should the model actually be exposed to, how do you draw the sandbox and permission boundary, how do you resume a multi-step task after it breaks, how does MCP coexist with the customer's existing RBAC and audit. None of the earlier Parts touched these.
 
-The two chapters in Part VI handle these Agent-era engineering questions.
+The three chapters in Part VI handle these Agent-era engineering questions — together covering the three axes of agent extension: capability, interop, expertise.
 
 ---
 
 Chapter 14 is on Agent toolset design. The most common anti-pattern is "more tools is better" — wrapping all fifty APIs from the customer's systems as tools and dumping them on the model. The result is the model picking the wrong tool, filling the wrong arguments, getting the call sequence backwards. This chapter is about designing a toolset by "enough + won't go wrong," how to draw the sandbox boundary, and how to keep recoverable intermediate state when a multi-step task fails.
 
 Chapter 15 is on MCP (Model Context Protocol) and enterprise integration. MCP has become the de facto standard for connecting Agents to enterprise tools, but there's still a meaningful gap between "install an MCP server" and "run it safely under the customer's compliance architecture" — identity propagation, permission narrowing, audit landing, network isolation. This chapter is about wiring MCP into the customer's existing SSO / RBAC / audit stack, not standing up a parallel permission world next to it.
+
+Chapter 16 is on Skill — the extension shape Anthropic promoted to a first-class concept across Claude Code / Agent SDK / Claude API in early 2026. A Skill isn't a capability package like a tool; it's a "way of working" package: description + body + co-located scripts, loaded on demand. Inside customer enterprises, the dispatch rules / SOPs / response templates that live only in veteran heads — this chapter is about formalizing them into methods the agent can actually learn.
 
 ---
 

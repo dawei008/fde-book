@@ -103,7 +103,7 @@ Ask the four questions below in order. The first one you can't answer "yes" to i
 
 4. **Is there someone inside the customer who can run it without depending on you?** Including releases, fixing edge bugs, adding new intents, watching dashboards. If no, you're in Handoff. Write runbooks and run training.
 
-All four "yes" — the project is done. Run a postmortem and extract lessons (covered in Chapter 16).
+All four "yes" — the project is done. Run a postmortem and extract lessons (covered in Chapter 17).
 
 The cost of misjudging is asymmetric. **If you think you're in Scaffolding but you're actually in Discovery, you'll waste weeks building unwanted features. If you think you're in Discovery but you're actually in Scaffolding, you'll lose at most two extra days talking to the customer.** When in doubt, judging "one phase earlier" is the safer bet.
 

@@ -306,4 +306,4 @@ This chapter pairs with Chapter 14: Chapter 14 is on cutting an agent's own tool
 - AWS, [Bedrock Agents — Session attributes docs](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-session-state.html) — inbound / outbound auth propagation mechanism
 - modelcontextprotocol.io, [Servers directory](https://modelcontextprotocol.io/servers) — community-maintained MCP server list; review this page before adopting
 
-[← Previous: Agent Toolset Design](../chapter-14/) · [Next Part: Handoff and Mastery →](../../part-7/intro/)
+[← Previous: Agent Toolset Design](../chapter-14/) · [Next: Skill — Packaging Customer Expertise for Agents →](../chapter-16/)

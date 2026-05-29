@@ -93,10 +93,11 @@ Every chapter answers questions in this shape.
 **Part VI — Agents and MCP**
 - [Chapter 14 — Agent Toolset Design](part-6/chapter-14/)
 - [Chapter 15 — MCP Integration](part-6/chapter-15/)
+- [Chapter 16 — Skill: Packaging Customer Expertise for Agents](part-6/chapter-16/)
 
 **Part VII — Handoff and Continuity**
-- [Chapter 16 — Project Handoff](part-7/chapter-16/)
-- [Chapter 17 — The FDE's Next Step](part-7/chapter-17/)
+- [Chapter 17 — Project Handoff](part-7/chapter-17/)
+- [Chapter 18 — The FDE's Next Step](part-7/chapter-18/)
 
 **Appendices**
 - [A — Toolstack Quick Reference](appendix/appendix-a/)

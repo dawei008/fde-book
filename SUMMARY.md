@@ -44,12 +44,13 @@
 - [Part VI 导读](part-6/intro.md)
 - [Chapter 14: 在客户环境部署 Agent — 工具集 / 沙箱 / 失败恢复](part-6/chapter-14.md)
 - [Chapter 15: MCP 与企业集成 — 把 Agent 接到客户工具上](part-6/chapter-15.md)
+- [Chapter 16: Skill — 把客户专长打包给 agent](part-6/chapter-16.md)
 
 # Part VII: 交付与精进
 
 - [Part VII 导读](part-7/intro.md)
-- [Chapter 16: Handoff + 模式提取 — 把方案抽象成可复用资产](part-7/chapter-16.md)
-- [Chapter 17: FDE 的 T 字成长 — 工程深度 + 行业纵深](part-7/chapter-17.md)
+- [Chapter 17: Handoff + 模式提取 — 把方案抽象成可复用资产](part-7/chapter-17.md)
+- [Chapter 18: FDE 的 T 字成长 — 工程深度 + 行业纵深](part-7/chapter-18.md)
 
 ---
 

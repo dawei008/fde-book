@@ -198,7 +198,7 @@ Weeks 11 and 12 were the most intense weeks on the Hesheng project. Looking back
               3 p.m.: Zhou Mingyuan / Chen Xue / Gu Jianguo sign GA
               on the contract
 
-  W13 Mon    Handoff begins (Chapter 16)
+  W13 Mon    Handoff begins (Chapter 17)
               I start handing the work to customer ops
 ```
 

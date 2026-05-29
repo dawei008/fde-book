@@ -5,7 +5,7 @@ nav_order: 2
 
 # Reading Guide
 
-> 17 chapters, ~6-7 hours end to end. Two tracks running in parallel — pick the route that matches your FDE flavor.
+> 18 chapters, ~6-7 hours end to end. Two tracks running in parallel — pick the route that matches your FDE flavor.
 
 ---
 
@@ -17,7 +17,7 @@ nav_order: 2
 
 **Path**: Part I → Part II → **Part III** → Part V → **Part VI** → Part VII.
 
-**Highlights**: Ch 6 stack quick-decision matrix, Ch 7 RAG/FT/Agent decision tree, Ch 8 eval-driven, Ch 14 agent deployment, Ch 15 MCP.
+**Highlights**: Ch 6 stack quick-decision matrix, Ch 7 RAG/FT/Agent decision tree, Ch 8 eval-driven, Ch 14 agent deployment, Ch 15 MCP, Ch 16 Skill.
 
 **Time**: ~5 hours.
 
@@ -29,7 +29,7 @@ nav_order: 2
 
 **Path**: Part I → Part II → **Part IV** → Part V → Part VII.
 
-**Highlights**: Ch 9 ontology / ETL, Ch 10 VPC deployment, Ch 11 SSO/SCIM/audit, Ch 12 PoC cut-over, Ch 16 handoff.
+**Highlights**: Ch 9 ontology / ETL, Ch 10 Scaffolding and the development loop, Ch 11 VPC / SSO / compliance, Ch 12 PoC cut-over, Ch 17 handoff.
 
 **Time**: ~4 hours.
 
@@ -101,8 +101,9 @@ Full glossary in [glossary](../glossary/). The load-bearing few:
 | **Ontology** | Palantir's core abstraction; Ch 9 gives an engineering view |
 | **Agent Toolset** | The set of tools an agent can call — Ch 14's topic |
 | **MCP** | Model Context Protocol — standard for connecting agents to enterprise tools |
+| **Skill** | Packaging "ways of working" for the agent to load on demand — Ch 16 |
 | **PoC Cut-over** | The chasm from PoC to production — Ch 12 |
-| **Handoff** | The departure-day delivery move — Ch 16 |
+| **Handoff** | The departure-day delivery move — Ch 17 |
 
 ---
 

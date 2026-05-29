@@ -69,7 +69,7 @@ nav_order: 90
 
 ## H
 
-**Handoff** — FDE 离场时把项目交回客户内部团队的动作。Ch 16 主题。
+**Handoff** — FDE 离场时把项目交回客户内部团队的动作。Ch 17 主题。
 
 ## I
 
@@ -125,11 +125,13 @@ nav_order: 90
 
 **SSO (Single Sign-On)** — 单点登录。客户合规几乎必查。Ch 11 主题。
 
+**Skill** ⭐ — Anthropic 的 agent 扩展形态：一个目录加 `SKILL.md`（含 `name` / `description` frontmatter）+ body + 同目录脚本/模板。Claude Code / Agent SDK / Claude API 三处通用，按 description 命中按需加载，body 不命中不消耗 token。和 Tool（能力）/ MCP（互操作）并列为 agent 三种扩展形态。Ch 16 主题。
+
 **Strands** — AWS 推出的轻量 agent SDK，与 AgentCore 配合使用。本书 Ch 14 demo 的 agent 编排层用 Strands；Strands 在两百行内能写完一个生产级 multi-tool agent，复杂度介于裸 boto3 与 LangGraph 之间。Ch 6 编排 Level 1 / Ch 14 主线。
 
 ## T
 
-**T 字成长 (T-shaped Growth)** — 工程深度 + 行业纵深。Ch 17 主题。
+**T 字成长 (T-shaped Growth)** — 工程深度 + 行业纵深。Ch 18 主题。
 
 **Trace / Tracing** — 分布式追踪。Ch 13 主题。
 
