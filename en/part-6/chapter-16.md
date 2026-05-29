@@ -86,7 +86,7 @@ Two facts about Skills that get missed most often:
 
 **Second, a Skill consumes tokens only when loaded.** The Skill systems in Claude API / Agent SDK / Claude Code first scan every Skill's description (short), decide which ones to load, and only then read the body + co-located files into context. This means you can register dozens of Skills without paying for dozens of Skill prompts — only the matching few enter the prompt.
 
-This is the fundamental difference from "stuff it into the system prompt." System prompt pays full token cost on every call; Skill is on-demand. Hesheng's example: previously stuffing 6,000 tokens into every triage call, now only overseas tickets (~30% of total) load this 1,500-token Skill; domestic tickets go the regular path. Token cost dropped by roughly half.
+This is the fundamental difference from "stuff it into the system prompt." System prompt pays full token cost on every call; Skill is on-demand. Hesheng's example: previously **every** triage call stuffed 6,000 tokens (4,500 overseas-specific, 1,500 domestic-common); now domestic tickets only pay the 1,500 common + ~100 tokens of description pre-scan, and overseas tickets (~30% of total) load this 1,500-token Skill body. Weighted by call volume, average input tokens per ticket drop from 6,000 to ~1,900 — about 70%. The exact number shifts with the call distribution; the structural point is moving **from full to on-demand**.
 
 ---
 
@@ -218,7 +218,7 @@ Two AWS-side concepts whose names look like Skill but are not Skill — FDEs run
 Hesheng phase-two agent
 ├─ Tools (14, wrapped via action group):
 │   ├─ query_tickets, lookup_alarm_code, ...
-│   └─ stateful MCP: salesforce_search, salesforce_update
+│   └─ stateful MCP: confluence_search, jira_lookup, salesforce_query, ...
 │
 └─ Skills (5, in Anthropic Skill form):
     ├─ hesheng-domestic-triage
@@ -256,7 +256,7 @@ Master Wang's was the most interesting. My first draft turned his "first check w
 
 Chapter 14 gave Tool. Chapter 15 gave MCP. This chapter gave Skill. Three shapes side by side — decomposing the abstract question of "how does an agent extend" into three concrete forms: capability, interop, expertise.
 
-Hesheng phase two's agent stays stable not because any one shape dominates, but because the three each manage their own slice: 14 tools as hands and feet, 5 Skills as SOP cards in the brain, stateful MCP attaching Salesforce and ServiceNow. Chapters 14 / 15 / 16 together are the full picture of a real production agent.
+Hesheng phase two's agent stays stable not because any one shape dominates, but because the three each manage their own slice: 14 tools as hands and feet, 5 Skills as SOP cards in the brain, stateful MCP attaching Confluence / Jira / Salesforce. Chapters 14 / 15 / 16 together are the full picture of a real production agent.
 
 The next Part enters handoff — Master Wang's Skill is written down, the agent learned it, but the day he retires, can the customer's receiver maintain this Skill? That's Chapter 17.
 
@@ -265,7 +265,7 @@ The next Part enters handoff — Master Wang's Skill is written down, the agent 
 ## Public references for this chapter
 
 - Anthropic, [Claude Skills documentation](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) — official Skill definition, frontmatter spec, loading mechanism
-- Anthropic engineering blog — *Equipping agents for the real world with Agent Skills* — the Skill vs prompt engineering argument
+- Anthropic, [Equipping agents for the real world with Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills) — the Skill vs prompt engineering argument
 - Anthropic, [Claude Agent SDK documentation](https://docs.claude.com/en/api/agent-sdk/overview) — Skill loading in the SDK layer
 
 ---

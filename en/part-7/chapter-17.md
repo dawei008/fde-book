@@ -55,7 +55,7 @@ The countdown's starting point is a simple list — who is the customer's receiv
 The receivers at Hesheng were chosen before GA:
 
 - **Wang Lei**, ops on Gu Jianguo's IT team, 5 years AWS experience, can write Python but not deeply. Owns D1 (Bedrock config / VPC endpoint / IAM policy).
-- **Shen Jia**, product manager on the after-sales business systems team, reports to Chen Xue, Python beginner-level. Owns D2-D4 (prompt / KB maintenance / agent orchestration logic).
+- **Shen Jia**, product manager on the after-sales business systems team, reports to Chen Xue, Python beginner-level. Owns D2-D4 (prompt / KB maintenance / agent orchestration logic / updates to the 5 Ch16 Skills).
 - **Zhang Wei**, an overseas service engineer turned internal data analyst, writes SQL not code. Owns D5 (run eval / dashboards / failure post-mortems).
 
 These three profiles set the capability gaps I had to fill: Wang Lei doesn't need AWS basics, but does need Bedrock-specific traps; Shen Jia needs "how to safely change a prompt" — not prompt engineering, but how to validate after changing through eval, then ship; Zhang Wei needs to learn how to read traces, how to write CloudWatch Logs Insights queries.
